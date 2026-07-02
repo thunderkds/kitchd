@@ -42,6 +42,7 @@ Chefs and kitchen teams currently juggle recipes on paper, prep lists on whitebo
 | US-010 | As an Admin, I want roles to restrict who can edit guidelines/inventory versus who can only view and complete tasks so that staff can't accidentally break standardized data. | P4 |
 | US-011 | As Kitchen Staff, I want the whole app to work on a phone/tablet without horizontal scrolling so that I can use it at the pass. | P1, P2, P3 |
 | US-012 | As a Head Chef, I want a home dashboard showing today's tasks, low-stock alerts, latest announcements, and pinned notes so that I get a full picture at a glance. | P1 |
+| US-013 | As the founder/developer, I want every push/PR automatically linted, typechecked, and tested, and every merge to `staging` automatically deployed, so that I can iterate quickly without manually re-verifying and re-deploying by hand. | P1 (founder, acting as maintainer) |
 
 ---
 
@@ -72,6 +73,7 @@ Chefs and kitchen teams currently juggle recipes on paper, prep lists on whitebo
 | FR-021 | System must support an Announcements channel: Owner/Chef broadcasts to all Staff, with per-user read receipts. | US-012 |
 | FR-022 | System must record an audit trail (who/when/what) for Recipe edits and Stock adjustments. | NFR-driven, supports US-001, US-005 |
 | FR-023 | System must support CSV export for Inventory and Recipes. | Doc §5 |
+| FR-024 | A CI pipeline must run lint, typecheck, and the full test suite for `/apps/web` and `/apps/api` on every push and pull request; a separate CD pipeline must deploy to a Railway staging environment automatically on merge to the `staging` branch only (never `main`). | US-013 |
 
 ---
 
@@ -114,7 +116,7 @@ The following are explicitly excluded from this MVP:
 - Public/read-only client-vendor share links — Post-MVP §5
 - Email/push notifications — deferred; MVP is in-app notification bell only
 - Third-party managed auth (Auth0/Clerk) — deferred in favor of custom JWT
-- Cloud hosting/deployment — local dev only for this milestone
+- Production deployment to `main` — staging deploy only for this milestone (Railway, on merge to `staging` branch)
 
 ---
 
@@ -127,4 +129,5 @@ The following are explicitly excluded from this MVP:
 | 3 | File storage: S3-compatible assumed; concrete provider (local/minio for dev vs real S3) deferred until hosting is decided. | Supervisor | Before first deploy |
 | 4 | Notifications: in-app bell only for MVP; email/push explicitly deferred to Post-MVP. | User (confirmed) | Revisit when team grows beyond solo use |
 | 5 | Multi-tenant enforcement: data model built correctly now (org→kitchen→user) even though MVP usage is single org/single kitchen. | User (confirmed) | Locked per NFR-003 |
-| 6 | Hosting provider not yet chosen; local dev (Docker Compose) only for this milestone. | User (confirmed) | Before first deploy |
+| 6 | Hosting: staging deploys to Railway on merge to `staging` branch; production/`main` deploy still deferred. | User (confirmed) | Before first production deploy |
+| 7 | FR-024: CI (lint/typecheck/test/build for /apps/web and /apps/api) must run on every push/PR; CD (deploy to Railway staging) triggers only on merge to `staging`, never `main`. | User (confirmed) | Stage 3, T023 |

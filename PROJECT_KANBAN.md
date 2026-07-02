@@ -32,6 +32,7 @@
 - [ ] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2
 - [ ] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1
 - [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0
+- [ ] **T023** — CI/CD: lint/test/build pipeline + Railway staging auto-deploy | common-infrastructure | C2 | Risk: Med | P1
 
 ### In Progress
 
