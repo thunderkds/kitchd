@@ -14,7 +14,7 @@
 - **Repo**: /home/hungnguyenhuu/workspace/pets/hungnguyen111/kitchd (local, branch `develop`)
 - **Primary tech**: TypeScript — React (frontend), NestJS (backend), PostgreSQL
 - **Type**: Web app (monorepo: `/apps/web`, `/apps/api`, `/packages/shared`)
-- **Deployment target**: Local dev only for this milestone (no cloud hosting decided yet)
+- **Deployment target**: Local dev (primary) + Railway staging (auto-deploy on merge to `staging` branch). Production/`main` deploy deferred.
 - **Key stakeholders**: Solo founder (hungnh1110@gmail.com) — self-use first, startup-idea framing for the future
 
 ---
@@ -32,7 +32,7 @@ KitchenOS is a monorepo with a NestJS backend (`/apps/api`) organized into one m
 - Multi-tenant data model (Organization → Kitchen → User) must be respected in every entity's schema from the first migration, even though MVP usage is single-org/single-kitchen (NFR-003).
 - Stock deduction on recipe-linked task completion must show a confirm-before-apply prompt (FR-008) — never silently auto-deduct.
 - RBAC must go through the shared `RolesGuard` + `@Roles()` decorator — no ad-hoc per-route permission checks.
-- No cloud hosting/deployment in this milestone — local dev (Docker Compose for Postgres) only.
+- No production (`main`) deployment in this milestone. Staging deploy IS in scope: CD deploys to Railway on merge to the `staging` branch only, never `main`. Local dev (Docker Compose for Postgres) remains the primary dev workflow.
 - Web dev server (`/apps/web`) must be exposed at `localhost:8765` — this is the fixed target the Playwright MCP uses for all UI Evidence screenshot capture (visual regression, design-system compliance, responsiveness rows). T001 must configure Vite's dev server port accordingly; do not change this port in later tasks without Supervisor sign-off, since every FE TASK_GUIDE's evidence instructions assume it.
 
 ---

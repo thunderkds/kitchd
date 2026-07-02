@@ -19,4 +19,9 @@
 **Why**: Hard-Stop Gate 6 requires pasted evidence for every UI task's design-acceptance rows; a fixed, known port lets the Playwright MCP reliably navigate to the running app without per-task port discovery. User confirmed this port explicitly.
 **Files**: `/apps/web/vite.config.ts`, `tasks/TASK_GUIDE_T001.md`, `tasks/TASK_GUIDE_T003.md`, `T007`, `T008`, `T011`, `T012`, `T015`, `T016`, `T018`, `T021`
 
+### 2026-07-02 — CI/CD added: staging-only auto-deploy to Railway, never main
+**Decision**: T023 adds a GitHub Actions CI workflow (lint/typecheck/test/build on every push+PR) and a separate CD workflow that deploys to Railway staging ONLY on merge to the `staging` branch. No workflow deploys on `main` pushes — production deployment remains explicitly out of scope for this milestone.
+**Why**: User flagged the missing CI/CD task after Stage 2 planning was already committed; this reopened (partially) the earlier "local dev only" hosting decision. Resolved via forced choice: CI+CD scope confirmed, staging host confirmed as Railway, deploy trigger confirmed as `staging` branch only (not `main`) to keep the earlier production-deferral decision intact.
+**Files**: `.github/workflows/ci.yml`, `.github/workflows/deploy-staging.yml`, `tasks/TASK_GUIDE_T023.md`
+
 ## Infrastructure
