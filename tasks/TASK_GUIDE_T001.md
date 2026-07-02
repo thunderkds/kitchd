@@ -98,7 +98,7 @@ docker compose up -d && npm --prefix apps/api run migrate && npm --prefix apps/a
 
 Per `BRAINSTORMING_LOG.md` (Option B, approved): monorepo with `/apps/web` (React+TS+Vite+Tailwind), `/apps/api` (NestJS), `/packages/shared` (shared TS types/DTOs). Local PostgreSQL via Docker Compose. ORM: Prisma is recommended for NestJS-idiomatic migrations and type generation — confirm this choice explicitly in the task's implementation notes before locking it in (per Stage 1 checklist item 6, ORM was deferred to this task). Initial migrations cover Organization, Kitchen, User only, each with `org_id`/`kitchen_id` scoping per NFR-003. JWT signing via a standard NestJS JWT module; no RolesGuard yet — that's T002's job, so do not add permission checks here beyond "is authenticated."
 
-**Dev server port**: configure Vite (`/apps/web`) to run on `localhost:8765` (set `server.port: 8765` in `vite.config.ts`). This is a fixed convention per `PROJECT_SPEC.md` Critical Constraints — every later FE task's UI Evidence capture (Playwright MCP) targets this exact port. Do not use Vite's default port.
+**Dev server port**: configure Vite (`/apps/web`) to run on `localhost:8766` (set `server.port: 8766` in `vite.config.ts`). This is a fixed convention per `PROJECT_SPEC.md` Critical Constraints — every later FE task's UI Evidence capture (Playwright MCP) targets this exact port. Do not use Vite's default port.
 
 ---
 

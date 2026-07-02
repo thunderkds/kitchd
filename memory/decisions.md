@@ -14,8 +14,8 @@
 **Why**: NFR-003 requires multi-tenant readiness for a possible future SaaS pivot; retrofitting tenant scoping onto ~10 entities after the fact is far more expensive than building it correctly now.
 **Files**: `/apps/api/src/**/entities/**` (all domain entities)
 
-### 2026-07-02 — Web dev server fixed at localhost:8765 for Playwright MCP evidence capture
-**Decision**: `/apps/web`'s Vite dev server runs on a fixed port `8765` (not Vite's default), and all FE TASK_GUIDEs' UI Evidence rows (visual regression, design-system compliance, responsiveness) use the Playwright MCP against `localhost:8765`.
+### 2026-07-02 — Web dev server fixed at localhost:8766 for Playwright MCP evidence capture
+**Decision**: `/apps/web`'s Vite dev server runs on a fixed port `8766` (not Vite's default), and all FE TASK_GUIDEs' UI Evidence rows (visual regression, design-system compliance, responsiveness) use the Playwright MCP against `localhost:8766`.
 **Why**: Hard-Stop Gate 6 requires pasted evidence for every UI task's design-acceptance rows; a fixed, known port lets the Playwright MCP reliably navigate to the running app without per-task port discovery. User confirmed this port explicitly.
 **Files**: `/apps/web/vite.config.ts`, `tasks/TASK_GUIDE_T001.md`, `tasks/TASK_GUIDE_T003.md`, `T007`, `T008`, `T011`, `T012`, `T015`, `T016`, `T018`, `T021`
 

@@ -10,7 +10,6 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0
 - [ ] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0
 - [ ] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0
 - [ ] **T004** — Ingredient CRUD + StockBatch + StockMovement ledger | backend-developer | C2 | Risk: Med | P0
@@ -35,6 +34,7 @@
 - [ ] **T023** — CI/CD: lint/test/build pipeline + Railway staging auto-deploy | common-infrastructure | C2 | Risk: Med | P1
 
 ### In Progress
+- [ ] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02
 
 ### Ready for Review
 
@@ -58,6 +58,6 @@
 | 1 Environment Setup | ✅ Done |
 | 1.5 Sub-Agent Architecture | ✅ Done |
 | 2 Planning (/plan) | ✅ Done |
-| 3 Execution | ⬜ Not Started |
+| 3 Execution | 🔄 In Progress |
 | 4 Review | ⬜ Not Started |
 | 5 Integration & Verify | ⬜ Not Started |

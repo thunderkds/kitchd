@@ -33,7 +33,7 @@ KitchenOS is a monorepo with a NestJS backend (`/apps/api`) organized into one m
 - Stock deduction on recipe-linked task completion must show a confirm-before-apply prompt (FR-008) — never silently auto-deduct.
 - RBAC must go through the shared `RolesGuard` + `@Roles()` decorator — no ad-hoc per-route permission checks.
 - No production (`main`) deployment in this milestone. Staging deploy IS in scope: CD deploys to Railway on merge to the `staging` branch only, never `main`. Local dev (Docker Compose for Postgres) remains the primary dev workflow.
-- Web dev server (`/apps/web`) must be exposed at `localhost:8765` — this is the fixed target the Playwright MCP uses for all UI Evidence screenshot capture (visual regression, design-system compliance, responsiveness rows). T001 must configure Vite's dev server port accordingly; do not change this port in later tasks without Supervisor sign-off, since every FE TASK_GUIDE's evidence instructions assume it.
+- Web dev server (`/apps/web`) must be exposed at `localhost:8766` — this is the fixed target the Playwright MCP uses for all UI Evidence screenshot capture (visual regression, design-system compliance, responsiveness rows). T001 must configure Vite's dev server port accordingly; do not change this port in later tasks without Supervisor sign-off, since every FE TASK_GUIDE's evidence instructions assume it.
 
 ---
 
