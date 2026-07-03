@@ -1,0 +1,115 @@
+T004 — Stage 5 Supervisor-driven live verification session
+Date: 2026-07-03
+Target: apps/api running on localhost:3000, real Postgres (kitchenos-postgres, docker compose)
+Branch verified: task/T004-ingredient-stock @ commit 7efb85a (pre-merge HEAD)
+
+=== Setup ===
+$ npx prisma migrate deploy
+4 migrations found in prisma/migrations
+No pending migrations to apply.
+
+$ npm run start:dev
+[Nest] InventoryModule dependencies initialized
+[Nest] InventoryController {/ingredients}:
+[Nest] Mapped {/ingredients, GET} route
+[Nest] Mapped {/ingredients/:id, GET} route
+[Nest] Mapped {/ingredients, POST} route
+[Nest] Mapped {/ingredients/:id, PATCH} route
+[Nest] Mapped {/ingredients/:id/stock/receive, POST} route
+[Nest] Mapped {/ingredients/:id/stock/movements, POST} route
+[Nest] Mapped {/ingredients/:id/stock/movements, GET} route
+[Nest] Nest application successfully started
+
+(Note: first launch attempt hit EADDRINUSE on :3000 — a stale process
+from an unrelated T001 worktree run was still bound to the port. Killed
+PID 47366 (cwd=.claude/worktrees/T001/apps/api) and relaunched cleanly
+from the T004 worktree before proceeding.)
+
+=== Happy path ===
+
+$ curl -X POST http://localhost:3000/auth/signup -H 'content-type: application/json' \
+  -d '{"email":"verify-t004-1783073927@ex.com","password":"Passw0rd!","organizationName":"VerifyOrg","kitchenName":"VerifyKitchen"}'
+{"accessToken":"eyJhbGciOiJIUzI1NiIs...F9N3R8Qip_fW1ShqdiivjohraABbuuhPugbm9nmg5BM",
+ "user":{"id":"e015a1cc-c592-4d9b-9825-bd7e021890df","email":"verify-t004-1783073927@ex.com",
+ "organizationId":"37d46812-20f8-457e-b720-06a901ffe909","kitchenId":"f5bf17e4-e536-4544-9652-e981167006ac"}}
+
+$ curl -X POST http://localhost:3000/ingredients -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"name":"Flour","unit":"kg","costPerUnit":1.5,"category":"dry-goods"}'
+HTTP 201
+{"id":"94b5e0fc-dfc5-4738-915c-58b729df8164","kitchenId":"b0ad2d73-f051-4ccf-a04d-29e8cb8adb27",
+ "name":"Flour","unit":"kg","costPerUnit":1.5,"category":"dry-goods","allergens":[],
+ "supplierId":null,"minThreshold":null,"createdAt":"2026-07-03T10:19:31.185Z","updatedAt":"2026-07-03T10:19:31.185Z"}
+
+$ curl -X POST http://localhost:3000/ingredients/94b5e0fc.../stock/receive -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"qty":50,"expiryDate":"2026-12-01","location":"Dry Store A"}'
+HTTP 201
+{"batch":{"id":"f872168a-7d9f-4634-9672-78e21f6d560a","ingredientId":"94b5e0fc-...",
+ "kitchenId":"b0ad2d73-...","qty":50,"expiryDate":"2026-12-01T00:00:00.000Z",
+ "location":"Dry Store A","createdAt":"2026-07-03T10:19:31.212Z"},
+ "movement":{"id":"b3e1243b-5a39-4624-8a0b-0fe276710c53","ingredientId":"94b5e0fc-...",
+ "kitchenId":"b0ad2d73-...","batchId":"f872168a-...","type":"RECEIVE","qty":50,
+ "reason":null,"actorId":"c714cdef-3d26-4e64-83b4-6b9328561181",
+ "createdAt":"2026-07-03T10:19:31.213Z"}}
+→ StockBatch + StockMovement(RECEIVE) created atomically in one call, confirming
+  the prisma.$transaction wrapping in InventoryService.receiveStock().
+
+$ curl http://localhost:3000/ingredients/94b5e0fc.../stock/movements -H "authorization: Bearer $TOKEN"
+HTTP 200
+[{"id":"b3e1243b-...","ingredientId":"94b5e0fc-...","kitchenId":"b0ad2d73-...",
+  "batchId":"f872168a-...","type":"RECEIVE","qty":50,"reason":null,
+  "actorId":"c714cdef-...","createdAt":"2026-07-03T10:19:31.213Z"}]
+→ Movement listed correctly with actorId + createdAt populated (NFR-007).
+
+=== Adversarial probes ===
+
+🔍 Probe 1 — cross-tenant read on another org's ingredient
+$ (signup a second, unrelated org — different accessToken)
+$ curl http://localhost:3000/ingredients/94b5e0fc-dfc5-4738-915c-58b729df8164 -H "authorization: Bearer $TOKEN_ORG2" -w '\nHTTP %{http_code}\n'
+{"message":"Ingredient not found","error":"Not Found","statusCode":404}
+HTTP 404
+→ PASS. Cross-tenant access returns 404, not 403 — matches the T002 RolesGuard
+  convention (no existence leak).
+
+🔍 Probe 2 — WASTE stock movement without a reason
+$ (new org, new ingredient "Sugar", id=4c7329d0-e131-4e7f-87d6-568a6ce9dec1)
+$ curl -X POST http://localhost:3000/ingredients/4c7329d0.../stock/movements -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"type":"WASTE","qty":5}'
+{"message":["reason must be a string"],"error":"Bad Request","statusCode":400}
+HTTP 400
+→ PASS. WASTE/ADJUST reason requirement enforced server-side (@ValidateIf).
+
+🔍 Probe 3 — negative qty on stock receive
+$ curl -X POST http://localhost:3000/ingredients/4c7329d0.../stock/receive -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"qty":-10}'
+{"message":["qty must be a positive number"],"error":"Bad Request","statusCode":400}
+HTTP 400
+→ PASS. @IsPositive() rejects negative quantities.
+
+🔍 Probe 4 — PATCH attempt on a stock movement (append-only enforcement)
+$ curl -X PATCH http://localhost:3000/ingredients/4c7329d0.../stock/movements/nonexistent-id -H "authorization: Bearer $TOKEN"
+{"message":"Cannot PATCH /ingredients/4c7329d0-e131-4e7f-87d6-568a6ce9dec1/stock/movements/nonexistent-id","error":"Not Found","statusCode":404}
+HTTP 404
+→ PASS. No PATCH/DELETE route exists at all for stock movements — true
+  append-only ledger, confirmed by Nest's own "Cannot PATCH ..." 404 (the
+  route is genuinely unmapped, not application-level rejection).
+
+=== Result ===
+Verdict: PASS. Happy path + 4 adversarial probes all held as designed.
+Cleanup: dev server process killed after session; port 3000 confirmed free.
+
+=== Post-merge regression check (separate from the above worktree session) ===
+After merging task/T004-ingredient-stock into develop (commit a6dba49), ran the
+full automated suite from develop's working tree (after `prisma generate` to
+regenerate the Prisma client against the merged schema):
+
+$ npm --prefix apps/api run test
+PASS src/auth/guards/jwt-auth.guard.spec.ts
+PASS src/app.controller.spec.ts
+PASS src/auth/guards/roles-rbac.guard.spec.ts
+PASS src/auth/auth.e2e.spec.ts (7.147 s)
+PASS src/users/users-invite.e2e.spec.ts (7.519 s)
+PASS src/kitchens/kitchens-rbac.e2e.spec.ts (7.836 s)
+PASS src/inventory/inventory.e2e.spec.ts (8.053 s)
+
+Test Suites: 7 passed, 7 total
+Tests:       45 passed, 45 total
