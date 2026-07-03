@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -18,6 +19,7 @@ export interface AuthResult {
     email: string;
     organizationId: string;
     kitchenId: string;
+    role: Role;
   };
 }
 
@@ -61,6 +63,7 @@ export class AuthService {
         user.email,
         user.organizationId,
         user.kitchenId,
+        user.role,
       );
     } catch (err) {
       // Unique constraint violation on email (e.g. concurrent duplicate signup) —
@@ -93,6 +96,7 @@ export class AuthService {
       user.email,
       user.organizationId,
       user.kitchenId,
+      user.role,
     );
   }
 
@@ -110,7 +114,11 @@ export class AuthService {
     email: string,
     organizationId: string,
     kitchenId: string,
+    role: Role,
   ): AuthResult {
+    // Intentionally no `role` claim in the JWT payload: RolesGuard always
+    // re-reads the current role from the database rather than trusting a
+    // claim baked into a (possibly stale) token.
     const accessToken = this.jwtService.sign({
       sub: id,
       email,
@@ -120,7 +128,7 @@ export class AuthService {
 
     return {
       accessToken,
-      user: { id, email, organizationId, kitchenId },
+      user: { id, email, organizationId, kitchenId, role },
     };
   }
 }
