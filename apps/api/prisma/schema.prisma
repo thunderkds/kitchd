@@ -20,6 +20,13 @@ enum InviteStatus {
   ACCEPTED
 }
 
+enum StockMovementType {
+  RECEIVE
+  CONSUME
+  WASTE
+  ADJUST
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -43,6 +50,7 @@ model Kitchen {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   users        User[]
   invites      Invite[]
+  ingredients  Ingredient[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -62,6 +70,7 @@ model User {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
   invitesSent  Invite[]
+  stockMovements StockMovement[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -88,4 +97,62 @@ model Invite {
   @@unique([email, kitchenId, status])
   @@index([kitchenId])
   @@map("invites")
+}
+
+model Ingredient {
+  id            String   @id @default(uuid())
+  kitchenId     String   @map("kitchen_id")
+  name          String
+  unit          String
+  costPerUnit   Float    @map("cost_per_unit")
+  category      String?
+  allergens     String[]
+  supplierId    String?  @map("supplier_id")
+  minThreshold  Float?   @map("min_threshold")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  kitchen        Kitchen         @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  stockBatches   StockBatch[]
+  stockMovements StockMovement[]
+
+  @@index([kitchenId])
+  @@map("ingredients")
+}
+
+model StockBatch {
+  id           String    @id @default(uuid())
+  ingredientId String    @map("ingredient_id")
+  kitchenId    String    @map("kitchen_id")
+  qty          Float
+  expiryDate   DateTime? @map("expiry_date")
+  location     String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  ingredient     Ingredient      @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
+
+  @@index([ingredientId])
+  @@index([kitchenId])
+  @@map("stock_batches")
+}
+
+model StockMovement {
+  id           String            @id @default(uuid())
+  ingredientId String            @map("ingredient_id")
+  kitchenId    String            @map("kitchen_id")
+  batchId      String?           @map("batch_id")
+  type         StockMovementType
+  qty          Float
+  reason       String?
+  actorId      String            @map("actor_id")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  ingredient Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  batch      StockBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  actor      User        @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([ingredientId])
+  @@index([kitchenId])
+  @@map("stock_movements")
 }
