@@ -77,7 +77,7 @@ npm --prefix apps/api run test -- recipes
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `apps/api/src/recipes/recipes.e2e.spec.ts` — 8 tests: AC1 (3-ingredient cost sum), AC2 (qty edit recalculates cost), live-cost-on-ingredient-price-change, AC3 (version increments + prior version retrievable), AC4 (Staff view-only via RolesGuard), cross-tenant 404, 2 edge-case negative tests (unknown/cross-kitchen ingredientId → 400) |
 | Verification command run | ☒ pass | `npm --prefix apps/api run test -- recipes` → `Test Suites: 1 passed, 1 total / Tests: 8 passed, 8 total` |
 | Negative cases hold | ☒ pass | Staff POST/PATCH → 403; cross-tenant GET/PATCH → 404; unknown ingredientId → 400; ingredient from another kitchen → 400 (all asserted in recipes.e2e.spec.ts) |
-| `verify` skill — works in running app | ☒ pass | Ran `npm run start:dev`, confirmed routes mapped (`GET/POST /recipes`, `GET /recipes/:id`, `GET /recipes/:id/versions`, `PATCH /recipes/:id`). Live curl probe: signup → create Ingredient (costPerUnit=2.5) → create Recipe with qty=4 → response `"costComputed":10` (4 × 2.5), matching manual calculation. |
+| verify | ☒ pass | Supervisor-driven independent live verify (2026-07-03), real Postgres, port 3000: AC1 3-ingredient cost sum (2*2+1*3+0.5*5=9.5, exact match); AC2 live recompute (changed Ingredient cost 2→10, Recipe costComputed followed on next read with no recipe edit); AC3 version history (2 edits → version 3, GET /recipes/:id/versions returns all 3 with v1's original name intact). Probes: 🔍 cross-tenant GET → 404; 🔍 unknown ingredientId on create → 400; 🔍 malformed payload (missing name, empty ingredients) → 400 with field-specific errors. All held — PASS. Full session archived at `reports/evidence/T005/verify-api-session.txt` (includes 53/53 regression run). |
 | Review scope bounded to blast radius | ☒ pass | Changes confined to `apps/api/src/recipes/**`, `apps/api/src/app.module.ts` (module registration), `apps/api/prisma/schema.prisma` (additive models + one back-relation field each on `Ingredient`/`Kitchen`), and new migration `20260703104034_add_recipes`. No edits under `apps/api/src/inventory`. |
 | Full smoke suite still green | ☒ pass | `npm --prefix apps/api run test` → `Test Suites: 8 passed, 8 total / Tests: 53 passed, 53 total` (45 pre-existing + 8 new) |
 | UI: Visual regression | ☒ N/A — pure backend task | |
@@ -122,10 +122,11 @@ Automated tests for cost roll-up math, versioning, RBAC. Manual: create a Recipe
 ## Completion Checklist
 
 - [x] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run — deferred to Supervisor's Stage 4 review
-- [ ] Security review: deferred to Supervisor's Stage 4 review (Medium risk)
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1, 2 P2 + 1 P3 advisory (not blocking)
+- [x] Security review: `Skill({ skill: "security-review" })` run — no HIGH/MEDIUM findings
+- [x] Migration safety: GO (purely additive, reversible, zero-downtime)
 - [x] Lint passes
 - [x] Tests written AND pass — output pasted into Evidence table
-- [x] `verify` — live app probe run (see Evidence table); full `Skill({ skill: "verify" })` invocation deferred to Supervisor's Stage 5
-- [ ] `memory/MEMORY.md` updated (live-cost-vs-historical decision recorded) — Supervisor-only write, decision summarized in agent report below
+- [x] `verify` — Supervisor-driven independent live run against a running server (documented in Evidence table)
+- [ ] `memory/MEMORY.md` updated (live-cost-vs-historical decision recorded) — Supervisor-only write, pending Stage 5 diff-driven pass
 - [x] Supervisor notified: task ready for Stage 4 review
