@@ -44,4 +44,9 @@
 **Why**: Stage 4 review flagged that invites never expiring left old/leaked tokens valid indefinitely. 7 days chosen as a reasonable default for MVP; no explicit user requirement drove the exact duration — revisit if a shorter/configurable window is needed later.
 **Files**: `apps/api/prisma/migrations/20260703120000_add_invite_expires_at/migration.sql`, `apps/api/src/users/users.service.ts`
 
+### 2026-07-03 — StockMovement is a pure append-only ledger, no cached running balance
+**Decision**: `StockMovement` rows are insert-only (no PATCH/DELETE route exists at all); `Ingredient`/`StockBatch` carry no cached quantity column that CONSUME/WASTE/ADJUST movements decrement. Current stock level, if ever needed, is derived by summing movements, not maintained as mutable state.
+**Why**: Avoids any read-modify-write race on concurrent stock writes — inserts naturally can't lose an update, whereas a cached balance would need locking or optimistic-concurrency handling. Deduction-on-task-completion (T011) and low-stock alerting (T007) are explicitly out of scope for T004 and will consume this ledger, not extend it with a balance column.
+**Files**: `apps/api/src/inventory/inventory.service.ts`, `apps/api/src/inventory/inventory.controller.ts`, `apps/api/prisma/schema.prisma`
+
 ## Infrastructure
