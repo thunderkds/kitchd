@@ -10,8 +10,6 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0
-- [ ] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0
 - [ ] **T004** — Ingredient CRUD + StockBatch + StockMovement ledger | backend-developer | C2 | Risk: Med | P0
 - [ ] **T005** — Recipe CRUD + ingredients builder + auto cost roll-up | backend-developer | C2 | Risk: Med | P0
 - [ ] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1
@@ -36,6 +34,10 @@
 ### In Progress
 
 ### Ready for Review
+- [ ] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-03
+
+- [ ] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03
+
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
@@ -46,7 +48,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T002–T022 | Not yet started | — (T001 complete) |
+| T004–T022 | Not yet started | — (T002/T003 in progress) |
 
 ---
 
