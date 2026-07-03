@@ -7,6 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  OWNER
+  ADMIN
+  CHEF
+  STAFF
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -15,6 +28,7 @@ model Organization {
 
   kitchens Kitchen[]
   users    User[]
+  invites  Invite[]
 
   @@map("organizations")
 }
@@ -28,6 +42,7 @@ model Kitchen {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   users        User[]
+  invites      Invite[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -42,10 +57,35 @@ model User {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
+  role           Role     @default(OWNER)
+
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  invitesSent  Invite[]
 
   @@index([organizationId])
   @@index([kitchenId])
   @@map("users")
+}
+
+model Invite {
+  id             String       @id @default(uuid())
+  email          String
+  organizationId String       @map("organization_id")
+  kitchenId      String       @map("kitchen_id")
+  role           Role
+  token          String       @unique
+  status         InviteStatus @default(PENDING)
+  invitedById    String       @map("invited_by_id")
+  expiresAt      DateTime?    @map("expires_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([email, kitchenId, status])
+  @@index([kitchenId])
+  @@map("invites")
 }
