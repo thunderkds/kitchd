@@ -10,7 +10,6 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T004** — Ingredient CRUD + StockBatch + StockMovement ledger | backend-developer | C2 | Risk: Med | P0
 - [ ] **T005** — Recipe CRUD + ingredients builder + auto cost roll-up | backend-developer | C2 | Risk: Med | P0
 - [ ] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1
 - [ ] **T007** — Low-stock threshold flag + dashboard widget | backend-developer | C1 | Risk: Low | P1
@@ -34,6 +33,8 @@
 ### In Progress
 
 ### Ready for Review
+- [ ] **T004** — Ingredient CRUD + StockBatch + StockMovement ledger | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-03
+
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
@@ -46,7 +47,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T004–T023 | Not yet started | — (T001/T002/T003 complete) |
+| T005–T023 | Not yet started | — (T004 In Progress) |
 
 ---
 
