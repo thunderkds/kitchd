@@ -77,15 +77,16 @@ npm --prefix apps/api run test -- rbac invite
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| UI: Visual regression | ☐ N/A — pure backend task | |
-| UI: Design-system compliance | ☐ N/A — pure backend task | |
-| UI: Responsiveness | ☐ N/A — pure backend task | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/api/src/auth/guards/roles-rbac.guard.spec.ts` (unit: allow when unguarded, allow/deny by DB-current role, 403 on removed user, 403 unauthenticated), `apps/api/src/users/users-invite.e2e.spec.ts` (invite creation, accept flow + kitchen scoping, 403 non-owner/admin, 401 unauthenticated, 409 re-invite existing member, idempotent pending re-invite, expired-invite rejection), `apps/api/src/kitchens/kitchens-rbac.e2e.spec.ts` (Staff 403 / Chef 200 on `@Roles(CHEF)`, Viewer read-allowed/write-403, revoked-user 403, unauthenticated 401, cross-kitchen 404 on GET/PATCH) |
+| Verification command run | ☑ pass | `npm --prefix apps/api run test -- rbac invite` → `Test Suites: 3 passed, 3 total`, `Tests: 21 passed, 21 total` |
+| Negative cases hold | ☑ pass | 403 on insufficient role, 401 unauthenticated, 404 on cross-kitchen access, 404 on expired/used invite, 409 on duplicate member invite — all covered above |
+| verify | ☑ pass | Real NestJS server driven live via curl (signup→invite→accept→RBAC-gated PATCH/GET, plus 4 adversarial probes: cross-kitchen 404, invite-reuse 404, privilege-escalation 403, unauthenticated 401) — all held. See PASS verification report in Stage 5 conversation log. |
+| Review scope bounded to the change's blast radius | ☑ pass | Stage 4 code-review scoped to `apps/api/src/auth/**`, `apps/api/src/users/**`, `apps/api/src/kitchens/**`, `apps/api/prisma/**` — matched the diff's actual footprint |
+| Full smoke suite still green (no regression) | ☑ pass | `npm --prefix apps/api run test` (full suite) → `Test Suites: 6 passed, 6 total`, `Tests: 32 passed, 32 total` |
+| UI: Visual regression | ☑ N/A — pure backend task | |
+| UI: Design-system compliance | ☑ N/A — pure backend task | |
+| UI: Responsiveness | ☑ N/A — pure backend task | |
+| **AC4 grep check** | ☑ pass | `grep -rn ".role ===" src --include="*.ts"` → only match is a code comment inside `roles.guard.ts` explaining the constraint; no inline role checks anywhere else |
 
 ---
 

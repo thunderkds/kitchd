@@ -65,22 +65,23 @@ Build the app shell every feature screen will live inside.
 ### Verification Command (exact, runnable)
 
 ```bash
-npm --prefix apps/web run test -- layout routing
+npm --prefix apps/web run test
 ```
+(Original filter `-- layout routing` matched no test filenames — `App.test.tsx`, `AuthGuard.test.tsx`, `LoginPage.test.tsx` — and failed with "No test files found." Corrected to run the full `apps/web` suite, which covers this task's files.)
 
 ### Evidence (filled by reviewer at Stage 4/5)
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | screenshot per page |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | Tailwind defaults, no tokens defined yet — note as interim |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | 375px, 768px, 1024px+ |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/web/src/App.test.tsx` (unauth redirect at `/` and `/tasks`; login form renders; each of 8 nav sections renders its distinct empty state; sidebar lists all 8 items), `apps/web/src/routes/AuthGuard.test.tsx` (redirect when no token; renders protected content when token present), `apps/web/src/routes/pages/LoginPage.test.tsx` (mode toggle) |
+| Verification command run | ☑ pass | `npm --prefix apps/web run test` → `Test Files 3 passed (3)`, `Tests 15 passed (15)`, Duration 1.10s |
+| Negative cases hold | ☑ pass | Unauthenticated access to `/tasks` and other guarded routes redirects to `/login` (AC2), verified in both automated test and `reports/evidence/T003/redirect-to-login.png` / `hscroll-report.txt` (`redirect-check final-url=http://localhost:8766/login`) |
+| verify | ☑ pass | Supervisor-driven live browser session (Stage 5, independent of implementer's own screenshots): signup→dashboard shell render, nav click→route change, logout→redirect, post-logout direct nav to protected route→re-guarded. Evidence: `reports/evidence/T003-verify/` (session HTML/JSON + 2 screenshots) — verdict PASS |
+| Review scope bounded to blast radius | ☑ pass | Stage 4 code-review scoped to `apps/web/src/layout/**`, `apps/web/src/routes/**`, `App.tsx`/`main.tsx`/`package.json` wiring — matched TASK_GUIDE's predicted file set; `apps/api/**` untouched |
+| Full smoke suite still green | ☑ pass | Same run as above — 3/3 suites, 15/15 tests, no failures |
+| **UI: Visual regression** | ☑ pass | `reports/evidence/T003/shell-{375,768,1280}.png`, `page-{dashboard,tasks,guidelines,inventory,notes,announcements,team,settings}.png`, `login-desktop.png` — one screenshot per required screen |
+| **UI: Design-system compliance** | ☑ pass (interim) | Tailwind default palette/spacing/type scale throughout; no custom design tokens exist yet in this project — accepted as interim per task's out-of-scope note |
+| **UI: Responsiveness** | ☑ pass | `reports/evidence/T003/hscroll-report.txt`: `hasHorizontalScroll=false` at 375px, 768px, 1280px across all 8 pages; sidebar collapses to hamburger drawer under `md` (768px) per `shell-375.png` vs `shell-768.png` |
 
 ---
 
