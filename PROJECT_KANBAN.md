@@ -34,13 +34,11 @@
 ### In Progress
 
 ### Ready for Review
-- [ ] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-03
-
-- [ ] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03
-
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
+- [x] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03 | Done: 2026-07-03
+- [x] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-03 | Done: 2026-07-03
 
 ---
 
@@ -48,7 +46,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T004–T022 | Not yet started | — (T002/T003 in progress) |
+| T004–T023 | Not yet started | — (T001/T002/T003 complete) |
 
 ---
 

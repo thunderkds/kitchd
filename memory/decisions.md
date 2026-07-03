@@ -34,4 +34,14 @@
 **Why**: User flagged the missing CI/CD task after Stage 2 planning was already committed; this reopened (partially) the earlier "local dev only" hosting decision. Resolved via forced choice: CI+CD scope confirmed, staging host confirmed as Railway, deploy trigger confirmed as `staging` branch only (not `main`) to keep the earlier production-deferral decision intact.
 **Files**: `.github/workflows/ci.yml`, `.github/workflows/deploy-staging.yml`, `tasks/TASK_GUIDE_T023.md`
 
+### 2026-07-03 — RolesGuard: DB-current role, never JWT claim; 404-not-403 on cross-tenant access
+**Decision**: `RolesGuard` (the single RBAC enforcement point, T002) re-reads the caller's role from Postgres on every guarded request rather than trusting a JWT claim (the JWT payload deliberately carries no `role` field). Cross-tenant resource access (e.g. `GET/PATCH /kitchens/:id` for a kitchen the caller doesn't belong to) returns 404, never 403, to avoid leaking the existence of other orgs' data.
+**Why**: A role change or removal must take effect on the very next guarded call, not just after re-login (stale-JWT privilege risk). A P0 finding in Stage 4 review caught the initial version trusting `:id` from the URL without scoping to the caller's own kitchen — fixed by deriving `kitchenId` from the caller's own user record, matching `UsersService.invite`'s existing pattern.
+**Files**: `apps/api/src/auth/guards/roles.guard.ts`, `apps/api/src/kitchens/kitchens.controller.ts`, `apps/api/src/kitchens/kitchens.service.ts`
+
+### 2026-07-03 — Invite tokens expire after 7 days
+**Decision**: `Invite.expiresAt` (nullable, additive migration) is set 7 days out on create/refresh; `acceptInvite` treats an expired PENDING invite the same as not-found (404), never distinguishing "expired" from "invalid" in the response.
+**Why**: Stage 4 review flagged that invites never expiring left old/leaked tokens valid indefinitely. 7 days chosen as a reasonable default for MVP; no explicit user requirement drove the exact duration — revisit if a shorter/configurable window is needed later.
+**Files**: `apps/api/prisma/migrations/20260703120000_add_invite_expires_at/migration.sql`, `apps/api/src/users/users.service.ts`
+
 ## Infrastructure
