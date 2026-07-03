@@ -1,0 +1,245 @@
+{
+  "id": "18069d89-8495-4005-a76d-f53b5848a0c9",
+  "target": "T001 signup/login flow - http://localhost:8766",
+  "status": "failed",
+  "startedAt": "2026-07-03T04:00:07.538Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-03T04:00:11.021Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/"
+    },
+    {
+      "timestamp": "2026-07-03T04:00:27.252Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:00:34.864Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051234757.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:00:38.981Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Sign up\") >> nth=0"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:00:40.462Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:00:42.779Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051242746.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:01.845Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Email\"]",
+        "value": "ui-verify@kitchenos.test"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:01.936Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Password\"]",
+        "value": "Passw0rd!23"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:01.992Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Organization name\"]",
+        "value": "UI Verify Org"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:02.053Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Kitchen name\"]",
+        "value": "UI Verify Kitchen"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:04.154Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Sign up\") >> nth=1"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:06.761Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051266741.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:01:06.820Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:18.162Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/"
+    },
+    {
+      "timestamp": "2026-07-03T04:02:20.395Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Sign up\") >> nth=0"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:21.091Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Email\"]",
+        "value": "ui-verify2@kitchenos.test"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:21.817Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Password\"]",
+        "value": "Passw0rd!23"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:22.190Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Organization name\"]",
+        "value": "UI Verify Org 2"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:22.547Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Kitchen name\"]",
+        "value": "UI Verify Kitchen 2"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:24.516Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Sign up\") >> nth=1"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:26.774Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051346750.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:36.733Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "!!localStorage.getItem('accessToken') || !!sessionStorage.getItem('accessToken') || document.body.innerText.includes('Failed')"
+      },
+      "ok": false,
+      "detail": "Assertion evaluated false"
+    },
+    {
+      "timestamp": "2026-07-03T04:02:42.996Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:45.725Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051365700.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:52.149Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\") >> nth=1"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:02:54.056Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051374035.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:03:02.016Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "WrongPass!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:03:04.195Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\") >> nth=1"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T04:03:06.056Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783051386025.png"
+      },
+      "ok": true
+    }
+  ],
+  "failureScreenshot": "/app/reports/screenshot-1783051356733.png",
+  "endedAt": "2026-07-03T04:03:11.596Z"
+}
