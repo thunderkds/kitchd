@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-02
+**Last updated**: 2026-07-03
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -34,11 +34,11 @@
 - [ ] **T023** — CI/CD: lint/test/build pipeline + Railway staging auto-deploy | common-infrastructure | C2 | Risk: Med | P1
 
 ### In Progress
-- [ ] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02
 
 ### Ready for Review
 
 ### Done
+- [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
 
 ---
 
@@ -46,7 +46,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T002–T022 | Not yet started | T001 (monorepo/auth scaffold) |
+| T002–T022 | Not yet started | — (T001 complete) |
 
 ---
 
