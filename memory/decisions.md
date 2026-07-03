@@ -49,4 +49,14 @@
 **Why**: Avoids any read-modify-write race on concurrent stock writes — inserts naturally can't lose an update, whereas a cached balance would need locking or optimistic-concurrency handling. Deduction-on-task-completion (T011) and low-stock alerting (T007) are explicitly out of scope for T004 and will consume this ledger, not extend it with a balance column.
 **Files**: `apps/api/src/inventory/inventory.service.ts`, `apps/api/src/inventory/inventory.controller.ts`, `apps/api/prisma/schema.prisma`
 
+### 2026-07-03 — Recipe cost_computed is always live-derived, never stored; versioning via a separate append-only RecipeVersion table
+**Decision**: `Recipe`/`RecipeIngredient` store no cost field at all — `cost_computed` is recalculated on every read and write from the CURRENT `Ingredient.cost_per_unit` (T004's module). Version history uses a dedicated `RecipeVersion` table (full snapshot per edit: name/steps/servings/ingredients + the cost as computed at that save time) rather than inline JSON on `Recipe`, with no PATCH/DELETE route — matching T004's `StockMovement` append-only pattern. `Recipe.version` is a plain incrementing int bumped on every create/update, written inside the same `$transaction` as the Recipe/RecipeIngredient rows so a partial failure can't leave version history out of sync.
+**Why**: The live-cost behavior is an explicit MVP directive in `TASK_GUIDE_T005.md`/`PROJECT_SPEC.md` (a Recipe's displayed cost should reflect today's ingredient prices, not a stale snapshot from creation time) — confirmed by Stage 5 verify: changing an Ingredient's price after Recipe creation immediately changes the Recipe's `costComputed` on next read, no recipe edit needed. The separate `RecipeVersion` table (vs. inline JSON) was chosen by the implementer to reuse the repo's established append-only-ledger shape and let prior versions be queried directly without ever mutating history rows.
+**Files**: `apps/api/src/recipes/recipes.service.ts`, `apps/api/src/recipes/recipes.controller.ts`, `apps/api/prisma/schema.prisma`
+
+### 2026-07-03 — RecipeIngredient → Ingredient FK is onDelete: Restrict
+**Decision**: `recipe_ingredients.ingredient_id` references `ingredients.id` with `ON DELETE RESTRICT` — deleting an Ingredient referenced by any RecipeIngredient is blocked at the DB level.
+**Why**: T004's Inventory module has no Ingredient-delete endpoint at all yet, so this constraint is currently inert in practice, but it's the simpler, safer default that prevents silent orphaning (a Recipe pointing at a nonexistent Ingredient) if a delete endpoint is ever added — chosen over the alternative of showing "ingredient no longer available" in the API response, which the TASK_GUIDE's edge-case checklist left as an open choice.
+**Files**: `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260703104034_add_recipes/migration.sql`
+
 ## Infrastructure
