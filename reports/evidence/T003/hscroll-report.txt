@@ -1,0 +1,12 @@
+375px dashboard hasHorizontalScroll=false
+768px dashboard hasHorizontalScroll=false
+1280px dashboard hasHorizontalScroll=false
+1280px dashboard hasHorizontalScroll=false
+1280px tasks hasHorizontalScroll=false
+1280px guidelines hasHorizontalScroll=false
+1280px inventory hasHorizontalScroll=false
+1280px notes hasHorizontalScroll=false
+1280px announcements hasHorizontalScroll=false
+1280px team hasHorizontalScroll=false
+1280px settings hasHorizontalScroll=false
+redirect-check final-url=http://localhost:8766/login
