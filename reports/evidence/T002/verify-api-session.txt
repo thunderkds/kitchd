@@ -1,0 +1,43 @@
+T002 Stage 5 verify — live API session (2026-07-03)
+Server: NestJS dev server on localhost:3011 (real Postgres via docker-compose)
+
+=== 1. Owner signup ===
+POST /auth/signup {"email":"owner-verify@t002.test","password":"Passw0rd!","organizationName":"VerifyOrg","kitchenName":"VerifyKitchen"}
+-> 200 { accessToken, user: { role: "OWNER", ... } }
+
+=== 2. Owner invites a staff member ===
+POST /users/invite (Bearer owner token) {"email":"staff-verify@t002.test","role":"STAFF"}
+-> 200 { id, email, role: "STAFF", token, status: "PENDING", expiresAt: 2026-07-10T05:09:48.996Z, ... }
+
+=== 3. Staff accepts invite ===
+POST /users/invite/accept {"token": "<invite token>", "password":"Passw0rd!"}
+-> 200 { accessToken, user: { role: "STAFF", kitchenId matches inviter's kitchen, ... } }
+
+=== 4. Staff tries to PATCH kitchen (Chef-only route) ===
+PATCH /kitchens/:id (Bearer staff token) {"name":"Hacked Name"}
+-> 403 {"message":"Insufficient role for this action","error":"Forbidden","statusCode":403}
+
+=== 5. Staff reads own kitchen ===
+GET /kitchens/:id (Bearer staff token)
+-> 200 { id, organizationId, name: "VerifyKitchen", ... }
+
+=== 6. Created second unrelated org+kitchen (owner2-verify@t002.test / OtherOrg / OtherKitchen) ===
+
+=== 7. PROBE: staff (kitchen A) GETs kitchen B by real ID (cross-tenant) ===
+GET /kitchens/:otherKitchenId (Bearer staff-A token)
+-> 404 {"message":"Kitchen not found","error":"Not Found","statusCode":404}
+(no existence leak — 404 not 403)
+
+=== 8. PROBE: re-accept the same already-used invite token ===
+POST /users/invite/accept {"token": "<same token>", "password":"Passw0rd!"}
+-> 404 {"message":"Invite not found or already used","error":"Not Found","statusCode":404}
+
+=== 9. PROBE: staff attempts to invite a new user as OWNER (privilege escalation) ===
+POST /users/invite (Bearer staff token) {"email":"escalate@t002.test","role":"OWNER"}
+-> 403 {"message":"Insufficient role for this action","error":"Forbidden","statusCode":403}
+
+=== 10. PROBE: no Authorization header on protected route ===
+GET /kitchens/:otherKitchenId (no auth)
+-> 401 {"message":"Missing bearer token","error":"Unauthorized","statusCode":401}
+
+Verdict: PASS. All claimed behavior held; all 4 adversarial probes held.
