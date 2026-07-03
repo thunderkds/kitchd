@@ -51,6 +51,7 @@ model Kitchen {
   users        User[]
   invites      Invite[]
   ingredients  Ingredient[]
+  recipes      Recipe[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -115,9 +116,78 @@ model Ingredient {
   kitchen        Kitchen         @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
   stockBatches   StockBatch[]
   stockMovements StockMovement[]
+  recipeIngredients RecipeIngredient[]
 
   @@index([kitchenId])
   @@map("ingredients")
+}
+
+model Recipe {
+  id        String   @id @default(uuid())
+  kitchenId String   @map("kitchen_id")
+  name      String
+  steps     String[]
+  servings  Int?
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  kitchen     Kitchen            @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  ingredients RecipeIngredient[]
+  versions    RecipeVersion[]
+
+  @@index([kitchenId])
+  @@map("recipes")
+}
+
+// Current, live ingredients list for a Recipe. qty is the only field
+// stored here — cost is never persisted on this row; it's always
+// recomputed from the live Ingredient.cost_per_unit at read/save time
+// (see RecipesService#computeCost). This is a deliberate MVP choice,
+// not an oversight: cost_computed always reflects current ingredient
+// pricing rather than a point-in-time snapshot.
+model RecipeIngredient {
+  id           String   @id @default(uuid())
+  recipeId     String   @map("recipe_id")
+  ingredientId String   @map("ingredient_id")
+  qty          Float
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  // Restrict (not Cascade/SetNull): an Ingredient referenced by a Recipe
+  // cannot be deleted out from under it. There is currently no
+  // ingredient-delete endpoint in the Inventory module (T004), so this
+  // is a forward-looking safe default rather than an active guard today.
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_ingredients")
+}
+
+// Append-only version history, mirroring the StockMovement ledger
+// pattern: no update/delete route, one row written per edit. Each row
+// is a full snapshot of the Recipe + its ingredients qty at the moment
+// of that edit, so prior versions remain retrievable after later edits.
+// costComputedAtSnapshot is a historical record of what the cost WAS at
+// save time for this version — distinct from the live cost_computed
+// shown on GET /recipes/:id, which always reflects current prices.
+model RecipeVersion {
+  id                     String   @id @default(uuid())
+  recipeId               String   @map("recipe_id")
+  version                Int
+  name                   String
+  steps                  String[]
+  servings               Int?
+  ingredientsSnapshot    Json     @map("ingredients_snapshot")
+  costComputedAtSnapshot Float    @map("cost_computed_at_snapshot")
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@map("recipe_versions")
 }
 
 model StockBatch {
