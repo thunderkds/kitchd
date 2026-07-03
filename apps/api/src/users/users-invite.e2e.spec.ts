@@ -171,4 +171,30 @@ describe('Users / Invite flow (e2e)', () => {
     });
     expect(invites).toHaveLength(1);
   });
+
+  it('P1 regression: an expired PENDING invite is rejected on accept with 404, same as not-found', async () => {
+    const owner = await signupOwner();
+    const inviteeEmail = uniqueEmail('expired');
+
+    const inviteRes = await request(app.getHttpServer())
+      .post('/users/invite')
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send({ email: inviteeEmail, role: 'STAFF' })
+      .expect(201);
+
+    // Simulate the invite having expired 1ms ago.
+    await prisma.invite.update({
+      where: { id: inviteRes.body.id },
+      data: { expiresAt: new Date(Date.now() - 1) },
+    });
+
+    const invite = await prisma.invite.findUnique({
+      where: { id: inviteRes.body.id },
+    });
+
+    await request(app.getHttpServer())
+      .post('/users/invite/accept')
+      .send({ token: invite!.token, password: 'expired-password' })
+      .expect(404);
+  });
 });

@@ -131,4 +131,21 @@ describe('Kitchens RBAC (e2e)', () => {
       .get(`/kitchens/${owner.user.kitchenId}`)
       .expect(401);
   });
+
+  it('AC2 (P0 regression): a user from kitchen A gets 404 hitting kitchen B GET/PATCH', async () => {
+    const ownerA = await signupOwner();
+    const ownerB = await signupOwner();
+
+    await request(app.getHttpServer())
+      .get(`/kitchens/${ownerB.user.kitchenId}`)
+      .set('Authorization', `Bearer ${ownerA.accessToken}`)
+      .expect(404);
+
+    const chefA = await inviteAndAccept(ownerA.accessToken, 'CHEF');
+    await request(app.getHttpServer())
+      .patch(`/kitchens/${ownerB.user.kitchenId}`)
+      .set('Authorization', `Bearer ${chefA.accessToken}`)
+      .send({ name: 'Should not be renamed' })
+      .expect(404);
+  });
 });

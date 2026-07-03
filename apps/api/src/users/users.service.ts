@@ -13,6 +13,7 @@ import { InviteUserDto } from './dto/invite-user.dto';
 import { AcceptInviteDto } from './dto/accept-invite.dto';
 
 const SALT_ROUNDS = 10;
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Injectable()
 export class UsersService {
@@ -50,11 +51,12 @@ export class UsersService {
     });
 
     const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
 
     if (existingInvite) {
       return this.prisma.invite.update({
         where: { id: existingInvite.id },
-        data: { role: dto.role, token, invitedById: inviterId },
+        data: { role: dto.role, token, invitedById: inviterId, expiresAt },
       });
     }
 
@@ -67,6 +69,7 @@ export class UsersService {
         organizationId: kitchen.organizationId,
         kitchenId: kitchen.id,
         invitedById: inviterId,
+        expiresAt,
       },
     });
   }
@@ -76,6 +79,11 @@ export class UsersService {
       where: { token: dto.token },
     });
     if (!invite || invite.status !== 'PENDING') {
+      throw new NotFoundException('Invite not found or already used');
+    }
+    if (invite.expiresAt && invite.expiresAt.getTime() < Date.now()) {
+      // Treat an expired invite the same as not-found — don't leak whether
+      // a (now-expired) invite ever existed for this token.
       throw new NotFoundException('Invite not found or already used');
     }
 
