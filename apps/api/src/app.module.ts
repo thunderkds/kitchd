@@ -9,6 +9,7 @@ import { KitchensModule } from './kitchens/kitchens.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { TasksModule } from './tasks/tasks.module';
+import { GuidelinesModule } from './guidelines/guidelines.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TasksModule } from './tasks/tasks.module';
     InventoryModule,
     RecipesModule,
     TasksModule,
+    GuidelinesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,24 @@
+T006 Stage 5 verify — live API session (2026-07-04)
+
+== Signup owner, create Guideline ==
+POST /auth/signup -> 201
+POST /guidelines (as owner, CHEF-equivalent OWNER role) {"title":"Opening Checklist","type":"CHECKLIST","steps":["Unlock","Turn on lights","Check fridge temps","Prep station"]}
+-> 201, steps stored in order, id 645b0c33-cfcb-4078-b522-0700fc329418
+
+== AC2: Staff can view but not edit/create ==
+Invite + accept STAFF role.
+GET /guidelines/645b0c33... (as staff) -> 200 (view allowed)
+PATCH /guidelines/645b0c33... (as staff) {"title":"Should be rejected"} -> 403 {"message":"Insufficient role for this action"}
+POST /guidelines (as staff) {"title":"Nope","type":"SOP","steps":[]} -> 403 {"message":"Insufficient role for this action"}
+
+== AC3: type filter ==
+POST /guidelines (as owner) {"title":"Sanitation SOP","type":"SOP","steps":["Wash hands","Sanitize surfaces"]} -> 201
+GET /guidelines?type=SOP (as owner) -> 200, only SOP-type Guidelines returned
+
+== Probe: invalid type query value ==
+Before fix: GET /guidelines?type=NOT_A_REAL_TYPE -> 500 {"message":"Internal server error"} (unhandled Prisma enum validation error)
+Code-review P1 raised, fixed in guidelines.service.ts (explicit GuidelineType.includes check + BadRequestException), regression
+test added (guidelines.e2e.spec.ts), full suite re-run green (67/67).
+After fix: GET /guidelines?type=NOT_A_REAL_TYPE -> 400 {"message":"Invalid type filter: NOT_A_REAL_TYPE","error":"Bad Request","statusCode":400}
+
+All ACs + probes held after the fix. Pure-backend task, no UI Evidence rows apply (N/A per guide).
