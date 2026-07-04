@@ -21,7 +21,7 @@ Confirmed 2026-07-02, user-approved. Source: `requirement.md` §6, `PRD.md`.
 - **StockBatch**: id, ingredient_id, qty, expiry_date, location, received_at.
 - **StockMovement**: id, ingredient_id, type(receive/consume/waste/adjust), qty, reason, actor_id, created_at.
 - **Guideline**: id, kitchen_id, title, type(SOP/checklist), steps[], attachments[].
-- **Task**: id, kitchen_id, title, status, assignee_id, due_at, recurrence_rule, source_recipe_id/nullable, checklist_items[].
+- **Task**: id, kitchen_id, title, status, assignee_id, due_at, recurrence_rule, source_recipe_id/nullable, source_guideline_id/nullable (added T009, mutually exclusive with source_recipe_id — set by "generate task" from a Recipe or Guideline respectively), checklist_items[].
 - **Note**: id, kitchen_id, author_id, title, body_md, tags[], pinned, linked_entity(type,id).
 - **Announcement**: id, kitchen_id, author_id, title, body, read_by[].
 - **ShiftLog**: id, kitchen_id, author_id, shift(morning/evening), body, created_at.

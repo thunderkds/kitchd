@@ -59,4 +59,9 @@
 **Why**: T004's Inventory module has no Ingredient-delete endpoint at all yet, so this constraint is currently inert in practice, but it's the simpler, safer default that prevents silent orphaning (a Recipe pointing at a nonexistent Ingredient) if a delete endpoint is ever added — chosen over the alternative of showing "ingredient no longer available" in the API response, which the TASK_GUIDE's edge-case checklist left as an open choice.
 **Files**: `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260703104034_add_recipes/migration.sql`
 
+### 2026-07-04 — Task.sourceGuidelineId is a dedicated column, symmetric with sourceRecipeId, not a shared/overloaded field
+**Decision**: T009 added `Task.sourceGuidelineId` (nullable, no FK, `@map("source_guideline_id")`) as its own column rather than reusing `sourceRecipeId` loosely for both source types (e.g. via a discriminator) or adding a polymorphic `sourceType`/`sourceId` pair.
+**Why**: `sourceRecipeId` (added inert in T008) already exists with the same shape — plain nullable string, no FK constraint, informational back-reference only. Adding a second column of the identical shape keeps both fields self-describing (`sourceRecipeId` is always a Recipe id or null, `sourceGuidelineId` is always a Guideline id or null) without needing a discriminator column or runtime type-checking on read. The corrected fact: `sourceRecipeId` has never had an FK constraint (an earlier memory entry incorrectly described it as "FK with onDelete SetNull" — verified directly against `20260704081952_add_tasks/migration.sql`, which shows it as a plain column). Additive migration (`20260704120000_add_task_source_guideline_id`), fully reversible via `DROP COLUMN`.
+**Files**: `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260704120000_add_task_source_guideline_id/migration.sql`, `apps/api/src/tasks/generate-from-recipe/generate-task.service.ts`
+
 ## Infrastructure
