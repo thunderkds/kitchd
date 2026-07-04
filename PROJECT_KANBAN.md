@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-03
+**Last updated**: 2026-07-04 (T008 Done)
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -12,7 +12,6 @@
 ### Todo
 - [ ] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1
 - [ ] **T007** — Low-stock threshold flag + dashboard widget | backend-developer | C1 | Risk: Low | P1
-- [ ] **T008** — Task CRUD + kanban board + list/calendar toggle | backend-developer | C2 | Risk: Med | P0
 - [ ] **T009** — Generate task from recipe/guideline (checklist from steps) | backend-developer | C1 | Risk: Low | P1
 - [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1
 - [ ] **T011** — Stock deduction on recipe-linked task completion (FR-008 confirm-prompt) | backend-developer | C2 | Risk: High | P0
@@ -33,12 +32,14 @@
 
 ### Ready for Review
 
+
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
 - [x] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T004** — Ingredient CRUD + StockBatch + StockMovement ledger | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T005** — Recipe CRUD + ingredients builder + auto cost roll-up | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-03 | Done: 2026-07-03
+- [x] **T008** — Task CRUD + kanban board + list/calendar toggle | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-04 | Done: 2026-07-04
 
 ---
 
@@ -46,7 +47,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T006–T023 | Not yet started | — (T001–T005 complete) |
+| T006, T007, T009–T023 | Not yet started | — (T001–T005, T008 complete) |
 
 ---
 
