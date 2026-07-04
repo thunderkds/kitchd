@@ -27,6 +27,12 @@ enum StockMovementType {
   ADJUST
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -52,6 +58,7 @@ model Kitchen {
   invites      Invite[]
   ingredients  Ingredient[]
   recipes      Recipe[]
+  tasks        Task[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -72,6 +79,7 @@ model User {
   kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
   invitesSent  Invite[]
   stockMovements StockMovement[]
+  assignedTasks  Task[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -188,6 +196,33 @@ model RecipeVersion {
 
   @@index([recipeId])
   @@map("recipe_versions")
+}
+
+// Task CRUD only (T008). recurrenceRule and sourceRecipeId are schema
+// placeholders for future tasks (T010 recurrence materialization, T009
+// generate-from-recipe) — no logic reads/acts on them yet.
+// checklistItems is a JSON array of {id, text, done} — toggled via
+// PATCH by the assignee; no separate "complete task" endpoint here
+// (that belongs to T011, which also triggers stock deduction).
+model Task {
+  id             String     @id @default(uuid())
+  kitchenId      String     @map("kitchen_id")
+  title          String
+  status         TaskStatus @default(TODO)
+  assigneeId     String?    @map("assignee_id")
+  dueAt          DateTime?  @map("due_at")
+  recurrenceRule String?    @map("recurrence_rule")
+  sourceRecipeId String?    @map("source_recipe_id")
+  checklistItems Json       @default("[]") @map("checklist_items")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  kitchen  Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  assignee User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([kitchenId])
+  @@index([assigneeId])
+  @@map("tasks")
 }
 
 model StockBatch {
