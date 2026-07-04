@@ -1,0 +1,34 @@
+T009 Stage 5 verify — live API session (2026-07-04)
+
+== AC1/AC2: generate Task from Recipe ==
+Signup owner, create Ingredient (Flour), create Recipe "Cake" with 5 steps.
+POST /tasks/generate-from-recipe/recipe/<recipeId> -> 201
+Task created: 5 checklistItems matching Recipe steps verbatim (Mix batter,
+Preheat oven, Bake 30 min, Cool, Frost). sourceRecipeId correctly set to
+the Recipe's id. sourceGuidelineId: null.
+
+== AC3: generate Task from Guideline ==
+Create Guideline "Opening Checklist" (CHECKLIST type) with 3 steps.
+POST /tasks/generate-from-recipe/guideline/<guidelineId> -> 201
+Task created: 3 checklistItems matching Guideline steps verbatim.
+sourceGuidelineId correctly set to the Guideline's id. sourceRecipeId: null.
+
+== Edge case: Recipe edited after Task generation does not retroactively change the snapshot ==
+PATCH /recipes/<id> steps -> added "Garnish" (6 steps total), recipe version bumped to 2.
+Re-fetched the already-generated Task: still exactly 5 checklistItems, no "Garnish" —
+snapshot correctly frozen at generation time, not a live reference.
+
+== Probe: nonexistent Recipe id ==
+POST /tasks/generate-from-recipe/recipe/00000000-0000-0000-0000-000000000000 -> 404 "Recipe not found"
+
+== Probe: cross-tenant generate (Recipe belongs to another Kitchen) ==
+Second org/owner attempts to generate from the first owner's Recipe -> 404 "Recipe not found"
+(not 403 — consistent with the established no-existence-leak convention)
+
+== Probe: STAFF role cannot call the generate endpoint (write-role gate) ==
+Invited + accepted a STAFF user, attempted POST /tasks/generate-from-recipe/recipe/<id> -> 403
+"Insufficient role for this action" (this probe goes beyond the automated e2e spec, added during
+Supervisor's live verify pass — confirms RolesGuard is actually wired on this new controller,
+not just assumed)
+
+All ACs + edge case + probes held. Pure-backend task, no UI Evidence rows apply (N/A per guide).
