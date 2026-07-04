@@ -79,15 +79,15 @@ npm --prefix apps/api run test -- tasks && npm --prefix apps/web run test -- tas
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | kanban + list screenshots |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | tap-to-move fallback at mobile width |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `apps/api/src/tasks/tasks.e2e.spec.ts` (8 tests: AC5 create+assign, AC1 status PATCH, AC2 staff checklist toggle, AC3 staff-reassign-403, cross-tenant 404, staff-create-403, staff-update-other's-task-403, list-share-data) + `apps/web/src/features/tasks/TasksPage.test.tsx` (4 tests: 3-column kanban render, AC1 tap-to-move PATCH, AC3 filter preserved across kanban↔list toggle, AC2 checklist checkbox PATCH). All 12 pass. |
+| Verification command run | ☒ pass | `npm --prefix apps/api run test -- tasks` → 8/8 pass (3.2s); `npm --prefix apps/web run test -- tasks` → 4/4 pass (0.9s) |
+| Negative cases hold | ☒ pass | Staff reassign → 403; Staff PATCH on non-own Task → 403; Staff POST /tasks → 403; cross-kitchen GET/PATCH → 404 (not 403, per RolesGuard convention) |
+| `verify` skill — works in running app | ☒ pass | Live API+UI session 2026-07-04: signup owner, invite+accept STAFF, create Task w/ checklist+assignee, staff PATCH status TODO→IN_PROGRESS (200), staff PATCH checklistItems done:true (200), staff PATCH assigneeId → 403 Forbidden, cross-tenant GET by 2nd org owner → 404. Browser: login→/tasks kanban render, tap-to-move click, list↔kanban toggle with `?view=&assignee=` both persisted in URL. See `reports/evidence/T008/verify-api-session.txt` + `session-b0129cca-9782-4097-a651-3d0a6588f15c.{html,json}` + 6 screenshots. |
+| Review scope bounded to blast radius | ☒ pass | New `apps/api/src/tasks/**` module + `apps/web/src/features/tasks/**` feature, plumbing-only edits to `app.module.ts` (register TasksModule) and `App.tsx` (register /tasks route) — no other module touched |
+| Full smoke suite still green | ☒ pass | Backend: `npm --prefix apps/api run test` → 61/61 pass (9 suites). Frontend: `npm --prefix apps/web run test` → 19/19 pass (4 files). Re-confirmed independently by Supervisor 2026-07-04. |
+| **UI: Visual regression** | ☒ pass | Playwright MCP screenshots: kanban 3-column board with task card + tap-to-move buttons (`reports/evidence/T008/screenshot-1783154850239.png`), post tap-to-move state (`...-1783154855901.png`), list view (`...-1783154866665.png`) |
+| **UI: Design-system compliance** | ☒ pass | Tap-to-move buttons use `min-h-[44px] min-w-[44px]` (mobile touch-target guideline); status colors: TODO=gray, IN_PROGRESS=amber, DONE=green column border, consistent with T003 shell tokens |
+| **UI: Responsiveness** | ☒ pass | `ui_assert` against live DOM: `overflow-x-auto` container present (assertion passed); all "Move to" buttons ≥44px height (assertion passed). Full resize-viewport screenshot not available (MCP toolset has no viewport-control primitive) — verified via DOM/CSS assertion instead of visual capture at each breakpoint. |
 
 ---
 
@@ -126,8 +126,8 @@ Task module under `/apps/api/src/tasks` (Kitchen-scoped, RBAC-gated per T002). F
 
 ## Edge Case Checklist
 
-- [ ] Staff attempting to reassign a Task to someone else is blocked server-side, not just hidden client-side
-- [ ] Drag-and-drop on a touch device has a tap-to-move fallback (not drag-only)
+- [x] Staff attempting to reassign a Task to someone else is blocked server-side, not just hidden client-side
+- [x] Drag-and-drop on a touch device has a tap-to-move fallback (not drag-only)
 
 ---
 
@@ -154,11 +154,11 @@ Automated backend CRUD+RBAC tests; frontend E2E for drag-drop and checklist togg
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Medium risk, judgment call)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run *(Supervisor Stage 4)*
+- [ ] Security review: pending Supervisor Stage 4 (Medium risk)
+- [x] Lint passes
+- [x] Tests written AND pass — output pasted into Evidence table
+- [ ] `Skill({ skill: "verify" })` run *(Supervisor Stage 5)*
+- [ ] `memory/MEMORY.md` updated *(Supervisor-only write)*
+- [x] Supervisor notified: task ready for Stage 4 review
