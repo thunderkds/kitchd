@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-04 (T008 Done)
+**Last updated**: 2026-07-04
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,9 +10,8 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1
 - [ ] **T007** — Low-stock threshold flag + dashboard widget | backend-developer | C1 | Risk: Low | P1
-- [ ] **T009** — Generate task from recipe/guideline (checklist from steps) | backend-developer | C1 | Risk: Low | P1
+- [ ] **T009** — Generate task from recipe/guideline (checklist from steps) | backend-developer | C1 | Risk: Low | P1 (unblocked — T006 Guideline model now exists)
 - [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1
 - [ ] **T011** — Stock deduction on recipe-linked task completion (FR-008 confirm-prompt) | backend-developer | C2 | Risk: High | P0
 - [ ] **T012** — Notes CRUD, tagging, pin, link-to-entity, search | backend-developer | C1 | Risk: Low | P1
@@ -40,6 +39,7 @@
 - [x] **T004** — Ingredient CRUD + StockBatch + StockMovement ledger | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T005** — Recipe CRUD + ingredients builder + auto cost roll-up | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T008** — Task CRUD + kanban board + list/calendar toggle | backend-developer | C2 | Risk: Med | P0 | Started: 2026-07-04 | Done: 2026-07-04
+- [x] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-04 | Done: 2026-07-04
 
 ---
 
@@ -47,7 +47,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T006, T007, T009–T023 | Not yet started | — (T001–T005, T008 complete) |
+| T007, T009–T023 | Not yet started | — (T001–T006, T008 complete) |
 
 ---
 
