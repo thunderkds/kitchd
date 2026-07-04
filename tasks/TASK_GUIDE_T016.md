@@ -68,6 +68,8 @@ Aggregate mentions, low-stock alerts, and task assignments into one in-app notif
 npm --prefix apps/api run test -- notifications && npm --prefix apps/web run test -- notifications
 ```
 
+> **Evidence is a required document, not a formality.** A task is not Done until every row below is filled with real, pasted output — not just checked. The `verify` row's Notes cell must contain the literal word "pass" (case-insensitive) for the pipeline gate hook to allow merge; use a bare `| verify |` first cell (no backticks) or the hook's regex won't match. See `memory/learnings.md` (2026-07-03/2026-07-04 entries) for the exact gotcha history.
+
 ### Evidence (filled by reviewer at Stage 4/5)
 
 | Check | Result | Notes / output snippet |
@@ -75,7 +77,7 @@ npm --prefix apps/api run test -- notifications && npm --prefix apps/web run tes
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
 | Verification command run | ☐ pass / ☐ fail | |
 | Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | |
+| verify | ☐ pass / ☐ fail | |
 | Review scope bounded to blast radius | ☐ pass / ☐ fail | |
 | Full smoke suite still green | ☐ pass / ☐ fail | |
 | **UI: Visual regression** | ☐ pass / ☐ fail | Bell + dropdown screenshot |

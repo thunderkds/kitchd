@@ -70,6 +70,8 @@ The final MVP Definition-of-Done gate — independently verify every PRD accepta
 npm --prefix apps/api run test && npm --prefix apps/web run test && npm --prefix apps/api run seed
 ```
 
+> **Evidence is a required document, not a formality.** A task is not Done until every row below is filled with real, pasted output — not just checked. The `verify` row's Notes cell must contain the literal word "pass" (case-insensitive) for the pipeline gate hook to allow merge; use a bare `| verify |` first cell (no backticks) or the hook's regex won't match. See `memory/learnings.md` (2026-07-03/2026-07-04 entries) for the exact gotcha history.
+
 ### Evidence (filled by reviewer at Stage 4/5)
 
 | Check | Result | Notes / output snippet |
@@ -77,7 +79,7 @@ npm --prefix apps/api run test && npm --prefix apps/web run test && npm --prefix
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
 | Verification command run | ☐ pass / ☐ fail | |
 | Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | |
+| verify | ☐ pass / ☐ fail | |
 | Review scope bounded to blast radius | ☐ pass / ☐ fail | N/A — this task's scope IS the full app |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | UI: Visual regression | ☐ N/A — covered per-task in T003–T021 | |
