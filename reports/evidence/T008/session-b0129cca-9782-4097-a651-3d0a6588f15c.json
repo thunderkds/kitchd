@@ -1,0 +1,225 @@
+{
+  "id": "b0129cca-9782-4097-a651-3d0a6588f15c",
+  "target": "T008 Task CRUD + kanban board verification at localhost:8766",
+  "status": "failed",
+  "startedAt": "2026-07-04T08:46:43.268Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-04T08:46:50.112Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-04T08:46:52.908Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:46:58.113Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "verify-owner-1783154699@kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:01.246Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "correct-horse-battery"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:04.014Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:05.672Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:08.088Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783154828001.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:16.422Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "verify-owner-1783154699@kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:16.451Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "correct-horse-battery"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:19.417Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:21.930Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:24.640Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "a:has-text(\"Tasks\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:26.540Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:30.260Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783154850239.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:33.034Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Move to Done\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:35.921Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783154855901.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:41.968Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"List\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:43.977Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:46.700Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783154866665.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:51.044Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "select[aria-label=\"Filter by assignee\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:47:55.070Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "select[aria-label=\"Filter by assignee\"]",
+        "value": "8e08fca0-ace3-476e-99d7-8fc868a5adbf"
+      },
+      "ok": false,
+      "detail": "locator.fill: Error: Element is not an <input>, <textarea> or [contenteditable] element\nCall log:\n  - waiting for locator('select[aria-label=\"Filter by assignee\"]')\n    - locator resolved to <select aria-label=\"Filter by assignee\" class=\"border rounded px-2 py-2 text-sm\">…</select>\n    - fill(\"8e08fca0-ace3-476e-99d7-8fc868a5adbf\")\n  - attempting fill action\n    - waiting for element to be visible, enabled and editable\n"
+    },
+    {
+      "timestamp": "2026-07-04T08:47:59.813Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks?view=list&assignee=8e08fca0-ace3-476e-99d7-8fc868a5adbf"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks?view=list&assignee=8e08fca0-ace3-476e-99d7-8fc868a5adbf"
+    },
+    {
+      "timestamp": "2026-07-04T08:48:02.999Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783154882972.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:48:05.403Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Kanban\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:48:08.517Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:48:14.272Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks"
+    },
+    {
+      "timestamp": "2026-07-04T08:48:21.768Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('[class*=\"overflow-x-auto\"]') !== null"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-04T08:48:24.851Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "Array.from(document.querySelectorAll('button')).filter(b => b.textContent.includes('Move to')).every(b => b.getBoundingClientRect().height >= 44)"
+      },
+      "ok": true
+    }
+  ],
+  "failureScreenshot": "/app/reports/screenshot-1783154875070.png",
+  "endedAt": "2026-07-04T08:48:28.034Z"
+}
