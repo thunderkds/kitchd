@@ -33,6 +33,11 @@ enum TaskStatus {
   DONE
 }
 
+enum GuidelineType {
+  SOP
+  CHECKLIST
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -59,6 +64,7 @@ model Kitchen {
   ingredients  Ingredient[]
   recipes      Recipe[]
   tasks        Task[]
+  guidelines   Guideline[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -223,6 +229,28 @@ model Task {
   @@index([kitchenId])
   @@index([assigneeId])
   @@map("tasks")
+}
+
+// Non-recipe SOP/checklist documents (e.g. "Opening Checklist",
+// "Sanitation Procedure"). Deliberately simpler than Recipe: no
+// ingredients, no cost roll-up, no version history — just an ordered
+// steps array and a type. attachments is a plain string array of
+// URLs/paths; no file-storage backend is wired yet in this milestone
+// (S3 not wired — stub for MVP per Edge Case Checklist).
+model Guideline {
+  id          String        @id @default(uuid())
+  kitchenId   String        @map("kitchen_id")
+  title       String
+  type        GuidelineType
+  steps       String[]
+  attachments String[]      @default([])
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@map("guidelines")
 }
 
 model StockBatch {
