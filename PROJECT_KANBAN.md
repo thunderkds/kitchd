@@ -10,7 +10,6 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T007** — Low-stock threshold flag + dashboard widget | backend-developer | C1 | Risk: Low | P1
 - [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1
 - [ ] **T012** — Notes CRUD, tagging, pin, link-to-entity, search | backend-developer | C1 | Risk: Low | P1
 - [ ] **T013** — Announcements (broadcast + read receipts) | backend-developer | C1 | Risk: Low | P1
@@ -28,6 +27,7 @@
 
 ### Ready for Review
 
+
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
 - [x] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03 | Done: 2026-07-03
@@ -39,6 +39,7 @@
 - [x] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-04 | Done: 2026-07-04
 - [x] **T011** — Stock deduction on recipe-linked task completion (FR-008 confirm-prompt) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-04 | Done: 2026-07-05
 - [x] **T019** — RBAC enforcement audit, scoped to Inventory/Recipes/Guidelines/Tasks; Notes/Announcements/ShiftLog/Comments audit deferred to a follow-up once T012-T015 exist | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-05 | Done: 2026-07-05
+- [x] **T007** — Low-stock threshold flag + dashboard widget (endpoints + standalone LowStockWidget; UI evidence deferred to T018 which hosts it) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
 
 ---
 
@@ -46,7 +47,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T007, T010, T012–T018, T020–T023 | Not yet started | — (T001–T006, T008–T009, T011, T019 complete) |
+| T010, T012–T018, T020–T023 | Not yet started | — (T001–T009, T011, T019, T007 complete) |
 | Follow-up RBAC audit (Notes/Announcements/ShiftLog/Comments) | Not yet a tracked task | T012–T015 must exist first |
 
 ---
