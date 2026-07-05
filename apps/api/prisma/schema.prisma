@@ -65,6 +65,7 @@ model Kitchen {
   recipes      Recipe[]
   tasks        Task[]
   guidelines   Guideline[]
+  notes        Note[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -86,6 +87,7 @@ model User {
   invitesSent  Invite[]
   stockMovements StockMovement[]
   assignedTasks  Task[]
+  notes          Note[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -252,6 +254,35 @@ model Guideline {
 
   @@index([kitchenId])
   @@map("guidelines")
+}
+
+// Freeform quick notes (T012). tags is a plain string array — tag search
+// uses Prisma's `has` filter (fully parameterized, no ILIKE/tsvector
+// needed for exact-tag lookup per the Approach note). linkedEntityType/Id
+// mirror the Task.sourceRecipeId/sourceGuidelineId pattern: a plain
+// nullable pair with NO FK constraint — informational back-reference
+// only, so a Note survives (and is still loadable) after its linked
+// Recipe/Task/Ingredient is deleted. linkedEntityType is validated
+// against a known enum of entity kinds at the DTO layer, not by the DB.
+model Note {
+  id                String   @id @default(uuid())
+  kitchenId         String   @map("kitchen_id")
+  authorId          String   @map("author_id")
+  title             String?
+  body              String
+  tags              String[] @default([])
+  pinned            Boolean  @default(false)
+  linkedEntityType  String?  @map("linked_entity_type")
+  linkedEntityId    String?  @map("linked_entity_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@map("notes")
 }
 
 model StockBatch {

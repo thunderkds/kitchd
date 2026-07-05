@@ -10,6 +10,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { TasksModule } from './tasks/tasks.module';
 import { GuidelinesModule } from './guidelines/guidelines.module';
+import { NotesModule } from './notes/notes.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GuidelinesModule } from './guidelines/guidelines.module';
     RecipesModule,
     TasksModule,
     GuidelinesModule,
+    NotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
