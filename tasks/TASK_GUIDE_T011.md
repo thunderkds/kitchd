@@ -77,15 +77,15 @@ npm --prefix apps/api run test -- task-complete-deduction
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | confirm dialog screenshot |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | dialog usable on tablet/phone |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `apps/api/src/tasks/complete/task-complete-deduction.e2e.spec.ts` (11 tests: AC1 preview read-only, AC2 confirm applies+DONE, AC3 decline leaves stock unchanged, AC4 concurrency, AC5 STAFF-own-task + STAFF-other-task-403, negative-stock allow+flag, double-completion 409, non-recipe task, 404 nonexistent, 404 cross-tenant); `apps/web/src/features/tasks/CompleteTaskDialog/CompleteTaskDialog.test.tsx` (3 tests); `apps/web/src/features/tasks/TasksPage.test.tsx` (+2 T011 tests: preview-then-cancel, preview-then-confirm) |
+| Verification command run | ☒ pass | `npm --prefix apps/api run test -- task-complete-deduction` → `Test Suites: 1 passed, 1 total` / `Tests: 11 passed, 11 total` |
+| Negative cases hold | ☒ pass | STAFF-completes-other's-task → 403; nonexistent Task → 404; cross-tenant Task → 404; double-confirm → 409; direct inventory CONSUME by STAFF → 403 (sanity probe inside AC5 test) |
+| verify | ☒ pass | Full backend suite: `npm --prefix apps/api run test` → `Test Suites: 12 passed, 12 total` / `Tests: 83 passed, 83 total`. Full frontend suite: `npm --prefix apps/web run test` → `Test Files 5 passed (5)` / `Tests 24 passed (24)`. Lint clean on both (`npm --prefix apps/api run lint`, `npm --prefix apps/web run lint`). |
+| Review scope bounded to blast radius | ☒ pass | Changes confined to `apps/api/src/tasks/complete/**`, `apps/api/src/inventory/{inventory.service.ts,inventory.module.ts}` (helper additions only, no signature changes to existing methods), `apps/api/src/tasks/tasks.module.ts`, `apps/web/src/features/tasks/{api.ts,types.ts,TasksPage.tsx}`, `apps/web/src/features/tasks/CompleteTaskDialog/**`. `apps/recipes` untouched per Files Must NOT Touch. |
+| Full smoke suite still green | ☒ pass | 83/83 backend + 24/24 frontend, see `verify` row above |
+| **UI: Visual regression** | ☒ pass | Live browser session (easy-ui-mcp, localhost:8766): signed in, generated a fresh recipe-linked Task, clicked "Move to Done" — dialog rendered exactly as specified (title, per-ingredient deduction row, Confirm/Cancel). Screenshot archived at `reports/evidence/T011/complete-dialog-negative-warning.png`. Confirming applied the deduction and moved the card to the Done column live (`reports/evidence/T011/task-moved-to-done.png`). Session report: `reports/evidence/T011/session-4aded4ca-92ab-4b48-ae45-6c38e6a92664.{json,html}`. |
+| **UI: Design-system compliance** | ☒ pass | Same live session confirmed via DOM assertion: dialog content `div` has `max-w-md` (`ui_assert` on `document.querySelector('[role="dialog"] > div').className`), all dialog buttons meet the 44px min tap-target (`getBoundingClientRect().height >= 44` on every `[role="dialog"] button`). Colors/typography match T003 shell tokens (`bg-white`, `rounded-lg`, `text-sm`/`text-lg`, amber warning banner) as seen in the screenshot. |
+| **UI: Responsiveness** | ☒ pass | Dialog uses `fixed inset-0 flex items-center justify-center p-4` + `w-full max-w-md p-4 sm:p-6`, confirmed centered and fully visible in the live 1280px session screenshot. easy-ui-mcp has no viewport-resize primitive (known limitation, see `memory/learnings.md` 2026-07-04 entry) — mobile/tablet breakpoints verified via the DOM-assertion method above (max-w-md constrains width regardless of viewport) rather than a physical resize screenshot. |
 
 ---
 
@@ -123,9 +123,9 @@ Completion endpoint computes deduction (RecipeIngredient.qty × servings) server
 
 ## Edge Case Checklist
 
-- [ ] Computed deduction pushing stock negative: chosen behavior is to ALLOW but flag/warn in the confirmation dialog (not silently block) — document this choice
-- [ ] Task completed by a Staff role without inventory-write permission still applies the deduction (RBAC nuance above) — verified with a dedicated test
-- [ ] Concurrent completions of two Tasks consuming the same Ingredient: DB transaction/optimistic lock prevents lost updates
+- [x] Computed deduction pushing stock negative: chosen behavior is to ALLOW but flag/warn in the confirmation dialog (not silently block) — verified by "Negative stock is ALLOWED but flagged" e2e test + `hasNegativeWarning`/`wouldGoNegative` fields
+- [x] Task completed by a Staff role without inventory-write permission still applies the deduction (RBAC nuance above) — verified by AC5 e2e test
+- [x] Concurrent completions of two Tasks consuming the same Ingredient: append-only StockMovement rows (no shared counter) + atomic `updateMany(status: not DONE)` claim on the Task row guards double-completion of the SAME task — verified by AC4 (cross-task) and double-completion (same-task, 409) e2e tests
 
 ---
 
@@ -153,11 +153,11 @@ Automated tests: happy path deduction, cancel path, concurrency test with parall
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (High risk — mandatory)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated (RBAC nuance + negative-stock decision recorded)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1, 2 P2 advisory (dead-code pre-check, ingredient name not shown in dialog), 0 P3
+- [x] Security review: `Skill({ skill: "security-review" })` run (High risk — mandatory) — 0 HIGH/MEDIUM findings
+- [x] Lint passes (backend `eslint`, frontend `oxlint`)
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run — live end-to-end pass: API session (signup → ingredient → stock receive → recipe → generate-task → preview → confirm → double-confirm 409) + browser session (login → kanban → Move to Done → confirm dialog → Done column), evidence archived to `reports/evidence/T011/`
+- [ ] `memory/MEMORY.md` updated (RBAC nuance + negative-stock decision recorded) — **next: Supervisor diff-driven pass**
+- [x] Supervisor notified: task ready for Stage 4 review
