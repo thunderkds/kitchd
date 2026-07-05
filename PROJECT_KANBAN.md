@@ -19,7 +19,6 @@
 - [ ] **T016** — Notification center (bell icon, unread count, mark-as-read) | backend-developer | C1 | Risk: Low | P1
 - [ ] **T017** — Socket.IO realtime wiring (tasks/comments/announcements) | backend-developer | C2 | Risk: Med | P1
 - [ ] **T018** — Home dashboard aggregation (today's tasks, low stock, announcements, pinned notes) | frontend-developer | C1 | Risk: Low | P0
-- [ ] **T019** — RBAC enforcement audit across all CRUD (staff vs chef vs admin) | backend-developer | C2 | Risk: High | P0
 - [ ] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2
 - [ ] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1
 - [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0
@@ -39,6 +38,7 @@
 - [x] **T009** — Generate task from recipe/guideline (checklist from steps) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-04 | Done: 2026-07-04
 - [x] **T006** — Guideline (SOP) CRUD | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-04 | Done: 2026-07-04
 - [x] **T011** — Stock deduction on recipe-linked task completion (FR-008 confirm-prompt) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-04 | Done: 2026-07-05
+- [x] **T019** — RBAC enforcement audit, scoped to Inventory/Recipes/Guidelines/Tasks; Notes/Announcements/ShiftLog/Comments audit deferred to a follow-up once T012-T015 exist | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-05 | Done: 2026-07-05
 
 ---
 
@@ -46,7 +46,8 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T007, T010, T012–T023 | Not yet started | — (T001–T006, T008–T009, T011 complete) |
+| T007, T010, T012–T018, T020–T023 | Not yet started | — (T001–T006, T008–T009, T011, T019 complete) |
+| Follow-up RBAC audit (Notes/Announcements/ShiftLog/Comments) | Not yet a tracked task | T012–T015 must exist first |
 
 ---
 
