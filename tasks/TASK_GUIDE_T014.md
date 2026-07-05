@@ -74,15 +74,15 @@ npm --prefix apps/api run test -- shift-logs
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| UI: Visual regression | ☐ N/A — backend-only task, feed UI is a simple list reused from Announcements pattern (frontend follow-up not separately tracked) | |
-| UI: Design-system compliance | ☐ N/A | |
-| UI: Responsiveness | ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/api/src/shift-logs/shift-logs.e2e.spec.ts` — 7 tests covering AC1 (newest-first post), AC2 (date filter incl. malformed-date negative case), AC3 (Staff can post / Viewer 403), plus RBAC-write-role, invalid-shift-enum, createdAt-spoof-ignored, and cross-tenant isolation cases |
+| Verification command run | ☑ pass | `npm --prefix apps/api run test -- shift-logs` → `Test Suites: 1 passed, 1 total` / `Tests: 7 passed, 7 total` |
+| Negative cases hold | ☑ pass | Viewer POST → 403; invalid shift enum → 400; malformed `?date=` → 400; client-supplied `createdAt` ignored (year assertion); cross-tenant entries never leak into another kitchen's feed |
+| verify | ☑ pass | PASS — ran `npm --prefix apps/api run test` (full suite): `Test Suites: 17 passed, 17 total` / `Tests: 131 passed, 131 total` including the new `shift-logs.e2e.spec.ts`; also confirmed `npx prisma migrate dev --name add_shift_logs` applied cleanly against the running `kitchenos-postgres` container with no manual SQL run by this agent. Supervisor-driven independent live API session (separate live server instance): Owner posts MORNING then EVENING entries → GET feed returns [EVENING, MORNING] confirming newest-first sort; Viewer POST → 403 (confirms the pre-dispatch RBAC scope correction was applied); spoofed `createdAt:"2020-01-01..."` in a POST body → response `createdAt` is the real server timestamp, spoof ignored. Archived to `reports/evidence/T014/verify-api-session.txt`. |
+| Review scope bounded to blast radius | ☑ pass | New module only (`apps/api/src/shift-logs/**`), plus schema.prisma additive additions (Shift enum, ShiftLog model, back-relations on Kitchen/User) and one-line registration in `app.module.ts`; no existing module files were modified beyond that |
+| Full smoke suite still green | ☑ pass | `npm --prefix apps/api run test` → `Test Suites: 17 passed, 17 total`, `Tests: 131 passed, 131 total` |
+| UI: Visual regression | ☑ N/A — backend-only task, no UI shipped in this slice | |
+| UI: Design-system compliance | ☑ N/A | |
+| UI: Responsiveness | ☑ N/A | |
 
 ---
 
@@ -94,7 +94,7 @@ ShiftLog module under `/apps/api/src/shift-logs`. Any authenticated Kitchen memb
 
 ## Edge Case Checklist
 
-- [ ] ShiftLog created_at is always server-set (prevents a future-dated entry from client tampering)
+- [x] ShiftLog created_at is always server-set (prevents a future-dated entry from client tampering)
 
 ---
 
@@ -120,11 +120,12 @@ Automated CRUD + date-filter + sort-order tests.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Low risk)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1/P2/P3
+- [x] Security review: N/A (Low risk)
+- [x] Lint passes
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run — independent live API session confirms all 3 ACs + createdAt-spoof edge case
+- [x] Migration-safety gate: GO (pure additive CREATE TABLE + CREATE TYPE, no data-loss risk)
+- [ ] `memory/MEMORY.md` updated — next: Supervisor diff-driven pass
+- [x] Supervisor notified: task ready for Stage 4 review
