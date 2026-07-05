@@ -36,11 +36,25 @@ describe('App routing', () => {
     expect(screen.getByPlaceholderText('Kitchen name')).toBeInTheDocument();
   });
 
-  it.each(NAV_ITEMS)('renders a distinct empty-state page for $label when authenticated', (item) => {
+  // /tasks, /notes, and /dashboard render real feature pages (T008/T012/T018)
+  // instead of the SectionPage placeholder — each has its own dedicated test
+  // suite (TasksPage.test.tsx, NotesPage.test.tsx, Dashboard.test.tsx).
+  const placeholderItems = NAV_ITEMS.filter(
+    (item) => !['/tasks', '/notes', '/dashboard'].includes(item.path),
+  );
+
+  it.each(placeholderItems)('renders a distinct empty-state page for $label when authenticated', (item) => {
     setToken('fake-jwt');
     renderAt(item.path);
     expect(screen.getByRole('heading', { name: item.label })).toBeInTheDocument();
     expect(screen.getByText(item.emptyMessage)).toBeInTheDocument();
+  });
+
+  it('renders the real Dashboard page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    renderAt('/dashboard');
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
   });
 
   it('shows the sidebar nav for an authenticated user', () => {

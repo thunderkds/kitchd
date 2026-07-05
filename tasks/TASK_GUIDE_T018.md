@@ -73,15 +73,15 @@ npm --prefix apps/web run test -- dashboard
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | Dashboard screenshots, Staff vs Chef view |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/web/src/pages/Dashboard/Dashboard.test.tsx` (AC1 "loads all four widgets", AC2 Staff-only-own-tasks + Chef-sees-all, AC4 zero-data empty state per widget, + a structural no-waterfall check), `apps/web/src/components/AnnouncementsWidget/AnnouncementsWidget.test.tsx`, `apps/web/src/components/PinnedNotesWidget/PinnedNotesWidget.test.tsx`. `npm --prefix apps/web run test -- dashboard` → "Test Files 1 passed (1) / Tests 5 passed (5)". |
+| Verification command run | pass | Ran guide's literal command `npm --prefix apps/web run test -- dashboard` (case-insensitive substring match against `Dashboard.test.tsx` — works as-is, no filter correction needed this time): `Test Files 1 passed (1)`, `Tests 5 passed (5)`, `Duration 724ms`. |
+| Negative cases hold | pass | Staff role does NOT see another user's task (`tasks-widget-row-t-other` asserted absent in the Staff test); fetch-error path asserted via `role="alert"` in all 3 new widget test suites (Announcements/PinnedNotes) plus pre-existing LowStockWidget coverage. |
+| verify | pass | PASS — `npm --prefix apps/web run test` (full web suite): `Test Files 12 passed (12)`, `Tests 52 passed (52)`. `npm --prefix apps/web run lint` → oxlint clean, no output. `npm --prefix apps/web run build`: `tsc -b` fails on 2 **pre-existing** errors unrelated to this change — confirmed via `git stash`/rebuild before my edits, same 2 errors reproduce (`Cannot find module '@kitchenos/shared'` — package needs `dist/` built, a monorepo build-order issue; `vite.config.ts` `test` key type overload — pre-existing vitest/vite version mismatch). Live browser MCP screenshot verification (Staff vs Chef view, empty state, breakpoints) could **not** be captured in this session: port 8766 (the fixed MCP-targeted web dev port per memory/MEMORY.md) was already held by a concurrent T016 worktree dev server (`readlink /proc/<pid>/cwd` confirmed `.claude/worktrees/T016/apps/web`), and no Playwright/UI-MCP tool was available in this agent's toolset to target an alternate port. Flagging to Supervisor: Stage 5 `verify`/live-browser check still needed once port 8766 is free or an MCP tool is attached. |
+| Review scope bounded to blast radius | pass | Touched: `apps/web/src/pages/Dashboard/**` (new), `apps/web/src/components/AnnouncementsWidget/**` (new), `apps/web/src/components/PinnedNotesWidget/**` (new), `apps/web/src/App.tsx` + `App.test.tsx` (route wiring), `apps/web/src/routes/auth.ts` + `LoginPage.tsx` (added `getUser`/`setUser` for role-aware Tasks widget — needed since no `/auth/me` endpoint exists and the JWT deliberately omits `role`), `packages/shared/src/auth.dto.ts` (added missing `role` field to match the API's actual runtime `AuthResult` shape). No `apps/api/**` files touched, per Files-Must-Not-Touch. |
+| Full smoke suite still green | pass | `npm --prefix apps/web run test`: `Test Files 12 passed (12)`, `Tests 52 passed (52)` (includes pre-existing TasksPage/NotesPage/LowStockWidget/AuthGuard/App suites). |
+| **UI: Visual regression** | ☐ N/A | Justification: no Playwright/UI-MCP tool available in this session and port 8766 was occupied by a concurrent worktree's dev server (see `verify` row) — could not capture screenshots. Deferred to Stage 5/Supervisor for live capture. |
+| **UI: Design-system compliance** | pass | All 3 new/composed widgets (`TasksWidget`, `AnnouncementsWidget`, `PinnedNotesWidget`) reuse T007 `LowStockWidget`'s exact Tailwind shape verbatim: `border rounded-lg p-4 w-full` container, `text-sm font-semibold text-gray-900 mb-3` heading, `divide-y` list, `text-sm text-gray-500` empty/loading state, `role="alert"` + `text-red-700` error state — confirmed by direct code comparison, no new tokens introduced. |
+| **UI: Responsiveness** | pass | Dashboard grid uses `grid-cols-1 md:grid-cols-2 lg:grid-cols-4` (mirrors T003 shell's existing responsive breakpoint convention: 1-col mobile, 2-col tablet ≥768px `md:`, 4-col desktop ≥1024px `lg:`) — structurally guarantees the 3 required layouts (single-column mobile, 2-column tablet, full 4-widget desktop) per Tailwind's documented breakpoints. Live-viewport screenshot capture not performed this session (see UI: Visual regression row); code-level breakpoint check is the substitute evidence per the guide's allowance for "structural verification, documented as method." |
 
 ---
 
@@ -117,12 +117,14 @@ npm --prefix apps/web run test -- dashboard
 
 Dashboard page under `/apps/web/src/pages/Dashboard`, fetching in parallel from T007/T008/T012/T013's existing endpoints (TanStack Query, parallel queries not waterfalled — critical for the 1.5s p95 target). Role check determines whether the Tasks widget queries "my tasks" vs "all Kitchen tasks."
 
+**Scope correction (2026-07-05, Supervisor)**: T007 built a reusable standalone `LowStockWidget` (compose as-is). T013 (Announcements) was backend-only — no frontend widget exists yet — so this task must build a small `AnnouncementsWidget` (list latest N announcements from `GET /announcements`) as part of composing the Dashboard, not just wire up an existing component. Similarly there is no existing "pinned Notes" widget — build a thin filter view over T012's `GET /notes` (client-side filter for `pinned: true`, or add a `?pinned=true` query param to the existing endpoint if simpler) rather than reusing `NotesPage` wholesale. Keep both new widgets minimal (list + empty state), matching `LowStockWidget`'s shape — do not scope-creep into full CRUD UIs for either.
+
 ---
 
 ## Edge Case Checklist
 
-- [ ] A Kitchen with zero Tasks/Announcements/Notes yet shows a clean empty-state per widget, not a broken/blank layout
-- [ ] Parallel widget fetches don't waterfall (verify via network tab / timing, not just code review)
+- [x] A Kitchen with zero Tasks/Announcements/Notes yet shows a clean empty-state per widget, not a broken/blank layout (`Dashboard.test.tsx` AC4)
+- [x] Parallel widget fetches don't waterfall — structurally guaranteed (4 independent widget-owned `useEffect`s, no shared parent fetch/await, no data dependency between them) and unit-verified (`Dashboard.test.tsx` "does not waterfall" test asserts all 4 fetch spies called synchronously on mount before any resolves); live Network-tab timing not captured this session (no browser/MCP tool available — see verify row)
 
 ---
 
@@ -148,11 +150,11 @@ E2E tests for Staff vs Chef view, empty state, and a performance measurement pas
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Low risk)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run (deferred to Supervisor/Stage 4, per pipeline — not run by the implementing agent)
+- [x] Security review: N/A (Low risk)
+- [x] Lint passes (`oxlint` clean)
+- [x] Tests written AND pass — output pasted into Evidence table
+- [ ] `Skill({ skill: "verify" })` run (partial — unit/lint/build-diff verified; live browser MCP verification blocked this session, see Evidence `verify` row — needs Stage 5 follow-up)
+- [ ] `memory/MEMORY.md` updated (Supervisor-owned, per Memory Write Protocol)
+- [x] Supervisor notified: task ready for Stage 4 review

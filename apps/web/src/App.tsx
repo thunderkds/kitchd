@@ -7,6 +7,7 @@ import { LoginPage } from './routes/pages/LoginPage';
 import { SectionPage } from './routes/pages/SectionPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { NotesPage } from './features/notes/NotesPage';
+import { Dashboard } from './pages/Dashboard/Dashboard';
 
 function App() {
   return (
@@ -15,6 +16,9 @@ function App() {
       <Route element={<AuthGuard />}>
         <Route element={<AppShell />}>
           {NAV_ITEMS.map((item) => {
+            if (item.path === '/dashboard') {
+              return <Route key={item.path} path={item.path} element={<Dashboard />} />;
+            }
             if (item.path === '/tasks') {
               return <Route key={item.path} path={item.path} element={<TasksPage />} />;
             }

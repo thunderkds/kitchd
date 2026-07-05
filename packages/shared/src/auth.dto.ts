@@ -17,5 +17,9 @@ export interface AuthResponseDto {
     email: string;
     organizationId: string;
     kitchenId: string;
+    // T018 — Dashboard needs role client-side to decide "my tasks" (Staff/
+    // Viewer) vs "all Kitchen tasks" (Owner/Admin/Chef). Matches the shape
+    // already returned by AuthService.buildAuthResult (this type was stale).
+    role: 'OWNER' | 'ADMIN' | 'CHEF' | 'STAFF' | 'VIEWER';
   };
 }

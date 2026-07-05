@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AuthResponseDto } from '@kitchenos/shared';
-import { setToken } from '../auth';
+import { setToken, setUser } from '../auth';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -40,6 +40,7 @@ export function LoginPage() {
       }
       setResult(data);
       setToken(data.accessToken);
+      setUser(data.user);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
