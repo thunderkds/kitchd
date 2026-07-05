@@ -11,6 +11,7 @@ import { RecipesModule } from './recipes/recipes.module';
 import { TasksModule } from './tasks/tasks.module';
 import { GuidelinesModule } from './guidelines/guidelines.module';
 import { NotesModule } from './notes/notes.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotesModule } from './notes/notes.module';
     TasksModule,
     GuidelinesModule,
     NotesModule,
+    AnnouncementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
