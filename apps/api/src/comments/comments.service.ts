@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ENTITY_TYPES } from './entity-type';
 
@@ -26,7 +27,10 @@ const MENTION_PATTERN = /@([a-zA-Z0-9_.-]+)/g;
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   // Resolves @mention tokens in a comment body against ONLY the given
   // Kitchen's membership — never cross-Kitchen. Unresolved or
@@ -108,7 +112,7 @@ export class CommentsService {
 
     const mentions = await this.resolveMentions(kitchenId, dto.body);
 
-    return this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: {
         kitchenId,
         authorId,
@@ -119,6 +123,19 @@ export class CommentsService {
         mentions,
       },
     });
+
+    // T016 hook: a resolved mention creates a Notification for each
+    // mentioned user. Additive only — never blocks/alters the comment
+    // create path above.
+    if (mentions.length > 0) {
+      await this.notificationsService.notifyMentions(
+        kitchenId,
+        mentions,
+        authorId,
+      );
+    }
+
+    return comment;
   }
 
   // Only the author may delete their own Comment — matches the Notes

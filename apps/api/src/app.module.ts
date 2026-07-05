@@ -14,6 +14,7 @@ import { NotesModule } from './notes/notes.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ShiftLogsModule } from './shift-logs/shift-logs.module';
 import { CommentsModule } from './comments/comments.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CommentsModule } from './comments/comments.module';
     AnnouncementsModule,
     ShiftLogsModule,
     CommentsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
