@@ -1,0 +1,13 @@
+T016 Stage 5 live verify session (Supervisor-driven, API + browser)
+
+API:
+  Owner mentions self in a comment -> Notification created
+  GET /notifications -> unreadCount: 1, notification listed
+  (UI) Bell shows badge "1" in Topbar
+  (UI) Click bell -> dropdown opens showing the notification, badge clears
+  GET /notifications (after UI open) -> read: true, unreadCount: 0
+  Confirms AC1 (mention creates Notification) and AC2 (opening bell marks
+  read + decrements count) end-to-end through the real UI, not just tests.
+
+Full backend suite: 146/146 tests green. Frontend: 43/43 tests green.
+Lint: clean on both.
