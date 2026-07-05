@@ -67,6 +67,7 @@ model Kitchen {
   guidelines   Guideline[]
   notes        Note[]
   announcements Announcement[]
+  shiftLogs    ShiftLog[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -90,6 +91,7 @@ model User {
   assignedTasks  Task[]
   notes          Note[]
   announcements  Announcement[]
+  shiftLogs      ShiftLog[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -310,6 +312,31 @@ model Announcement {
   @@index([kitchenId])
   @@index([authorId])
   @@map("announcements")
+}
+
+enum Shift {
+  MORNING
+  EVENING
+}
+
+// Per-shift handoff feed (T014). createdAt is server-set only — never
+// accepted from the client — to prevent a future-dated/backdated entry
+// via client tampering. Write RBAC matches Notes (everyone-but-Viewer),
+// NOT the narrower Owner/Chef-only Announcements gate.
+model ShiftLog {
+  id        String   @id @default(uuid())
+  kitchenId String   @map("kitchen_id")
+  authorId  String   @map("author_id")
+  shift     Shift
+  body      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@map("shift_logs")
 }
 
 model StockBatch {
