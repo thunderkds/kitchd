@@ -1,0 +1,19 @@
+T019 Stage 5 live verify session (Supervisor-driven, independent of the automated rbac-matrix suite)
+
+Owner signup -> invite Viewer -> accept -> create Task -> assign to Viewer.
+
+Viewer PATCH /tasks/:id { status: IN_PROGRESS } (own assigned task)
+  -> 403 {"message":"Viewer role is read-only","error":"Forbidden","statusCode":403}
+
+Viewer GET /tasks/:id (own assigned task)
+  -> 200 (read allowed, as expected)
+
+Viewer POST /tasks/:id/complete/preview (own assigned task)
+  -> 403 {"message":"Viewer role is read-only","error":"Forbidden","statusCode":403}
+
+Confirms the T019 fix: Viewer is denied both task-status mutation and the T011
+completion/stock-deduction flow even when assigned to the Task, while retaining
+read access. Matches FR-018 ("Viewer is read-only").
+
+Full backend suite post-fix: 99/99 tests green (13 suites).
+Lint: clean.
