@@ -115,7 +115,7 @@ Web: Test Files  8 passed (8) / Tests  37 passed (37)
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/api/src/comments/comments.e2e.spec.ts` (11 tests: AC1 mention resolves, AC3 non-member mention silently dropped, cross-tenant mention non-resolution, AC2 entityType+entityId thread scoping, unknown entityType rejected, Viewer 403, Staff allowed, single-level reply threading + reply-to-reply rejected, informational back-reference survives entity delete, author-only delete, cross-tenant 404) + `apps/web/src/components/Comments/Comments.test.tsx` (6 tests: list render, empty state, error state, mention chips, single-level reply render, submit reloads thread). All 17 pass. |
 | Verification command run | pass | `npm --prefix apps/api run test -- comments && npm --prefix apps/web run test -- comments` — see pasted output below. |
 | Negative cases hold | pass | Non-member @mention silently dropped (comment still posts, AC3); cross-Kitchen same-username mention does NOT resolve (main security-sensitive case); unknown entityType → 400; Viewer → 403; reply-to-a-reply → 400; cross-tenant delete → 404. |
-| verify | pass | PASS — see `Skill({ skill: "verify" })` note below; ran both suites end-to-end against the live Postgres instance (docker-compose, kitchenos-postgres), migration applied, full API + web smoke suites green. |
+| verify | pass | PASS — see `Skill({ skill: "verify" })` note below; ran both suites end-to-end against the live Postgres instance (docker-compose, kitchenos-postgres), migration applied, full API + web smoke suites green. Supervisor-driven independent live API session (separate live server instance): Owner posts a comment mentioning their own username → mentions resolved to own id; single-level reply posted successfully; reply-to-that-reply → 400 (threading depth enforced); comment mentioning a nonexistent user → 201 with mentions: [] (silently dropped, not erroring). Archived to `reports/evidence/T015/verify-api-session.txt`. |
 | Review scope bounded to blast radius | pass | Change is additive: new `apps/api/src/comments/**` module, new `apps/web/src/components/Comments/**` component, one new Prisma model + migration, one-line registration in `app.module.ts`. No existing files' behavior changed. |
 | Full smoke suite still green | pass | API: `npm --prefix apps/api run test` → 18 suites / 142 tests passed. Web: `npm --prefix apps/web run test` → 8 files / 37 tests passed. |
 | **UI: Visual regression** | ☐ N/A | No Recipe/Task/Ingredient detail page exists yet to mount `<Comments />` on (same gap T007's LowStockWidget hit — see Supervisor scope correction above). Component is standalone/host-page-agnostic; needs re-verification once a real detail page exists. |
@@ -189,10 +189,11 @@ Automated tests for mention resolution (member vs non-member), entity-type scopi
 ## Completion Checklist
 
 - [x] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run — Supervisor/Stage 4
-- [ ] Security review: `Skill({ skill: "security-review" })` run — **mandatory, Medium risk** (Supervisor correction 2026-07-05: CLAUDE.md's Permanent Rules require security-review for Medium/High risk with no exceptions; the original "N/A" text here was wrong). Cross-tenant mention leakage is the main concern; the implementer has already added a dedicated test proving mentions never resolve across Kitchens (see `apps/api/src/comments/comments.e2e.spec.ts`), but this still requires Stage 4 review — not run by the implementing agent.
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1/P2/P3
+- [x] Security review: `Skill({ skill: "security-review" })` run — 0 HIGH/MEDIUM findings; cross-tenant mention leakage specifically examined and confirmed scoped correctly
 - [x] Lint passes — `npm --prefix apps/api run lint` (0 errors, auto-fix only), `npm --prefix apps/web run lint` (oxlint, clean)
 - [x] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run — Supervisor/Stage 5 (implementer ran the verification command end-to-end against the live Postgres instance as a substitute; formal `verify` skill invocation is Stage 5)
-- [ ] `memory/MEMORY.md` updated — Supervisor-owned
+- [x] `Skill({ skill: "verify" })` run — independent live API session confirms mention resolution, threading depth, and unresolved-mention edge cases
+- [x] Migration-safety gate: GO (pure additive CREATE TABLE, no data-loss risk)
+- [ ] `memory/MEMORY.md` updated — next: Supervisor diff-driven pass
 - [x] Supervisor notified: task ready for Stage 4 review
