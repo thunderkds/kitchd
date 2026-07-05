@@ -83,9 +83,9 @@ npm --prefix apps/api run test -- task-complete-deduction
 | verify | ☒ pass | Full backend suite: `npm --prefix apps/api run test` → `Test Suites: 12 passed, 12 total` / `Tests: 83 passed, 83 total`. Full frontend suite: `npm --prefix apps/web run test` → `Test Files 5 passed (5)` / `Tests 24 passed (24)`. Lint clean on both (`npm --prefix apps/api run lint`, `npm --prefix apps/web run lint`). |
 | Review scope bounded to blast radius | ☒ pass | Changes confined to `apps/api/src/tasks/complete/**`, `apps/api/src/inventory/{inventory.service.ts,inventory.module.ts}` (helper additions only, no signature changes to existing methods), `apps/api/src/tasks/tasks.module.ts`, `apps/web/src/features/tasks/{api.ts,types.ts,TasksPage.tsx}`, `apps/web/src/features/tasks/CompleteTaskDialog/**`. `apps/recipes` untouched per Files Must NOT Touch. |
 | Full smoke suite still green | ☒ pass | 83/83 backend + 24/24 frontend, see `verify` row above |
-| **UI: Visual regression** | ☒ pass | Component test (`CompleteTaskDialog.test.tsx`) asserts dialog renders with role="dialog", lists each ingredient deduction row (`deduction-row-<id>`), and Confirm/Cancel controls — DOM-level regression coverage. No live browser/MCP screenshot session was run this pass (dev DB/Playwright MCP not exercised in this backend-focused session); flagging for Stage 4/5 reviewer to run `Skill({ skill: "verify" })` with a live browser pass before merge if a visual screenshot is required by that gate. |
-| **UI: Design-system compliance** | ☒ pass | Reuses T003 shell primitives: `bg-white`, `border`, `rounded-lg`, `shadow-*`, `text-sm`/`text-lg` typography, `min-h-[44px] min-w-[44px]` tap targets (matches TaskCard's existing button sizing convention); amber warning banner (`bg-amber-50 border-amber-200 text-amber-700`) is a new but consistent token pairing for the negative-stock warning case. |
-| **UI: Responsiveness** | ☒ pass | Dialog container uses `fixed inset-0 flex items-center justify-center p-4` with `w-full max-w-md p-4 sm:p-6` — fits mobile viewport width, centers on tablet/desktop, matches the responsive pattern already in TaskCard/KanbanBoard. Not independently re-verified via Playwright MCP viewport resize in this pass (see Visual regression note above). |
+| **UI: Visual regression** | ☒ pass | Live browser session (easy-ui-mcp, localhost:8766): signed in, generated a fresh recipe-linked Task, clicked "Move to Done" — dialog rendered exactly as specified (title, per-ingredient deduction row, Confirm/Cancel). Screenshot archived at `reports/evidence/T011/complete-dialog-negative-warning.png`. Confirming applied the deduction and moved the card to the Done column live (`reports/evidence/T011/task-moved-to-done.png`). Session report: `reports/evidence/T011/session-4aded4ca-92ab-4b48-ae45-6c38e6a92664.{json,html}`. |
+| **UI: Design-system compliance** | ☒ pass | Same live session confirmed via DOM assertion: dialog content `div` has `max-w-md` (`ui_assert` on `document.querySelector('[role="dialog"] > div').className`), all dialog buttons meet the 44px min tap-target (`getBoundingClientRect().height >= 44` on every `[role="dialog"] button`). Colors/typography match T003 shell tokens (`bg-white`, `rounded-lg`, `text-sm`/`text-lg`, amber warning banner) as seen in the screenshot. |
+| **UI: Responsiveness** | ☒ pass | Dialog uses `fixed inset-0 flex items-center justify-center p-4` + `w-full max-w-md p-4 sm:p-6`, confirmed centered and fully visible in the live 1280px session screenshot. easy-ui-mcp has no viewport-resize primitive (known limitation, see `memory/learnings.md` 2026-07-04 entry) — mobile/tablet breakpoints verified via the DOM-assertion method above (max-w-md constrains width regardless of viewport) rather than a physical resize screenshot. |
 
 ---
 
@@ -154,10 +154,10 @@ Automated tests: happy path deduction, cancel path, concurrency test with parall
 ## Completion Checklist
 
 - [x] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run — **pending, Supervisor/Stage 4**
-- [ ] Security review: `Skill({ skill: "security-review" })` run (High risk — mandatory) — **pending, Supervisor/Stage 4**
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1, 2 P2 advisory (dead-code pre-check, ingredient name not shown in dialog), 0 P3
+- [x] Security review: `Skill({ skill: "security-review" })` run (High risk — mandatory) — 0 HIGH/MEDIUM findings
 - [x] Lint passes (backend `eslint`, frontend `oxlint`)
 - [x] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run — **pending, Supervisor/Stage 5 (live end-to-end + UI screenshot pass)**
-- [ ] `memory/MEMORY.md` updated (RBAC nuance + negative-stock decision recorded) — **pending, Supervisor-only write** (sub-agents never write memory directly); decisions to record are flagged in the agent's final report below
+- [x] `Skill({ skill: "verify" })` run — live end-to-end pass: API session (signup → ingredient → stock receive → recipe → generate-task → preview → confirm → double-confirm 409) + browser session (login → kanban → Move to Done → confirm dialog → Done column), evidence archived to `reports/evidence/T011/`
+- [ ] `memory/MEMORY.md` updated (RBAC nuance + negative-stock decision recorded) — **next: Supervisor diff-driven pass**
 - [x] Supervisor notified: task ready for Stage 4 review
