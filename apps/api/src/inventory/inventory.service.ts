@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
@@ -118,6 +119,63 @@ export class InventoryService {
     return this.prisma.stockMovement.findMany({
       where: { ingredientId },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // Current on-hand qty for an ingredient, derived by summing the
+  // append-only StockMovement ledger. There is NO cached balance column
+  // by design (see MEMORY append-only pattern) — deriving on read avoids
+  // read-modify-write races. RECEIVE/ADJUST add, CONSUME/WASTE subtract.
+  // Used by the T011 task-completion flow only to compute the
+  // negative-stock WARNING; it never gates the deduction (FR-008 allows
+  // stock to go negative — it is flagged, not blocked).
+  async currentStock(ingredientId: string): Promise<number> {
+    const movements = await this.prisma.stockMovement.findMany({
+      where: { ingredientId },
+      select: { type: true, qty: true },
+    });
+    return movements.reduce((sum, m) => {
+      if (m.type === 'RECEIVE' || m.type === 'ADJUST') {
+        return sum + m.qty;
+      }
+      return sum - m.qty; // CONSUME, WASTE
+    }, 0);
+  }
+
+  // Transaction-aware CONSUME writer used by the T011 task-completion
+  // stock-deduction flow. Kept here so InventoryService stays the single
+  // owner of the StockMovement append-only write path — the tasks module
+  // reuses this rather than duplicating the insert logic (see MEMORY).
+  //
+  // It accepts an interactive transaction client so a whole recipe's
+  // multi-ingredient deduction commits atomically with the Task status
+  // flip in TaskCompletionService.
+  //
+  // RBAC NUANCE (FR-008 + FR-018): this path is intentionally NOT behind
+  // the inventory WRITE_ROLES guard. It is reachable by a STAFF user via
+  // task completion because the deduction is a *side effect* of completing
+  // their own assigned Task, not a direct inventory edit. Authorization is
+  // enforced upstream in TaskCompletionService (own-task check) — never
+  // trust this method to be called only by inventory writers.
+  async createConsumeMovementTx(
+    tx: Prisma.TransactionClient,
+    params: {
+      ingredientId: string;
+      kitchenId: string;
+      actorId: string;
+      qty: number;
+      reason?: string;
+    },
+  ) {
+    return tx.stockMovement.create({
+      data: {
+        ingredientId: params.ingredientId,
+        kitchenId: params.kitchenId,
+        type: 'CONSUME',
+        qty: params.qty,
+        reason: params.reason,
+        actorId: params.actorId,
+      },
     });
   }
 }

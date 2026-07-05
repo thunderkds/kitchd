@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { listTasks, updateTaskChecklist, updateTaskStatus } from './api';
+import {
+  confirmTaskCompletion,
+  listTasks,
+  previewTaskCompletion,
+  updateTaskChecklist,
+  updateTaskStatus,
+} from './api';
+import { CompleteTaskDialog } from './CompleteTaskDialog/CompleteTaskDialog';
 import { KanbanBoard } from './KanbanBoard';
 import { ListView } from './ListView';
 import { ViewToggle } from './ViewToggle';
-import type { Task, TaskStatus } from './types';
+import type { CompletionPreview, Task, TaskStatus } from './types';
 
 const UNASSIGNED = 'unassigned';
 
@@ -18,6 +25,13 @@ export function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // T011 — pending recipe-linked completion awaiting user confirm/cancel.
+  const [pendingCompletion, setPendingCompletion] = useState<{
+    taskId: string;
+    preview: CompletionPreview;
+  } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const view = (searchParams.get('view') as 'kanban' | 'list') ?? 'kanban';
   const assigneeFilter = searchParams.get('assignee') ?? 'all';
@@ -58,6 +72,25 @@ export function TasksPage() {
   });
 
   const handleMove = async (taskId: string, status: TaskStatus) => {
+    // T011: moving a Task to DONE requires previewing the stock deduction
+    // first (FR-008) — never a silent automatic deduction. Other moves
+    // (TODO/IN_PROGRESS) are unaffected.
+    if (status === 'DONE') {
+      try {
+        const preview = await previewTaskCompletion(taskId);
+        if (preview.requiresConfirmation) {
+          setPendingCompletion({ taskId, preview });
+          return;
+        }
+        // Non-recipe task: no deduction to confirm, just complete it.
+        const result = await confirmTaskCompletion(taskId);
+        setTasks((prev) => prev.map((t) => (t.id === taskId ? result.task : t)));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to complete task');
+      }
+      return;
+    }
+
     const previous = tasks;
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
     try {
@@ -66,6 +99,26 @@ export function TasksPage() {
       setTasks(previous);
       setError(err instanceof Error ? err.message : 'Failed to move task');
     }
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!pendingCompletion) return;
+    setConfirmLoading(true);
+    try {
+      const result = await confirmTaskCompletion(pendingCompletion.taskId);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === pendingCompletion.taskId ? result.task : t)),
+      );
+      setPendingCompletion(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete task');
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  const handleCancelCompletion = () => {
+    setPendingCompletion(null);
   };
 
   const handleToggleChecklistItem = async (
@@ -123,6 +176,15 @@ export function TasksPage() {
         <KanbanBoard tasks={filteredTasks} onMove={handleMove} />
       ) : (
         <ListView tasks={filteredTasks} onToggleChecklistItem={handleToggleChecklistItem} />
+      )}
+
+      {pendingCompletion && (
+        <CompleteTaskDialog
+          preview={pendingCompletion.preview}
+          loading={confirmLoading}
+          onConfirm={handleConfirmCompletion}
+          onCancel={handleCancelCompletion}
+        />
       )}
     </div>
   );

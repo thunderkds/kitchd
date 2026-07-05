@@ -1,5 +1,11 @@
 import { getToken } from '../../routes/auth';
-import type { ChecklistItem, Task, TaskStatus } from './types';
+import type {
+  ChecklistItem,
+  CompletionPreview,
+  CompletionResult,
+  Task,
+  TaskStatus,
+} from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -37,5 +43,20 @@ export function updateTaskChecklist(
   return request<Task>(`/tasks/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ checklistItems }),
+  });
+}
+
+// T011 — two-step confirm-before-deduct stock flow (FR-008). Preview is
+// read-only (computes the would-be deductions); confirm actually applies
+// the StockMovement(CONSUME) writes and marks the Task DONE.
+export function previewTaskCompletion(id: string): Promise<CompletionPreview> {
+  return request<CompletionPreview>(`/tasks/${id}/complete/preview`, {
+    method: 'POST',
+  });
+}
+
+export function confirmTaskCompletion(id: string): Promise<CompletionResult> {
+  return request<CompletionResult>(`/tasks/${id}/complete/confirm`, {
+    method: 'POST',
   });
 }

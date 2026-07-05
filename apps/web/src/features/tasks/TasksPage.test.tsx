@@ -173,4 +173,119 @@ describe('TasksPage', () => {
       ),
     );
   });
+
+  // T011 — stock deduction confirm-before-apply flow (FR-008).
+  it('T011 AC1/AC3: moving a recipe-linked task to Done previews the deduction; cancelling applies nothing', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [makeTask({ id: 't1', title: 'Task A', status: 'IN_PROGRESS' })],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          requiresConfirmation: true,
+          deductions: [
+            {
+              ingredientId: 'ingredient-1',
+              deductQty: 6,
+              currentStock: 10,
+              resultingStock: 4,
+              wouldGoNegative: false,
+            },
+          ],
+          hasNegativeWarning: false,
+        }),
+      });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: 'Move to Done' }));
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    expect(screen.getByTestId('deduction-row-ingredient-1')).toBeInTheDocument();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/tasks/t1/complete/preview'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+
+    // Cancel: no confirm call made, task stays IN_PROGRESS.
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining('/tasks/t1/complete/confirm'),
+      expect.anything(),
+    );
+    expect(
+      within(screen.getByTestId('kanban-column-IN_PROGRESS')).getByText('Task A'),
+    ).toBeInTheDocument();
+  });
+
+  it('T011 AC2: confirming the dialog applies the deduction and moves the task to Done', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [makeTask({ id: 't1', title: 'Task A', status: 'IN_PROGRESS' })],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          requiresConfirmation: true,
+          deductions: [
+            {
+              ingredientId: 'ingredient-1',
+              deductQty: 6,
+              currentStock: 10,
+              resultingStock: 4,
+              wouldGoNegative: false,
+            },
+          ],
+          hasNegativeWarning: false,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          task: makeTask({ id: 't1', title: 'Task A', status: 'DONE' }),
+          movements: [{ id: 'm1', ingredientId: 'ingredient-1', qty: 6 }],
+          hasNegativeWarning: false,
+        }),
+      });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Move to Done' }));
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/tasks/t1/complete/confirm'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('kanban-column-DONE')).getByText('Task A'),
+      ).toBeInTheDocument(),
+    );
+  });
 });
