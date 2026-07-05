@@ -26,3 +26,4 @@ Confirmed 2026-07-02, user-approved. Source: `requirement.md` §6, `PRD.md`.
 - **Announcement**: id, kitchen_id, author_id, title, body, read_by[].
 - **ShiftLog**: id, kitchen_id, author_id, shift(morning/evening), body, created_at.
 - **Comment**: id, entity_type, entity_id, author_id, body, mentions[], created_at. Polymorphic — attaches to Recipe/Task/Ingredient.
+- **Notification**: id, kitchen_id, recipient_id, type(MENTION/LOW_STOCK/TASK_ASSIGNED — only MENTION and LOW_STOCK are wired up, TASK_ASSIGNED is reserved for future use), body, read, created_at. Not part of the original 14 confirmed domain models — added T016 as the aggregation point for @mention (T015) and low-stock (T007) events.
