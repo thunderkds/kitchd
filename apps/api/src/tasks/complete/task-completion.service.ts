@@ -17,12 +17,19 @@ import { WRITE_ROLES } from '../tasks.service';
 // and flips the Task to DONE, atomically, inside a single transaction.
 //
 // RBAC NUANCE (FR-008 + FR-018): a WRITE_ROLES caller (OWNER/ADMIN/CHEF)
-// may complete any Task in their Kitchen. A non-writer (STAFF/VIEWER)
-// may only complete a Task assigned to themselves — completing it is a
+// may complete any Task in their Kitchen. A non-writer STAFF caller may
+// only complete a Task assigned to themselves — completing it is a
 // task-completion action they ARE permitted to perform, and the stock
 // deduction is a side effect of that action, not a direct inventory
 // edit. This intentionally bypasses the inventory WRITE_ROLES guard;
 // see InventoryService#createConsumeMovementTx for the mirrored note.
+//
+// RBAC FIX (T019): VIEWER is excluded from this own-task allowance —
+// FR-018 states Viewer is strictly read-only, so a Viewer must never be
+// able to complete a Task (and thus trigger a stock deduction) even if
+// assigned to it. Previously this branch only checked WRITE_ROLES
+// membership, so an assigned Viewer could complete their own Task; this
+// path was untested for Viewer in T011.
 @Injectable()
 export class TaskCompletionService {
   constructor(
@@ -40,8 +47,13 @@ export class TaskCompletionService {
       throw new NotFoundException('Task not found');
     }
     const isWriter = WRITE_ROLES.includes(caller.role);
-    if (!isWriter && task.assigneeId !== caller.id) {
-      throw new ForbiddenException('Not your task');
+    if (!isWriter) {
+      if (caller.role === Role.VIEWER) {
+        throw new ForbiddenException('Viewer role is read-only');
+      }
+      if (task.assigneeId !== caller.id) {
+        throw new ForbiddenException('Not your task');
+      }
     }
     return task;
   }
