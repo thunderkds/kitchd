@@ -68,6 +68,7 @@ model Kitchen {
   notes        Note[]
   announcements Announcement[]
   shiftLogs    ShiftLog[]
+  comments     Comment[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -92,6 +93,7 @@ model User {
   notes          Note[]
   announcements  Announcement[]
   shiftLogs      ShiftLog[]
+  comments       Comment[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -337,6 +339,39 @@ model ShiftLog {
   @@index([kitchenId])
   @@index([authorId])
   @@map("shift_logs")
+}
+
+// Polymorphic Comment thread (T015), attachable to a Recipe, Task, or
+// Ingredient. Mirrors the Note.linkedEntityType/linkedEntityId pattern:
+// entityType/entityId are a plain nullable-free pair with NO FK
+// constraint — informational back-reference only, validated against a
+// known enum of entity kinds at the DTO layer, not by the DB. mentions
+// is a plain string array of resolved user ids, matching the
+// Note.tags/Announcement.readBy array-field convention — populated by
+// parsing @username tokens out of body and resolving them ONLY against
+// the author's own Kitchen membership (never cross-Kitchen). parentId
+// supports single-level reply threading only (no unbounded recursion
+// for MVP) — a reply's own parentId must point at a top-level comment
+// (parentId itself null), enforced in CommentsService, not the DB.
+model Comment {
+  id         String   @id @default(uuid())
+  kitchenId  String   @map("kitchen_id")
+  authorId   String   @map("author_id")
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  body       String
+  mentions   String[] @default([])
+  parentId   String?  @map("parent_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@index([entityType, entityId])
+  @@map("comments")
 }
 
 model StockBatch {

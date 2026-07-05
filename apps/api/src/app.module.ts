@@ -13,6 +13,7 @@ import { GuidelinesModule } from './guidelines/guidelines.module';
 import { NotesModule } from './notes/notes.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ShiftLogsModule } from './shift-logs/shift-logs.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ShiftLogsModule } from './shift-logs/shift-logs.module';
     NotesModule,
     AnnouncementsModule,
     ShiftLogsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
