@@ -12,6 +12,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { GuidelinesModule } from './guidelines/guidelines.module';
 import { NotesModule } from './notes/notes.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { ShiftLogsModule } from './shift-logs/shift-logs.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
     GuidelinesModule,
     NotesModule,
     AnnouncementsModule,
+    ShiftLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

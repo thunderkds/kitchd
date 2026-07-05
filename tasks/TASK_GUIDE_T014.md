@@ -88,7 +88,7 @@ npm --prefix apps/api run test -- shift-logs
 
 ## Approach
 
-ShiftLog module under `/apps/api/src/shift-logs`, any authenticated Kitchen member can write (no RBAC restriction beyond Kitchen membership, per US-007 — this differs from Announcements which are Chef+-only, document the distinction). created_at is server-set, never client-supplied.
+ShiftLog module under `/apps/api/src/shift-logs`. Any authenticated Kitchen member EXCEPT Viewer can write (this differs from Announcements which are Owner/Chef-only — document the distinction). **Scope correction (2026-07-05, Supervisor)**: the original text said "no RBAC restriction beyond Kitchen membership," which would let Viewer post entries — that contradicts FR-018's blanket "Viewer is read-only" rule (the same class of gap T019 found and fixed for Tasks). Viewer must be excluded from POST here too, same pattern as Notes (everyone-but-Viewer may write). created_at is server-set, never client-supplied.
 
 ---
 
