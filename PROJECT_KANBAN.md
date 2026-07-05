@@ -11,7 +11,6 @@
 
 ### Todo
 - [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1
-- [ ] **T014** — Shift log (per-shift feed, time-sorted) | backend-developer | C1 | Risk: Low | P1
 - [ ] **T015** — Comments component (reusable) + @mentions | backend-developer | C2 | Risk: Med | P1
 - [ ] **T016** — Notification center (bell icon, unread count, mark-as-read) | backend-developer | C1 | Risk: Low | P1
 - [ ] **T017** — Socket.IO realtime wiring (tasks/comments/announcements) | backend-developer | C2 | Risk: Med | P1
@@ -24,6 +23,7 @@
 ### In Progress
 
 ### Ready for Review
+
 
 
 
@@ -42,6 +42,7 @@
 - [x] **T007** — Low-stock threshold flag + dashboard widget (endpoints + standalone LowStockWidget; UI evidence deferred to T018 which hosts it) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
 - [x] **T012** — Notes CRUD, tagging, pin, link-to-entity, search | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
 - [x] **T013** — Announcements (broadcast + read receipts) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
+- [x] **T014** — Shift log (per-shift feed, time-sorted) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
 
 ---
 
@@ -49,7 +50,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T010, T014–T018, T020–T023 | Not yet started | — (T001–T009, T011, T019, T007, T012, T013 complete) |
+| T010, T015–T018, T020–T023 | Not yet started | — (T001–T009, T011, T019, T007, T012–T014 complete) |
 | Follow-up RBAC audit (Notes/Announcements/ShiftLog/Comments) | Not yet a tracked task | T012–T015 must exist first |
 
 ---

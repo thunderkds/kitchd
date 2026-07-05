@@ -81,4 +81,9 @@
 **Why**: FR-021's literal text is "Owner/Chef broadcasts to all Staff, with per-user read receipts" — Admin is not named, so it's excluded rather than assumed-included. This is the third distinct RBAC shape across Inventory/Recipes/Guidelines (Owner/Admin/Chef), Notes (everyone but Viewer), and Announcements (Owner/Chef only) in this codebase — confirms the pattern that each entity's write gate must be read from its own PRD line, never copy-pasted from a prior task's shape.
 **Files**: `apps/api/src/announcements/announcements.controller.ts`, `apps/api/src/announcements/announcements.service.ts`
 
+### 2026-07-05 — ShiftLog write RBAC follows the Notes shape (everyone but Viewer); TASK_GUIDE_T014's original text was wrong
+**Decision**: `POST /shift-logs` is gated to everyone except `Role.VIEWER` (same `WRITE_ROLES` shape as Notes), not the narrower Announcements gate and not the "no RBAC restriction" text the original TASK_GUIDE_T014.md Approach section stated.
+**Why**: The task guide (written at Stage 2 planning time, before FR-018's blanket "Viewer is read-only" rule had been enforced consistently across every entity) said "any authenticated Kitchen member can write, no RBAC restriction beyond Kitchen membership" — this would have let Viewer post ShiftLog entries, repeating the exact class of gap T019 found and fixed for Tasks. The Supervisor corrected the TASK_GUIDE's Approach section before dispatching the implementing agent, rather than letting the agent build to a stale/wrong spec and catching it at Stage 4. Live-verified: a Viewer invite + POST attempt returns 403.
+**Files**: `apps/api/src/shift-logs/shift-logs.controller.ts`, `apps/api/src/shift-logs/shift-logs.service.ts`, `tasks/TASK_GUIDE_T014.md`
+
 ## Infrastructure
