@@ -8,5 +8,8 @@ import { InventoryService } from './inventory.service';
   imports: [PrismaModule, AuthModule],
   controllers: [InventoryController],
   providers: [InventoryService],
+  // Exported so the tasks module's T011 completion flow can reuse the
+  // single StockMovement(CONSUME) write path instead of duplicating it.
+  exports: [InventoryService],
 })
 export class InventoryModule {}
