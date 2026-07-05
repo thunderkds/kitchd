@@ -74,15 +74,15 @@ npm --prefix apps/api run test -- announcements
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| UI: Visual regression | ☐ N/A — backend-only task; UI composed in T018 dashboard | |
-| UI: Design-system compliance | ☐ N/A | |
-| UI: Responsiveness | ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/api/src/announcements/announcements.e2e.spec.ts` — AC1 (Chef posts, visible to Staff via list), AC2 (Staff GET marks read_by, idempotent on re-read), AC3 (Staff 403 on POST) |
+| Verification command run | pass | `DATABASE_URL=... npm --prefix apps/api run test -- announcements` → `Test Suites: 1 passed, 1 total / Tests: 5 passed, 5 total` (all 5 tests: AC1, AC2, AC3, zero-other-members edge case, cross-tenant 404) |
+| Negative cases hold | pass | Staff POST → 403 (AC3); cross-tenant GET → 404 (not 403, per RolesGuard pattern) |
+| verify | pass | PASS — ran `npm --prefix apps/api run test` (full suite): `Test Suites: 16 passed, 16 total / Tests: 124 passed, 124 total`. Manually traced request flow: signup Owner → invite/accept Chef+Staff → Chef POSTs Announcement (201, readBy: []) → Staff GET /announcements lists it → Staff GET /announcements/:id returns 200 with own id appended to readBy, re-GET does not duplicate the id → Staff POST rejected 403 → Owner posting alone in a fresh Kitchen (zero other members) succeeds 201 with readBy: [] (edge case) → cross-tenant Owner B GET on Owner A's Announcement → 404. Supervisor-driven independent live API session (separate live server instance): Owner POST → 201; Staff POST → 403 "Insufficient role for this action"; Staff GET detail → 200 with own id in readBy. Archived to `reports/evidence/T013/verify-api-session.txt`. |
+| Review scope bounded to blast radius | pass | Change confined to `apps/api/src/announcements/**` (new module) + `apps/api/prisma/schema.prisma` (additive model + 2 relation lines) + 1 new migration + `app.module.ts` (module registration, 2 lines). No existing controller/service files touched. |
+| Full smoke suite still green | pass | `npm --prefix apps/api run test` → `Test Suites: 16 passed, 16 total / Tests: 124 passed, 124 total` (includes pre-existing rbac-matrix, guidelines, notes, recipes, inventory, tasks, auth, kitchens suites — none regressed) |
+| UI: Visual regression | N/A — backend-only task; UI composed in T018 dashboard | |
+| UI: Design-system compliance | N/A | |
+| UI: Responsiveness | N/A | |
 
 ---
 
@@ -94,7 +94,7 @@ Announcement module under `/apps/api/src/announcements`, RBAC-gated write (`@Rol
 
 ## Edge Case Checklist
 
-- [ ] Announcement posted to a Kitchen with zero other members yet doesn't error
+- [x] Announcement posted to a Kitchen with zero other members yet doesn't error
 
 ---
 
@@ -120,11 +120,12 @@ Automated CRUD + read-receipt + RBAC tests.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Low risk)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1/P2, 1 P3 advisory
+- [x] Security review: N/A (Low risk)
+- [x] Lint passes
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run — independent live API session confirms all 3 ACs
+- [x] Migration-safety gate: GO (pure additive CREATE TABLE, no data-loss risk)
+- [ ] `memory/MEMORY.md` updated — next: Supervisor diff-driven pass
+- [x] Supervisor notified: task ready for Stage 4 review
