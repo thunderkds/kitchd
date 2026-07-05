@@ -81,9 +81,9 @@ npm --prefix apps/api run test -- notes
 | PASS — verify | pass | Ran the API on a throwaway port (3099) against the real dev Postgres DB and hit every endpoint with curl end-to-end (not just unit tests): `POST /notes` (standalone) → 201 `{"body":"Verify note","tags":["#verify"],...}`; `POST /tasks` + `POST /notes` with `linkedEntityType:"task"` → 201 with `linkedEntityId` set to the real task id; `GET /notes?tag=%23verify` → 200 `[{...tags:["#verify"]}]`; `PATCH /notes/:id {"pinned":true}` → 200 `{"pinned":true}`; `GET /notes?tag='; DROP TABLE notes; --'` → 200 `[]` (no crash/injection). Server log confirmed all 6 Notes routes registered (`NotesController {/notes}`: GET, GET :id, POST, PATCH :id, DELETE :id). Verification server subsequently killed (PID 170098/170099) without touching the pre-existing shared dev watch process (PID 103493/103494). |
 | Review scope bounded to blast radius | pass | Change confined to new `apps/api/src/notes/**`, `apps/web/src/features/notes/**`, one new Prisma migration, plus 3 additive one-line wiring edits (`app.module.ts` import+register, `App.tsx` route, `schema.prisma` Note model + relation arrays on Kitchen/User). No existing controller/service logic touched. |
 | Full smoke suite still green | pass | `npm --prefix apps/api run test` → `Test Suites: 15 passed, 15 total` / `Tests: 119 passed, 119 total`. `npm --prefix apps/web run test` → `Test Files: 7 passed (7)` / `Tests: 31 passed (31)`. Lints clean: `npm --prefix apps/api run lint` (eslint --fix, exit 0, only prettier formatting applied) and `npm --prefix apps/web run lint` (oxlint, exit 0). |
-| **UI: Visual regression** | ☐ N/A | No Playwright/MCP browser session available to this backend-implementer sandbox to capture a live screenshot. Component-render assertions in `NotesPage.test.tsx` cover pinned-first ordering and editor field presence in lieu of a screenshot. Recommend Stage 4 reviewer capture via `Skill({ skill: "verify" })` MCP session before merge if a visual artifact is required. |
-| **UI: Design-system compliance** | ☐ N/A | Reused existing Tailwind utility classes verbatim from `features/tasks/TasksPage.tsx` (button/border/spacing/text-size scale) — no new design tokens introduced. No standalone CSS-audit tool run in this sandbox. |
-| **UI: Responsiveness** | ☐ N/A | Layout reuses the same `flex flex-wrap` / `p-6` responsive pattern already verified for TasksPage in prior tasks; no dedicated breakpoint screenshot session run here — flagging for Stage 4 if a fresh capture is required. |
+| **UI: Visual regression** | pass | Supervisor-driven live browser session (easy-ui-mcp, localhost:8766): signed up, navigated to `/notes`, confirmed empty state ("No notes yet."), created a titled+tagged Note via the form, confirmed it rendered with title/body/tags/Pin/Delete controls, pinned it (button toggled Pin→Unpin, state persisted on screen). Screenshots archived to `reports/evidence/T012/{notes-empty-state,note-created-pinned,tag-search-result}.png`. Session report: `reports/evidence/T012/session-90c9fd43-3030-45ec-a259-3bb84212ceab.{json,html}`. |
+| **UI: Design-system compliance** | pass | Confirmed live: reuses the same border/rounded/text-sm scale and dark-slate active-tab styling as TasksPage's My/Team-equivalent toggle. No new design tokens introduced. |
+| **UI: Responsiveness** | pass | Confirmed via DOM assertion in the live session: header row uses `flex items-center justify-between flex-wrap gap-3` (wraps on narrow viewports) and the editor card uses `max-w-xl`, matching the existing card-width convention elsewhere in the app. easy-ui-mcp has no viewport-resize primitive (known limitation) — verified via DOM/class assertion rather than a physical resize screenshot, per the established workaround. |
 
 ---
 
@@ -151,10 +151,11 @@ Automated CRUD + search + My/Team scoping tests; manual check of linked-entity d
 ## Completion Checklist
 
 - [x] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run — deferred to Stage 4 (Supervisor/reviewer), not run by this implementer
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1/P2/P3
 - [x] Security review: N/A (Low risk)
 - [x] Lint passes
 - [x] Tests written AND pass — output pasted into Evidence table
-- [x] Live end-to-end curl verification run against a real server/DB (see Evidence "verify" row) — no MCP browser session available in this sandbox for a UI screenshot capture
-- [ ] `memory/MEMORY.md` updated — Supervisor-only write, flagged for Stage 5 diff-driven pass
+- [x] `Skill({ skill: "verify" })` run — live API session + live browser session (easy-ui-mcp), evidence archived to `reports/evidence/T012/`
+- [x] Migration-safety gate: GO (pure additive CREATE TABLE, no data-loss risk)
+- [ ] `memory/MEMORY.md` updated — next: Supervisor diff-driven pass
 - [x] Supervisor notified: task ready for Stage 4 review
