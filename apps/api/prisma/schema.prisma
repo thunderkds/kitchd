@@ -66,6 +66,7 @@ model Kitchen {
   tasks        Task[]
   guidelines   Guideline[]
   notes        Note[]
+  announcements Announcement[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -88,6 +89,7 @@ model User {
   stockMovements StockMovement[]
   assignedTasks  Task[]
   notes          Note[]
+  announcements  Announcement[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -283,6 +285,31 @@ model Note {
   @@index([kitchenId])
   @@index([authorId])
   @@map("notes")
+}
+
+// Kitchen-wide broadcast channel (T013). Per FR-021 only Owner/Chef may
+// post; every Kitchen member can view. readBy is a plain string array of
+// user ids appended to on first GET of the detail route. Updated via
+// Prisma's atomic `push` (not a read-modify-write) so concurrent reads by
+// different users can't race and drop an id — same append-only-ledger
+// spirit as StockMovement, just on an array column instead of a separate
+// table since read receipts have no other fields to track.
+model Announcement {
+  id        String   @id @default(uuid())
+  kitchenId String   @map("kitchen_id")
+  authorId  String   @map("author_id")
+  title     String
+  body      String
+  readBy    String[] @default([]) @map("read_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@map("announcements")
 }
 
 model StockBatch {
