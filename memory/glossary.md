@@ -22,7 +22,7 @@ Confirmed 2026-07-02, user-approved. Source: `requirement.md` §6, `PRD.md`.
 - **StockMovement**: id, ingredient_id, type(receive/consume/waste/adjust), qty, reason, actor_id, created_at.
 - **Guideline**: id, kitchen_id, title, type(SOP/checklist), steps[], attachments[].
 - **Task**: id, kitchen_id, title, status, assignee_id, due_at, recurrence_rule, source_recipe_id/nullable, source_guideline_id/nullable (added T009, mutually exclusive with source_recipe_id — set by "generate task" from a Recipe or Guideline respectively), checklist_items[].
-- **Note**: id, kitchen_id, author_id, title, body_md, tags[], pinned, linked_entity(type,id).
+- **Note**: id, kitchen_id, author_id, title (nullable), body (plain text, not `body_md` as originally planned — no markdown rendering built in T012), tags[] (plain strings, stored exactly as submitted e.g. `#prep` — tag search is an exact array-element match via Prisma's `has`, not full-text/substring), pinned, linked_entity_type/linked_entity_id (nullable pair, no FK — matches `Task.sourceRecipeId` pattern, so a link to a since-deleted entity never crashes on load). Built T012.
 - **Announcement**: id, kitchen_id, author_id, title, body, read_by[].
 - **ShiftLog**: id, kitchen_id, author_id, shift(morning/evening), body, created_at.
 - **Comment**: id, entity_type, entity_id, author_id, body, mentions[], created_at. Polymorphic — attaches to Recipe/Task/Ingredient.
