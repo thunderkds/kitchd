@@ -25,10 +25,13 @@ Note: per CLAUDE.md Hard-Stop Gate 2, any task whose scope resembles "test cover
 Close the loop on RBAC: verify every module built in T004–T015 actually enforces roles correctly, including the previously-unexercised Viewer role.
 
 **Restated intent**:
-> Every CRUD endpoint across Inventory, Recipes, Guidelines, Tasks, Notes, Announcements, ShiftLogs, Comments is verified against the 4-role matrix (Owner/Admin, Chef, Staff, Viewer), with automated tests proving each cell, and zero ad-hoc permission checks outside `RolesGuard`.
+> Every CRUD endpoint across Inventory, Recipes, Guidelines, Tasks is verified against the 4-role matrix (Owner/Admin, Chef, Staff, Viewer), with automated tests proving each cell, and zero ad-hoc permission checks outside `RolesGuard`.
+
+**Scope correction (2026-07-05, Supervisor)**: The original scope listed 8 modules including Notes, Announcements, ShiftLogs, Comments — those are T012–T015, still Todo, and don't exist in the codebase yet. Same task-numbering-isn't-a-dependency-graph gap previously hit on T009/T006 (see `memory/learnings.md`). Per user decision, this pass covers only the 4 modules that exist today (Inventory, Recipes, Guidelines, Tasks). A follow-up RBAC audit pass covering Notes/Announcements/ShiftLog/Comments is required once T012–T015 land — track as a new task at that time, do not silently consider T019 fully closing FR-018 forever.
 
 **Out of scope**:
 - Building any new feature — this is a verification-and-fix pass on existing modules only
+- Notes/Announcements/ShiftLogs/Comments RBAC (modules don't exist yet — T012-T015)
 
 **Requirement Refs**:
 - FR-018, US-010

@@ -62,10 +62,17 @@ export class TasksService {
     });
   }
 
-  // Staff/Viewer may only update `status` and `checklistItems`, and only
-  // on a Task currently assigned to themselves. Reassigning (or any
-  // other field) requires a WRITE_ROLES role — enforced here, not just
-  // hidden client-side, per the Edge Case Checklist.
+  // Staff (only) may update `status` and `checklistItems`, and only on a
+  // Task currently assigned to themselves. Reassigning (or any other
+  // field) requires a WRITE_ROLES role — enforced here, not just hidden
+  // client-side, per the Edge Case Checklist.
+  //
+  // RBAC FIX (T019): Viewer is strictly read-only per FR-018 ("Staff can
+  // ... manage own Tasks ... Viewer is read-only"). Previously this
+  // branch only checked WRITE_ROLES membership, so a Viewer assigned to
+  // a Task could still PATCH its status/checklistItems — the Viewer
+  // role was never exercised in T008's own tests. Viewer must always be
+  // denied here, regardless of assignment.
   async update(
     id: string,
     kitchenId: string,
@@ -77,6 +84,9 @@ export class TasksService {
     const isWriter = WRITE_ROLES.includes(caller.role);
 
     if (!isWriter) {
+      if (caller.role === Role.VIEWER) {
+        throw new ForbiddenException('Viewer role is read-only');
+      }
       if (existing.assigneeId !== caller.id) {
         throw new ForbiddenException('Not your task');
       }

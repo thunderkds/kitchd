@@ -13,7 +13,10 @@ export class GuidelinesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(kitchenId: string, type?: string) {
-    if (type !== undefined && !Object.values(GuidelineType).includes(type as GuidelineType)) {
+    if (
+      type !== undefined &&
+      !Object.values(GuidelineType).includes(type as GuidelineType)
+    ) {
       throw new BadRequestException(`Invalid type filter: ${type}`);
     }
     return this.prisma.guideline.findMany({
