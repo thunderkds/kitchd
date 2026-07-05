@@ -69,6 +69,7 @@ model Kitchen {
   announcements Announcement[]
   shiftLogs    ShiftLog[]
   comments     Comment[]
+  notifications Notification[]
 
   @@index([organizationId])
   @@map("kitchens")
@@ -94,6 +95,7 @@ model User {
   announcements  Announcement[]
   shiftLogs      ShiftLog[]
   comments       Comment[]
+  notifications  Notification[]
 
   @@index([organizationId])
   @@index([kitchenId])
@@ -132,6 +134,12 @@ model Ingredient {
   allergens     String[]
   supplierId    String?  @map("supplier_id")
   minThreshold  Float?   @map("min_threshold")
+  // T016: last-known low-stock state, used solely to detect the
+  // above->below threshold TRANSITION (not the level itself) so the
+  // low-stock alert only notifies once per crossing, not on every poll.
+  // A single boolean is simpler than a separate tracking table per the
+  // Approach note — no history is needed, only "was it already low?".
+  wasLowStock   Boolean  @default(false) @map("was_low_stock")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -372,6 +380,38 @@ model Comment {
   @@index([authorId])
   @@index([entityType, entityId])
   @@map("comments")
+}
+
+enum NotificationType {
+  MENTION
+  LOW_STOCK
+  TASK_ASSIGNED
+}
+
+// In-app notification feed (T016). Aggregates @mentions (T015),
+// low-stock threshold crossings (T007/Ingredient.wasLowStock), and task
+// assignment. `type` is an informational discriminator only — like
+// Note.linkedEntityType/Comment.entityType there is deliberately NO FK
+// to the source row (Comment/Ingredient/Task), so a Notification still
+// displays gracefully if its source is later deleted (see Edge Case
+// Checklist). `body` is a fully-rendered, human-readable message
+// snapshotted at creation time — nothing is re-derived from the source
+// at read time.
+model Notification {
+  id          String           @id @default(uuid())
+  kitchenId   String           @map("kitchen_id")
+  recipientId String           @map("recipient_id")
+  type        NotificationType
+  body        String
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  kitchen   Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  recipient User    @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([recipientId])
+  @@map("notifications")
 }
 
 model StockBatch {

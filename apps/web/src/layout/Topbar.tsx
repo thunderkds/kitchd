@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { clearToken } from '../routes/auth';
+import { NotificationBell } from '../components/NotificationBell/NotificationBell';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -24,9 +25,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         Menu
       </button>
       <span className="font-semibold">KitchenOS</span>
-      <button type="button" className="text-sm text-gray-600 hover:text-gray-900" onClick={logout}>
-        Log out
-      </button>
+      <div className="flex items-center gap-3">
+        <NotificationBell />
+        <button type="button" className="text-sm text-gray-600 hover:text-gray-900" onClick={logout}>
+          Log out
+        </button>
+      </div>
     </header>
   );
 }
