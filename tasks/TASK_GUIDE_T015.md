@@ -70,19 +70,57 @@ npm --prefix apps/api run test -- comments && npm --prefix apps/web run test -- 
 
 > **Evidence is a required document, not a formality.** A task is not Done until every row below is filled with real, pasted output — not just checked. The `verify` row's Notes cell must contain the literal word "pass" (case-insensitive) for the pipeline gate hook to allow merge; use a bare `| verify |` first cell (no backticks) or the hook's regex won't match. See `memory/learnings.md` (2026-07-03/2026-07-04 entries) for the exact gotcha history.
 
+**Pasted output (verification command, run 2026-07-05):**
+
+```
+> @kitchenos/api@0.0.1 test
+> jest comments
+
+PASS src/comments/comments.e2e.spec.ts
+  Comments (e2e)
+    ✓ AC1: @mentioning a Kitchen member resolves to their user id (267 ms)
+    ✓ AC3: @mentioning a non-member does not resolve (mentions stays empty, comment still posts) (68 ms)
+    ✓ Cross-tenant: @mentioning a same-username user from a DIFFERENT Kitchen does not resolve (218 ms)
+    ✓ AC2: a comment thread on one Task is independent from another Task (entityType+entityId scoping), and also independent across entity types (83 ms)
+    ✓ rejects an unknown entityType (56 ms)
+    ✓ Viewer cannot create a Comment (403) (161 ms)
+    ✓ Staff CAN create a Comment (per FR-018) (168 ms)
+    ✓ single-level reply threading: a reply resolves under its parent, replying-to-a-reply is rejected (81 ms)
+    ✓ a comment on a since-deleted Task loads without crashing (no FK, informational back-reference) (64 ms)
+    ✓ only the author may delete their own Comment (403 for others) (168 ms)
+    ✓ Cross-tenant: a user from another Kitchen gets 404 reading another Kitchen comment thread by id lookup path is not exposed, but delete is 404 (114 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       11 passed, 11 total
+
+> @kitchenos/web@0.0.0 test
+> vitest run comments
+
+ RUN  v4.1.9 apps/web
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+```
+
+**Full smoke suite (run 2026-07-05):**
+
+```
+API: Test Suites: 18 passed, 18 total / Tests: 142 passed, 142 total
+Web: Test Files  8 passed (8) / Tests  37 passed (37)
+```
+
 ### Evidence (filled by reviewer at Stage 4/5)
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | Comments component screenshot |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/api/src/comments/comments.e2e.spec.ts` (11 tests: AC1 mention resolves, AC3 non-member mention silently dropped, cross-tenant mention non-resolution, AC2 entityType+entityId thread scoping, unknown entityType rejected, Viewer 403, Staff allowed, single-level reply threading + reply-to-reply rejected, informational back-reference survives entity delete, author-only delete, cross-tenant 404) + `apps/web/src/components/Comments/Comments.test.tsx` (6 tests: list render, empty state, error state, mention chips, single-level reply render, submit reloads thread). All 17 pass. |
+| Verification command run | pass | `npm --prefix apps/api run test -- comments && npm --prefix apps/web run test -- comments` — see pasted output below. |
+| Negative cases hold | pass | Non-member @mention silently dropped (comment still posts, AC3); cross-Kitchen same-username mention does NOT resolve (main security-sensitive case); unknown entityType → 400; Viewer → 403; reply-to-a-reply → 400; cross-tenant delete → 404. |
+| verify | pass | PASS — see `Skill({ skill: "verify" })` note below; ran both suites end-to-end against the live Postgres instance (docker-compose, kitchenos-postgres), migration applied, full API + web smoke suites green. Supervisor-driven independent live API session (separate live server instance): Owner posts a comment mentioning their own username → mentions resolved to own id; single-level reply posted successfully; reply-to-that-reply → 400 (threading depth enforced); comment mentioning a nonexistent user → 201 with mentions: [] (silently dropped, not erroring). Archived to `reports/evidence/T015/verify-api-session.txt`. |
+| Review scope bounded to blast radius | pass | Change is additive: new `apps/api/src/comments/**` module, new `apps/web/src/components/Comments/**` component, one new Prisma model + migration, one-line registration in `app.module.ts`. No existing files' behavior changed. |
+| Full smoke suite still green | pass | API: `npm --prefix apps/api run test` → 18 suites / 142 tests passed. Web: `npm --prefix apps/web run test` → 8 files / 37 tests passed. |
+| **UI: Visual regression** | ☐ N/A | No Recipe/Task/Ingredient detail page exists yet to mount `<Comments />` on (same gap T007's LowStockWidget hit — see Supervisor scope correction above). Component is standalone/host-page-agnostic; needs re-verification once a real detail page exists. |
+| **UI: Design-system compliance** | ☐ N/A | Same reason — no live host page/viewport to audit computed styles against yet; component reuses the same Tailwind utility classes and card/list treatment as LowStockWidget for consistency. |
+| **UI: Responsiveness** | ☐ N/A | Same reason — no host page/viewport exists yet; component uses `w-full` layout with no fixed widths so it should reflow, but this is unverified until mounted. |
 
 ---
 
@@ -114,14 +152,16 @@ npm --prefix apps/api run test -- comments && npm --prefix apps/web run test -- 
 
 ## Approach
 
-Comment module under `/apps/api/src/comments`, polymorphic on (entity_type, entity_id). @mention parsing: regex-extract `@username` tokens, resolve each against the current Kitchen's membership list only (never cross-Kitchen), silently drop unresolved mentions rather than erroring the whole comment. Reusable `<Comments entityType entityId />` frontend component mounted on Recipe/Task/Ingredient detail pages.
+Comment module under `/apps/api/src/comments`, polymorphic on (entity_type, entity_id). @mention parsing: regex-extract `@username` tokens, resolve each against the current Kitchen's membership list only (never cross-Kitchen), silently drop unresolved mentions rather than erroring the whole comment. Reusable `<Comments entityType entityId />` frontend component.
+
+**Scope correction (2026-07-05, Supervisor)**: no Recipe/Task/Ingredient *detail* page exists yet in this codebase (Inventory/Recipes/Guidelines render via a generic SectionPage placeholder from T003; Tasks has only the kanban/list view, no per-task detail page) — same gap as T007's LowStockWidget/T018's Dashboard. Build `<Comments entityType entityId />` as a standalone, host-page-agnostic component (like T007's LowStockWidget) — do NOT build new detail pages, that's out of scope. UI evidence for visual/design/responsiveness may be N/A-justified the same way T007's was, with a note that it needs re-verification once a real detail page exists to mount it on.
 
 ---
 
 ## Edge Case Checklist
 
-- [ ] @mentioning a user not in the Kitchen does not resolve/notify (silently ignored, comment still posts)
-- [ ] Reply threading depth: flat or single-level nesting only for MVP (document the choice, avoid unbounded recursion)
+- [x] @mentioning a user not in the Kitchen does not resolve/notify (silently ignored, comment still posts) — covered by AC3 test
+- [x] Reply threading depth: flat or single-level nesting only for MVP (document the choice, avoid unbounded recursion) — enforced in `CommentsService#create` (a reply's parent must itself have `parentId === null`; replying to a reply is rejected with 400), documented in schema.prisma Comment doc-comment and comments.service.ts
 
 ---
 
@@ -148,11 +188,12 @@ Automated tests for mention resolution (member vs non-member), entity-type scopi
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Medium risk, judgment call — cross-tenant mention leakage is the main concern, covered by tests above)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0/P1/P2/P3
+- [x] Security review: `Skill({ skill: "security-review" })` run — 0 HIGH/MEDIUM findings; cross-tenant mention leakage specifically examined and confirmed scoped correctly
+- [x] Lint passes — `npm --prefix apps/api run lint` (0 errors, auto-fix only), `npm --prefix apps/web run lint` (oxlint, clean)
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run — independent live API session confirms mention resolution, threading depth, and unresolved-mention edge cases
+- [x] Migration-safety gate: GO (pure additive CREATE TABLE, no data-loss risk)
+- [ ] `memory/MEMORY.md` updated — next: Supervisor diff-driven pass
+- [x] Supervisor notified: task ready for Stage 4 review
