@@ -75,15 +75,15 @@ npm --prefix apps/api run test -- inventory-alerts
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | widget screenshot |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | widget at mobile width |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/api/src/inventory/alerts/inventory-alerts.e2e.spec.ts` (8 tests: AC1 low-stock below threshold, AC2 at/above threshold excluded, AC3 expiring within default 3 days, beyond-N-days excluded, days=0/null-threshold edge case, null expiry_date excluded, configurable `?days=`, cross-tenant isolation). `apps/web/src/components/LowStockWidget/LowStockWidget.test.tsx` (3 tests: list render, empty state, error state). |
+| Verification command run | pass | `npm --prefix apps/api run test -- inventory-alerts` → `Test Suites: 1 passed, 1 total / Tests: 8 passed, 8 total` |
+| Negative cases hold | pass | min_threshold=0 never flags (test "Edge case: min_threshold = 0 never flags as low-stock" passes); null expiry_date excluded, not crashed (test "Edge case: a StockBatch with null expiry_date is excluded, not crashed on" passes); cross-tenant isolation confirmed |
+| verify | pass | Supervisor-driven independent live API session (separate from the automated suite): created a low-stock ingredient (threshold 5, stock 2) and an OK one (threshold 5, stock 10) → `GET /inventory/alerts/low-stock` returned only the low-stock one. Created 3 StockBatches (expiring +2 days, +30 days, and no expiry) → `GET /inventory/alerts/expiring` (default days=3) returned exactly the +2-day batch, confirming both the window filter and the null-expiry-date edge case exclusion. Archived to `reports/evidence/T007/verify-api-session.txt`. Full smoke suites (api 107/107, web 27/27) both green post-change. |
+| Review scope bounded to blast radius | pass | Change is additive: new `apps/api/src/inventory/alerts/**` module (controller/service/DTO/spec), 1-line registration diff in `inventory.module.ts`, and new standalone `apps/web/src/components/LowStockWidget/**`. No existing endpoint, DTO, or component was modified. `InventoryService#currentStock` reused as-is (no changes) to avoid duplicating the ledger-summation logic. |
+| Full smoke suite still green | pass | api: `npm --prefix apps/api run test` → `Test Suites: 14 passed, 14 total / Tests: 107 passed, 107 total`. web: `npx vitest run` → `Test Files 6 passed (6) / Tests 27 passed (27)` |
+| **UI: Visual regression** | N/A (justified) | `LowStockWidget` is a standalone component with no host page yet — Dashboard composition is explicitly T018's scope (see Out of Scope). No live route exists to screenshot via Playwright MCP. Verified instead via component-level render assertions in `LowStockWidget.test.tsx` (renders ingredient rows, empty state, error state). Re-verify visually once T018 composes it into the Dashboard. |
+| **UI: Design-system compliance** | N/A (justified) | Same reason as above — no live page to inspect computed styles on. Amber/red warning classes (`bg-amber-50 text-amber-700` / `bg-red-50 text-red-700`) and Tailwind spacing follow the same utility-class conventions as `CompleteTaskDialog` (T011), the closest prior art in this codebase. |
+| **UI: Responsiveness** | N/A (justified) | Same reason — widget uses `w-full` and no fixed widths, matching the Dashboard-grid-cell expectation, but responsive behavior can only be meaningfully asserted once mounted in T018's grid layout. |
 
 ---
 
@@ -121,8 +121,8 @@ Read-only query endpoints under `/apps/api/src/inventory/alerts`, computed from 
 
 ## Edge Case Checklist
 
-- [ ] Ingredient with min_threshold = 0 never flags (division/comparison edge case)
-- [ ] StockBatch with null expiry_date is excluded from expiring-soon, not crashed on
+- [x] Ingredient with min_threshold = 0 never flags (division/comparison edge case)
+- [x] StockBatch with null expiry_date is excluded from expiring-soon, not crashed on
 
 ---
 
@@ -149,11 +149,11 @@ Automated tests for threshold boundary conditions; manual widget render check.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Low risk)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated (if new patterns)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review: `Skill({ skill: "code-review" })` run — Stage 4 pass complete, 0 P0/P1/P2/P3
+- [x] Security review: N/A (Low risk)
+- [x] Lint passes (`npx eslint "src/inventory/alerts/**/*.ts"` clean; `npx oxlint src/components/LowStockWidget` clean)
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run — live API session confirms AC1-3 + both edge cases, evidence archived to `reports/evidence/T007/verify-api-session.txt`
+- [x] `memory/MEMORY.md` updated (if new patterns) — no new pattern beyond existing kitchen-scoped-controller / append-only-ledger reuse; flagged to Supervisor for one-liner if desired
+- [x] Supervisor notified: task ready for Stage 4 review
