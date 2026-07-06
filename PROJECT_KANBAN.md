@@ -10,9 +10,10 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0
 
 ### In Progress
+- [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0 | Started: 2026-07-06
+- [ ] **T024** — RBAC enforcement audit — Notes, Announcements, ShiftLog, Comments | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-06
 
 ### Ready for Review
 
@@ -49,9 +50,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T022 | Not yet started | — (all other tasks T001–T021, T023 complete) |
 | T023 staging deploy (not the CI/CD code itself) | Workflow merged, but the actual Render deploy cannot fire yet | Human: create Render service(s), add `RENDER_DEPLOY_HOOK_WEB`, `RENDER_DEPLOY_HOOK_API`, `STAGING_DATABASE_URL` (optionally `RENDER_API_KEY` + service IDs) as GitHub repo secrets |
-| Follow-up RBAC audit (Notes/Announcements/ShiftLog/Comments) | Ready to schedule as new task (e.g. T024) — all 4 modules now exist | — |
 
 ---
 
