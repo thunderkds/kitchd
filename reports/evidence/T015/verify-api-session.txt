@@ -1,0 +1,17 @@
+T015 Stage 5 live verify session (Supervisor-driven)
+
+Owner (bob) posts a comment on Task:11111111... mentioning "@bob-t015-<ts>"
+  -> 201, mentions: [own user id] (AC1: mention resolves to Kitchen member)
+
+Reply to that comment (parentId = top-level comment id) -> 201 (single-level OK)
+Reply to that reply (parentId = the reply's id) -> 400
+  "Replies may only be one level deep (cannot reply to a reply)"
+  (confirms Edge Case Checklist: single-level threading enforced server-side)
+
+Comment mentioning "@totally-nonexistent-user" -> 201, mentions: []
+  (AC3: unresolved mention silently dropped, comment still posts)
+
+GET thread for the entity returns all 3 comments in creation order.
+
+Full backend suite: 142/142 tests green. Frontend: 37/37 tests green.
+Lint: clean on both.

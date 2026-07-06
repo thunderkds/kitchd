@@ -1,0 +1,191 @@
+[
+  {
+    "screen": "dashboard",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-dashboard-375.png"
+  },
+  {
+    "screen": "tasks-kanban",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-tasks-kanban-375.png"
+  },
+  {
+    "screen": "tasks-list",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-tasks-list-375.png"
+  },
+  {
+    "screen": "guidelines",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-guidelines-375.png"
+  },
+  {
+    "screen": "inventory",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-inventory-375.png"
+  },
+  {
+    "screen": "notes",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-notes-375.png"
+  },
+  {
+    "screen": "announcements",
+    "viewport": "375",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-announcements-375.png"
+  },
+  {
+    "screen": "dashboard",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-dashboard-768.png"
+  },
+  {
+    "screen": "tasks-kanban",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-tasks-kanban-768.png"
+  },
+  {
+    "screen": "tasks-list",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-tasks-list-768.png"
+  },
+  {
+    "screen": "guidelines",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-guidelines-768.png"
+  },
+  {
+    "screen": "inventory",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-inventory-768.png"
+  },
+  {
+    "screen": "notes",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-notes-768.png"
+  },
+  {
+    "screen": "announcements",
+    "viewport": "768",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-announcements-768.png"
+  },
+  {
+    "screen": "dashboard",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-dashboard-1024.png"
+  },
+  {
+    "screen": "tasks-kanban",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-tasks-kanban-1024.png"
+  },
+  {
+    "screen": "tasks-list",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-tasks-list-1024.png"
+  },
+  {
+    "screen": "guidelines",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-guidelines-1024.png"
+  },
+  {
+    "screen": "inventory",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-inventory-1024.png"
+  },
+  {
+    "screen": "notes",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-notes-1024.png"
+  },
+  {
+    "screen": "announcements",
+    "viewport": "1024",
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "overflow": 0,
+    "pass": true,
+    "screenshot": "/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-hungnguyen111-kitchd/67ec54f8-044b-4890-a385-63e5b7b2cae4/scratchpad/t021-announcements-1024.png"
+  }
+]

@@ -1,0 +1,17 @@
+T007 Stage 5 live verify session (Supervisor-driven)
+
+Low-stock:
+  - Ingredient A: minThreshold=5, stock=2 -> appears in GET /inventory/alerts/low-stock (AC1)
+  - Ingredient B: minThreshold=5, stock=10 -> does NOT appear (AC2)
+  Result: [ { "name": "Low Stock Flour", "minThreshold": 5, "currentStock": 2 } ] -- only A returned.
+
+Expiring-soon (default days=3):
+  - Batch 1: expiryDate = today+2 -> appears (AC3)
+  - Batch 2: expiryDate = today+30 -> does NOT appear
+  - Batch 3: expiryDate = null -> does NOT appear (edge case, no crash)
+  Result: exactly one batch returned (the +2-day one), confirming both the
+  window filter and the null-expiry exclusion.
+
+Full backend suite: 107/107 tests green.
+Full frontend suite: 27/27 tests green.
+Lint: clean on both.

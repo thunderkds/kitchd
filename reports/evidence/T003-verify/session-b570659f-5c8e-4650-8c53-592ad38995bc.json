@@ -1,0 +1,149 @@
+{
+  "id": "b570659f-5c8e-4650-8c53-592ad38995bc",
+  "target": "T003 base layout verify - localhost:8766",
+  "status": "passed",
+  "startedAt": "2026-07-03T05:11:44.404Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-03T05:11:46.584Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks"
+    },
+    {
+      "timestamp": "2026-07-03T05:11:48.301Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:11:51.283Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:12.887Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:19.411Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Sign up\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:22.409Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "t003-verify@example.test"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:22.770Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Passw0rd!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:23.529Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Organization name\"]",
+        "value": "T003VerifyOrg"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:23.720Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Kitchen name\"]",
+        "value": "T003VerifyKitchen"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:25.428Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:26.975Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:29.954Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783055609929.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:30.066Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "a:has-text(\"Inventory\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:31.817Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:34.408Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log out\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:35.995Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:39.741Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/inventory"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/inventory"
+    },
+    {
+      "timestamp": "2026-07-03T05:13:41.842Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-03T05:13:44.285Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783055624253.png"
+      },
+      "ok": true
+    }
+  ],
+  "endedAt": "2026-07-03T05:13:44.330Z"
+}

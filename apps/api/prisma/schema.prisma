@@ -1,0 +1,462 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  CHEF
+  STAFF
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+}
+
+enum StockMovementType {
+  RECEIVE
+  CONSUME
+  WASTE
+  ADJUST
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum GuidelineType {
+  SOP
+  CHECKLIST
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  kitchens Kitchen[]
+  users    User[]
+  invites  Invite[]
+
+  @@map("organizations")
+}
+
+model Kitchen {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users        User[]
+  invites      Invite[]
+  ingredients  Ingredient[]
+  recipes      Recipe[]
+  tasks        Task[]
+  guidelines   Guideline[]
+  notes        Note[]
+  announcements Announcement[]
+  shiftLogs    ShiftLog[]
+  comments     Comment[]
+  notifications Notification[]
+
+  @@index([organizationId])
+  @@map("kitchens")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  kitchenId      String   @map("kitchen_id")
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  role           Role     @default(OWNER)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  invitesSent  Invite[]
+  stockMovements StockMovement[]
+  assignedTasks  Task[]
+  notes          Note[]
+  announcements  Announcement[]
+  shiftLogs      ShiftLog[]
+  comments       Comment[]
+  notifications  Notification[]
+
+  @@index([organizationId])
+  @@index([kitchenId])
+  @@map("users")
+}
+
+model Invite {
+  id             String       @id @default(uuid())
+  email          String
+  organizationId String       @map("organization_id")
+  kitchenId      String       @map("kitchen_id")
+  role           Role
+  token          String       @unique
+  status         InviteStatus @default(PENDING)
+  invitedById    String       @map("invited_by_id")
+  expiresAt      DateTime?    @map("expires_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([email, kitchenId, status])
+  @@index([kitchenId])
+  @@map("invites")
+}
+
+model Ingredient {
+  id            String   @id @default(uuid())
+  kitchenId     String   @map("kitchen_id")
+  name          String
+  unit          String
+  costPerUnit   Float    @map("cost_per_unit")
+  category      String?
+  allergens     String[]
+  supplierId    String?  @map("supplier_id")
+  minThreshold  Float?   @map("min_threshold")
+  // T016: last-known low-stock state, used solely to detect the
+  // above->below threshold TRANSITION (not the level itself) so the
+  // low-stock alert only notifies once per crossing, not on every poll.
+  // A single boolean is simpler than a separate tracking table per the
+  // Approach note — no history is needed, only "was it already low?".
+  wasLowStock   Boolean  @default(false) @map("was_low_stock")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  kitchen        Kitchen         @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  stockBatches   StockBatch[]
+  stockMovements StockMovement[]
+  recipeIngredients RecipeIngredient[]
+
+  @@index([kitchenId])
+  @@map("ingredients")
+}
+
+model Recipe {
+  id        String   @id @default(uuid())
+  kitchenId String   @map("kitchen_id")
+  name      String
+  steps     String[]
+  servings  Int?
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  kitchen     Kitchen            @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  ingredients RecipeIngredient[]
+  versions    RecipeVersion[]
+
+  @@index([kitchenId])
+  @@map("recipes")
+}
+
+// Current, live ingredients list for a Recipe. qty is the only field
+// stored here — cost is never persisted on this row; it's always
+// recomputed from the live Ingredient.cost_per_unit at read/save time
+// (see RecipesService#computeCost). This is a deliberate MVP choice,
+// not an oversight: cost_computed always reflects current ingredient
+// pricing rather than a point-in-time snapshot.
+model RecipeIngredient {
+  id           String   @id @default(uuid())
+  recipeId     String   @map("recipe_id")
+  ingredientId String   @map("ingredient_id")
+  qty          Float
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  // Restrict (not Cascade/SetNull): an Ingredient referenced by a Recipe
+  // cannot be deleted out from under it. There is currently no
+  // ingredient-delete endpoint in the Inventory module (T004), so this
+  // is a forward-looking safe default rather than an active guard today.
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_ingredients")
+}
+
+// Append-only version history, mirroring the StockMovement ledger
+// pattern: no update/delete route, one row written per edit. Each row
+// is a full snapshot of the Recipe + its ingredients qty at the moment
+// of that edit, so prior versions remain retrievable after later edits.
+// costComputedAtSnapshot is a historical record of what the cost WAS at
+// save time for this version — distinct from the live cost_computed
+// shown on GET /recipes/:id, which always reflects current prices.
+model RecipeVersion {
+  id                     String   @id @default(uuid())
+  recipeId               String   @map("recipe_id")
+  version                Int
+  name                   String
+  steps                  String[]
+  servings               Int?
+  ingredientsSnapshot    Json     @map("ingredients_snapshot")
+  costComputedAtSnapshot Float    @map("cost_computed_at_snapshot")
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@map("recipe_versions")
+}
+
+// Task CRUD only (T008). recurrenceRule and sourceRecipeId are schema
+// placeholders for future tasks (T010 recurrence materialization, T009
+// generate-from-recipe) — no logic reads/acts on them yet.
+// checklistItems is a JSON array of {id, text, done} — toggled via
+// PATCH by the assignee; no separate "complete task" endpoint here
+// (that belongs to T011, which also triggers stock deduction).
+model Task {
+  id             String     @id @default(uuid())
+  kitchenId      String     @map("kitchen_id")
+  title          String
+  status         TaskStatus @default(TODO)
+  assigneeId     String?    @map("assignee_id")
+  dueAt          DateTime?  @map("due_at")
+  recurrenceRule String?    @map("recurrence_rule")
+  sourceRecipeId    String? @map("source_recipe_id")
+  sourceGuidelineId String? @map("source_guideline_id")
+  // Recurrence (T010): a Task with `recurrenceRule` set (e.g. "daily") is
+  // a *template*. The nightly job clones it into a fresh occurrence Task
+  // stamped with `recurringTemplateId` + `occurrenceDate` (date-only, no
+  // time component). The unique constraint below is what makes re-running
+  // the job for the same day a no-op instead of a duplicate insert.
+  recurringTemplateId String?   @map("recurring_template_id")
+  occurrenceDate       DateTime? @map("occurrence_date") @db.Date
+  checklistItems Json       @default("[]") @map("checklist_items")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  kitchen  Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  assignee User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  recurringTemplate    Task?  @relation("TaskRecurrence", fields: [recurringTemplateId], references: [id], onDelete: SetNull)
+  generatedOccurrences Task[] @relation("TaskRecurrence")
+
+  @@unique([recurringTemplateId, occurrenceDate])
+  @@index([kitchenId])
+  @@index([assigneeId])
+  @@map("tasks")
+}
+
+// Non-recipe SOP/checklist documents (e.g. "Opening Checklist",
+// "Sanitation Procedure"). Deliberately simpler than Recipe: no
+// ingredients, no cost roll-up, no version history — just an ordered
+// steps array and a type. attachments is a plain string array of
+// URLs/paths; no file-storage backend is wired yet in this milestone
+// (S3 not wired — stub for MVP per Edge Case Checklist).
+model Guideline {
+  id          String        @id @default(uuid())
+  kitchenId   String        @map("kitchen_id")
+  title       String
+  type        GuidelineType
+  steps       String[]
+  attachments String[]      @default([])
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@map("guidelines")
+}
+
+// Freeform quick notes (T012). tags is a plain string array — tag search
+// uses Prisma's `has` filter (fully parameterized, no ILIKE/tsvector
+// needed for exact-tag lookup per the Approach note). linkedEntityType/Id
+// mirror the Task.sourceRecipeId/sourceGuidelineId pattern: a plain
+// nullable pair with NO FK constraint — informational back-reference
+// only, so a Note survives (and is still loadable) after its linked
+// Recipe/Task/Ingredient is deleted. linkedEntityType is validated
+// against a known enum of entity kinds at the DTO layer, not by the DB.
+model Note {
+  id                String   @id @default(uuid())
+  kitchenId         String   @map("kitchen_id")
+  authorId          String   @map("author_id")
+  title             String?
+  body              String
+  tags              String[] @default([])
+  pinned            Boolean  @default(false)
+  linkedEntityType  String?  @map("linked_entity_type")
+  linkedEntityId    String?  @map("linked_entity_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@map("notes")
+}
+
+// Kitchen-wide broadcast channel (T013). Per FR-021 only Owner/Chef may
+// post; every Kitchen member can view. readBy is a plain string array of
+// user ids appended to on first GET of the detail route. Updated via
+// Prisma's atomic `push` (not a read-modify-write) so concurrent reads by
+// different users can't race and drop an id — same append-only-ledger
+// spirit as StockMovement, just on an array column instead of a separate
+// table since read receipts have no other fields to track.
+model Announcement {
+  id        String   @id @default(uuid())
+  kitchenId String   @map("kitchen_id")
+  authorId  String   @map("author_id")
+  title     String
+  body      String
+  readBy    String[] @default([]) @map("read_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@map("announcements")
+}
+
+enum Shift {
+  MORNING
+  EVENING
+}
+
+// Per-shift handoff feed (T014). createdAt is server-set only — never
+// accepted from the client — to prevent a future-dated/backdated entry
+// via client tampering. Write RBAC matches Notes (everyone-but-Viewer),
+// NOT the narrower Owner/Chef-only Announcements gate.
+model ShiftLog {
+  id        String   @id @default(uuid())
+  kitchenId String   @map("kitchen_id")
+  authorId  String   @map("author_id")
+  shift     Shift
+  body      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@map("shift_logs")
+}
+
+// Polymorphic Comment thread (T015), attachable to a Recipe, Task, or
+// Ingredient. Mirrors the Note.linkedEntityType/linkedEntityId pattern:
+// entityType/entityId are a plain nullable-free pair with NO FK
+// constraint — informational back-reference only, validated against a
+// known enum of entity kinds at the DTO layer, not by the DB. mentions
+// is a plain string array of resolved user ids, matching the
+// Note.tags/Announcement.readBy array-field convention — populated by
+// parsing @username tokens out of body and resolving them ONLY against
+// the author's own Kitchen membership (never cross-Kitchen). parentId
+// supports single-level reply threading only (no unbounded recursion
+// for MVP) — a reply's own parentId must point at a top-level comment
+// (parentId itself null), enforced in CommentsService, not the DB.
+model Comment {
+  id         String   @id @default(uuid())
+  kitchenId  String   @map("kitchen_id")
+  authorId   String   @map("author_id")
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  body       String
+  mentions   String[] @default([])
+  parentId   String?  @map("parent_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([authorId])
+  @@index([entityType, entityId])
+  @@map("comments")
+}
+
+enum NotificationType {
+  MENTION
+  LOW_STOCK
+  TASK_ASSIGNED
+}
+
+// In-app notification feed (T016). Aggregates @mentions (T015),
+// low-stock threshold crossings (T007/Ingredient.wasLowStock), and task
+// assignment. `type` is an informational discriminator only — like
+// Note.linkedEntityType/Comment.entityType there is deliberately NO FK
+// to the source row (Comment/Ingredient/Task), so a Notification still
+// displays gracefully if its source is later deleted (see Edge Case
+// Checklist). `body` is a fully-rendered, human-readable message
+// snapshotted at creation time — nothing is re-derived from the source
+// at read time.
+model Notification {
+  id          String           @id @default(uuid())
+  kitchenId   String           @map("kitchen_id")
+  recipientId String           @map("recipient_id")
+  type        NotificationType
+  body        String
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  kitchen   Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  recipient User    @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([kitchenId])
+  @@index([recipientId])
+  @@map("notifications")
+}
+
+model StockBatch {
+  id           String    @id @default(uuid())
+  ingredientId String    @map("ingredient_id")
+  kitchenId    String    @map("kitchen_id")
+  qty          Float
+  expiryDate   DateTime? @map("expiry_date")
+  location     String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  ingredient     Ingredient      @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
+
+  @@index([ingredientId])
+  @@index([kitchenId])
+  @@map("stock_batches")
+}
+
+model StockMovement {
+  id           String            @id @default(uuid())
+  ingredientId String            @map("ingredient_id")
+  kitchenId    String            @map("kitchen_id")
+  batchId      String?           @map("batch_id")
+  type         StockMovementType
+  qty          Float
+  reason       String?
+  actorId      String            @map("actor_id")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  ingredient Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  batch      StockBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  actor      User        @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([ingredientId])
+  @@index([kitchenId])
+  @@map("stock_movements")
+}

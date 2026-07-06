@@ -1,0 +1,94 @@
+{
+  "id": "fc8ad046-b1e7-4db8-979d-18e8007b6c13",
+  "target": "T016 NotificationBell verify — localhost:8766",
+  "status": "failed",
+  "startedAt": "2026-07-05T09:48:29.134Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-05T09:48:34.790Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-05T09:48:37.915Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:48:42.495Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "owner-t016-1783244903@kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:48:42.562Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "correct-horse-battery"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:48:45.697Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:48:50.447Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783244930427.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:48:59.787Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"🔔\"), [aria-label*=\"notification\" i], [data-testid*=\"bell\" i]"
+      },
+      "ok": false,
+      "detail": "Selector \"button:has-text(\"🔔\"), [aria-label*=\"notification\" i], [data-testid*=\"bell\" i]\" matched 2 elements; expected exactly 1"
+    },
+    {
+      "timestamp": "2026-07-05T09:49:15.195Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "[data-testid=\"notification-bell-button\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:49:19.015Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783244958991.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T09:49:38.919Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('[data-testid=\"notification-dropdown\"]').className.includes('max-w')"
+      },
+      "ok": true
+    }
+  ],
+  "failureScreenshot": "/app/reports/screenshot-1783244939787.png",
+  "endedAt": "2026-07-05T09:49:44.706Z"
+}

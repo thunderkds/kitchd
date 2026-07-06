@@ -1,0 +1,46 @@
+T008 Stage 5 verify — live API session (2026-07-04)
+
+== Signup owner ==
+POST /auth/signup {"email":"verify-owner-1783154699@kitchenos.dev", ...}
+-> 201, accessToken issued
+
+== Invite + accept STAFF ==
+POST /users/invite {"email":"verify-staff-1783154728@kitchenos.dev","role":"STAFF"} -> 201
+POST /users/invite/accept {"token":"...","password":"staff-password"} -> 201, accessToken issued
+staff id: 8e08fca0-ace3-476e-99d7-8fc868a5adbf
+
+== AC5: Chef+ create + assign Task to Kitchen member ==
+POST /tasks (as owner) {"title":"Prep onions for dinner service","assigneeId":"<staff>","checklistItems":[{"text":"Wash onions"},{"text":"Dice onions"}]}
+-> 201
+{
+  "id": "9e19caab-0c60-45de-9419-c32a04162441",
+  "status": "TODO",
+  "assigneeId": "8e08fca0-ace3-476e-99d7-8fc868a5adbf",
+  "checklistItems": [
+    {"id":"3483e854-b2f0-4620-acc2-9800cf0f4a18","done":false,"text":"Wash onions"},
+    {"id":"0d42c4f4-d8c9-4293-abf4-6c766f005443","done":false,"text":"Dice onions"}
+  ]
+}
+
+== AC1: staff drags own Task To Do -> In Progress ==
+PATCH /tasks/9e19caab... (as staff) {"status":"IN_PROGRESS"}
+-> 200 HTTP 200, status: "IN_PROGRESS"
+
+== AC2: staff checks off first checklist item on own Task ==
+PATCH /tasks/9e19caab... (as staff) {"checklistItems":[{"id":"3483e854...","text":"Wash onions","done":true},{"id":"0d42c4f4...","text":"Dice onions","done":false}]}
+-> 200 HTTP 200, checklistItems[0].done: true
+
+== Probe: staff attempts to reassign own Task (forbidden — not a writer role) ==
+PATCH /tasks/9e19caab... (as staff) {"assigneeId":"<staff-self>"}
+-> 403 {"message":"Not allowed to update: assigneeId","error":"Forbidden","statusCode":403}
+
+== Probe: cross-tenant GET by a second org's owner ==
+signup second owner (Other Org / Other Kitchen)
+GET /tasks/9e19caab... (as owner2)
+-> 404 {"message":"Task not found","error":"Not Found","statusCode":404}
+
+All probes held as expected. See session-b0129cca-9782-4097-a651-3d0a6588f15c.{json,html}
+and screenshot-*.png in this directory for the paired browser-driven UI walkthrough
+(login -> /tasks kanban -> tap-to-move -> list/kanban toggle with assignee filter
+persisted across toggle -> ui_assert checks for overflow-x-auto container and
+>=44px tap-to-move touch targets).

@@ -1,0 +1,193 @@
+{
+  "id": "90c9fd43-3030-45ec-a259-3bb84212ceab",
+  "target": "T012 Notes CRUD verify — localhost:8766",
+  "status": "passed",
+  "startedAt": "2026-07-05T08:34:30.507Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-05T08:34:34.489Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-05T08:34:38.060Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:34:43.809Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Sign up\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:34:46.996Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:01.174Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "verify-t012@kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:01.907Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "correct-horse-battery"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:02.321Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Organization name\"]",
+        "value": "T012 Verify Org"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:02.727Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Kitchen name\"]",
+        "value": "T012 Verify Kitchen"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:05.856Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:09.054Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/notes"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/notes"
+    },
+    {
+      "timestamp": "2026-07-05T08:35:13.233Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783240513194.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:26.605Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Title (optional)\"]",
+        "value": "Prep reminder"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:27.332Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "textarea[placeholder=\"Write a note...\"]",
+        "value": "Remember to defrost the salmon tonight for tomorrow's service."
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:27.951Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Tags, comma separated (e.g. #recipe-idea)\"]",
+        "value": "#prep,#urgent"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:31.795Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Add Note\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:34.433Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783240534406.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:41.738Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Pin\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:44.936Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Search by tag\"]",
+        "value": "urgent"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:47.765Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783240547733.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:35:55.635Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[placeholder=\"Search by tag\"]",
+        "value": "#urgent"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:36:00.201Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1783240560169.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-05T08:36:14.238Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('main, .max-w-3xl, [class*=\"max-w\"]') !== null"
+      },
+      "ok": true
+    }
+  ],
+  "endedAt": "2026-07-05T08:36:22.768Z"
+}
