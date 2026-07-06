@@ -1,0 +1,71 @@
+name: Deploy Staging (Render)
+
+# CRITICAL: this workflow must ONLY ever trigger on pushes to `staging`.
+# It must NEVER trigger on `main` (production deploy is explicitly out of
+# scope for this milestone). Do not widen the branches list below.
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  guard-branch:
+    name: Guard — refuse to run outside staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert ref is refs/heads/staging
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/staging" ]; then
+            echo "::error::This workflow must only run on staging. Got ref=${{ github.ref }}"
+            exit 1
+          fi
+          echo "Confirmed deploy trigger ref is refs/heads/staging."
+
+  deploy-web:
+    name: Deploy apps/web to Render
+    needs: guard-branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook (web)
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_WEB }}" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_WEB secret is not set."
+            exit 1
+          fi
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_WEB }}"
+
+  deploy-api:
+    name: Deploy apps/api to Render
+    needs: guard-branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Prisma migrations against staging DB
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          npm ci --prefix apps/api
+          npm --prefix apps/api run migrate
+      - name: Trigger Render deploy hook (api)
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_API }}" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_API secret is not set."
+            exit 1
+          fi
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_API }}"
+
+  verify-deploy:
+    name: Verify Render deploy status via API
+    needs: [deploy-web, deploy-api]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poll Render API for latest deploy status (web)
+        if: ${{ secrets.RENDER_API_KEY != '' && secrets.RENDER_SERVICE_ID_WEB != '' }}
+        run: |
+          curl -fsS -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_WEB }}/deploys?limit=1" \
+            | tee /dev/null
+      - name: Poll Render API for latest deploy status (api)
+        if: ${{ secrets.RENDER_API_KEY != '' && secrets.RENDER_SERVICE_ID_API != '' }}
+        run: |
+          curl -fsS -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_API }}/deploys?limit=1" \
+            | tee /dev/null
