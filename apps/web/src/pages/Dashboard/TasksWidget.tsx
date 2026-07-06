@@ -32,7 +32,7 @@ export function TasksWidget() {
   }, []);
 
   const user = getUser();
-  const showAll = user ? ALL_KITCHEN_ROLES.has(user.role) : true;
+  const showAll = user ? ALL_KITCHEN_ROLES.has(user.role) : false;
   const scoped =
     tasks === null
       ? null
