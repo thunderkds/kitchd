@@ -483,10 +483,327 @@ describe('RBAC matrix audit (e2e)', () => {
   });
 
   // =========================================================================
+  // T024 — RBAC audit follow-up: Notes, Announcements, ShiftLog, Comments
+  // (T012-T015). Each module has its own distinct RBAC shape per
+  // memory/MEMORY.md — audited against its own PRD line, not copied from
+  // another module's matrix.
+  // =========================================================================
+
+  async function createNote(token: string) {
+    const res = await request(app.getHttpServer())
+      .post('/notes')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ body: `Note ${Date.now()}-${Math.random()}` })
+      .expect(201);
+    return res.body as { id: string; authorId: string };
+  }
+
+  async function createAnnouncement(token: string) {
+    const res = await request(app.getHttpServer())
+      .post('/announcements')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Notice', body: `Body ${Date.now()}` })
+      .expect(201);
+    return res.body as { id: string };
+  }
+
+  async function createShiftLog(token: string) {
+    const res = await request(app.getHttpServer())
+      .post('/shift-logs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ shift: 'MORNING', body: `Handover ${Date.now()}` })
+      .expect(201);
+    return res.body as { id: string };
+  }
+
+  async function createComment(token: string, entityId: string) {
+    const res = await request(app.getHttpServer())
+      .post('/comments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ entityType: 'task', entityId, body: `Comment ${Date.now()}` })
+      .expect(201);
+    return res.body as { id: string; authorId: string };
+  }
+
+  // =========================================================================
+  // Matrix: Notes — every role except Viewer may author; only the author
+  // may edit/pin/delete (FR-018). Distinct from Inventory's Owner/Admin/
+  // Chef-only shape.
+  // =========================================================================
+  describe('Notes module matrix', () => {
+    it('read (list/findOne) is 200 for all 4 roles, including Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      const note = await createNote(owner.accessToken);
+
+      for (const actor of [owner, chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .get('/notes')
+          .set('Authorization', `Bearer ${actor.accessToken}`)
+          .expect(200);
+        await request(app.getHttpServer())
+          .get(`/notes/${note.id}`)
+          .set('Authorization', `Bearer ${actor.accessToken}`)
+          .expect(200);
+      }
+    });
+
+    it('create is 201 for Owner/Chef/Staff, 403 for Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      for (const writer of [owner, chef, staff]) {
+        await createNote(writer.accessToken);
+      }
+      await request(app.getHttpServer())
+        .post('/notes')
+        .set('Authorization', `Bearer ${viewer.accessToken}`)
+        .send({ body: 'Should be blocked' })
+        .expect(403);
+    });
+
+    it('only the author may update/delete their own Note — a non-author write-eligible role gets 403 (ownership layered on top of RolesGuard)', async () => {
+      const { owner, chef, viewer } = await buildRoleSet();
+      const note = await createNote(owner.accessToken);
+
+      // Chef is write-eligible per RolesGuard, but is not the author.
+      await request(app.getHttpServer())
+        .patch(`/notes/${note.id}`)
+        .set('Authorization', `Bearer ${chef.accessToken}`)
+        .send({ body: 'Hijacked' })
+        .expect(403);
+      await request(app.getHttpServer())
+        .delete(`/notes/${note.id}`)
+        .set('Authorization', `Bearer ${chef.accessToken}`)
+        .expect(403);
+
+      // Viewer is blocked at the coarser RolesGuard gate before ownership
+      // is even evaluated.
+      await request(app.getHttpServer())
+        .patch(`/notes/${note.id}`)
+        .set('Authorization', `Bearer ${viewer.accessToken}`)
+        .send({ body: 'Hijacked' })
+        .expect(403);
+
+      // The author itself may update/delete.
+      await request(app.getHttpServer())
+        .patch(`/notes/${note.id}`)
+        .set('Authorization', `Bearer ${owner.accessToken}`)
+        .send({ body: 'Edited by author' })
+        .expect(200);
+      await request(app.getHttpServer())
+        .delete(`/notes/${note.id}`)
+        .set('Authorization', `Bearer ${owner.accessToken}`)
+        .expect(200);
+    });
+
+    it('Edge case: note list does not leak cross-Kitchen data', async () => {
+      const kitchenA = await buildRoleSet();
+      const kitchenB = await buildRoleSet();
+      await createNote(kitchenA.owner.accessToken);
+
+      const res = await request(app.getHttpServer())
+        .get('/notes')
+        .set('Authorization', `Bearer ${kitchenB.owner.accessToken}`)
+        .expect(200);
+      expect(res.body).toHaveLength(0);
+    });
+  });
+
+  // =========================================================================
+  // Matrix: Announcements — FR-021 "Owner/Chef broadcasts to all Staff".
+  // Admin is deliberately excluded — narrower than both Notes and
+  // Inventory. Staff/Viewer/Admin are all read-only here.
+  // =========================================================================
+  describe('Announcements module matrix', () => {
+    it('read (list/findOne) is 200 for all 4 roles, including Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      const announcement = await createAnnouncement(owner.accessToken);
+
+      for (const actor of [owner, chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .get('/announcements')
+          .set('Authorization', `Bearer ${actor.accessToken}`)
+          .expect(200);
+        await request(app.getHttpServer())
+          .get(`/announcements/${announcement.id}`)
+          .set('Authorization', `Bearer ${actor.accessToken}`)
+          .expect(200);
+      }
+    });
+
+    it('create is 201 for Owner+Chef, 403 for Staff+Viewer (Admin excluded per FR-021, but Admin cannot currently be created via any code path — see memory/learnings.md 2026-07-06 Admin-role-unreachable finding)', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      for (const writer of [owner, chef]) {
+        await createAnnouncement(writer.accessToken);
+      }
+      for (const nonWriter of [staff, viewer]) {
+        await request(app.getHttpServer())
+          .post('/announcements')
+          .set('Authorization', `Bearer ${nonWriter.accessToken}`)
+          .send({ title: 'x', body: 'x' })
+          .expect(403);
+      }
+    });
+
+    it('Edge case: announcement list does not leak cross-Kitchen data', async () => {
+      const kitchenA = await buildRoleSet();
+      const kitchenB = await buildRoleSet();
+      await createAnnouncement(kitchenA.owner.accessToken);
+
+      const res = await request(app.getHttpServer())
+        .get('/announcements')
+        .set('Authorization', `Bearer ${kitchenB.owner.accessToken}`)
+        .expect(200);
+      expect(res.body).toHaveLength(0);
+    });
+  });
+
+  // =========================================================================
+  // Matrix: ShiftLog — same everyone-but-Viewer write shape as Notes, per
+  // its own module comment referencing FR-018's blanket Viewer-read-only
+  // rule. Audited independently, not assumed from Notes.
+  // =========================================================================
+  describe('ShiftLog module matrix', () => {
+    it('read (list, incl. ?date= filter) is 200 for all 4 roles, including Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      await createShiftLog(owner.accessToken);
+
+      for (const actor of [owner, chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .get('/shift-logs')
+          .set('Authorization', `Bearer ${actor.accessToken}`)
+          .expect(200);
+      }
+    });
+
+    it('create is 201 for Owner/Chef/Staff, 403 for Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      for (const writer of [owner, chef, staff]) {
+        await createShiftLog(writer.accessToken);
+      }
+      await request(app.getHttpServer())
+        .post('/shift-logs')
+        .set('Authorization', `Bearer ${viewer.accessToken}`)
+        .send({ shift: 'MORNING', body: 'Should be blocked' })
+        .expect(403);
+    });
+
+    it('Edge case: shift-log list does not leak cross-Kitchen data', async () => {
+      const kitchenA = await buildRoleSet();
+      const kitchenB = await buildRoleSet();
+      await createShiftLog(kitchenA.owner.accessToken);
+
+      const res = await request(app.getHttpServer())
+        .get('/shift-logs')
+        .set('Authorization', `Bearer ${kitchenB.owner.accessToken}`)
+        .expect(200);
+      expect(res.body).toHaveLength(0);
+    });
+  });
+
+  // =========================================================================
+  // Matrix: Comments — everyone-but-Viewer may author (FR-018, same shape
+  // as Notes/ShiftLog); only the author may delete. Polymorphic entity
+  // linkage (recipe/task/ingredient) must not bypass RBAC regardless of
+  // which entity type is targeted.
+  // =========================================================================
+  describe('Comments module matrix', () => {
+    it('read (list by entityType/entityId) is 200 for all 4 roles, including Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      const task = await createTask(owner.accessToken);
+      const comment = await createComment(owner.accessToken, task.id);
+
+      for (const actor of [owner, chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .get(`/comments?entityType=task&entityId=${task.id}`)
+          .set('Authorization', `Bearer ${actor.accessToken}`)
+          .expect(200);
+      }
+      expect(comment.id).toBeDefined();
+    });
+
+    it('create is 201 for Owner/Chef/Staff, 403 for Viewer — on multiple polymorphic entity types (task and recipe)', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      const task = await createTask(owner.accessToken);
+      const ingredient = await createIngredient(owner.accessToken);
+      const recipe = await createRecipe(owner.accessToken, ingredient.id);
+
+      for (const writer of [owner, chef, staff]) {
+        await createComment(writer.accessToken, task.id);
+        await request(app.getHttpServer())
+          .post('/comments')
+          .set('Authorization', `Bearer ${writer.accessToken}`)
+          .send({
+            entityType: 'recipe',
+            entityId: recipe.id,
+            body: 'On a recipe',
+          })
+          .expect(201);
+      }
+
+      for (const entity of [
+        { entityType: 'task', entityId: task.id },
+        { entityType: 'recipe', entityId: recipe.id },
+      ]) {
+        await request(app.getHttpServer())
+          .post('/comments')
+          .set('Authorization', `Bearer ${viewer.accessToken}`)
+          .send({ ...entity, body: 'Should be blocked' })
+          .expect(403);
+      }
+    });
+
+    it('only the author may delete their own Comment — a non-author write-eligible role gets 403 (ownership layered on top of RolesGuard)', async () => {
+      const { owner, chef, viewer } = await buildRoleSet();
+      const task = await createTask(owner.accessToken);
+      const comment = await createComment(owner.accessToken, task.id);
+
+      // Chef is write-eligible per RolesGuard, but is not the author.
+      await request(app.getHttpServer())
+        .delete(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${chef.accessToken}`)
+        .expect(403);
+
+      // Viewer is blocked at the coarser RolesGuard gate.
+      await request(app.getHttpServer())
+        .delete(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${viewer.accessToken}`)
+        .expect(403);
+
+      // The author itself may delete.
+      await request(app.getHttpServer())
+        .delete(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${owner.accessToken}`)
+        .expect(200);
+    });
+
+    it('Edge case: comments list does not leak cross-Kitchen data (checked across polymorphic entity types)', async () => {
+      const kitchenA = await buildRoleSet();
+      const kitchenB = await buildRoleSet();
+      const taskA = await createTask(kitchenA.owner.accessToken);
+      await createComment(kitchenA.owner.accessToken, taskA.id);
+
+      // Kitchen B has no such task/comment; querying by Kitchen A's
+      // entityId from Kitchen B must not leak Kitchen A's comment.
+      const res = await request(app.getHttpServer())
+        .get(`/comments?entityType=task&entityId=${taskA.id}`)
+        .set('Authorization', `Bearer ${kitchenB.owner.accessToken}`)
+        .expect(200);
+      expect(res.body).toHaveLength(0);
+    });
+  });
+
+  // =========================================================================
   // AC3: unauthenticated calls are rejected on every module (401, not 403)
   // =========================================================================
   it('unauthenticated request is 401 on every in-scope module', async () => {
-    for (const path of ['/ingredients', '/recipes', '/guidelines', '/tasks']) {
+    for (const path of [
+      '/ingredients',
+      '/recipes',
+      '/guidelines',
+      '/tasks',
+      '/notes',
+      '/announcements',
+      '/shift-logs',
+    ]) {
       await request(app.getHttpServer()).get(path).expect(401);
     }
   });
