@@ -12,13 +12,8 @@
 ### Todo
 
 ### In Progress
-- [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0 | Started: 2026-07-06
-- [ ] **T024** — RBAC enforcement audit — Notes, Announcements, ShiftLog, Comments | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-06
 
 ### Ready for Review
-
-
-
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
@@ -43,6 +38,8 @@
 - [x] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2 | Started: 2026-07-06 | Done: 2026-07-06
 - [x] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1 | Started: 2026-07-06 | Done: 2026-07-06
 - [x] **T023** — CI/CD: lint/test/build pipeline + Render staging auto-deploy (human follow-up needed: create Render service + secrets before staging deploy is live) | common-infrastructure | C2 | Risk: Med | P1 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T022** — QA pass + seed demo data + onboarding walkthrough (all 8 PRD MVP acceptance criteria verified live; 1 bug found+fixed: mention notification body UUID) | qa-expert | C2 | Risk: Med | P0 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T024** — RBAC enforcement audit — Notes, Announcements, ShiftLog, Comments (no gap found, all 4 already correct; surfaced product finding: ADMIN role has no creation path anywhere) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-06 | Done: 2026-07-06
 
 ---
 
@@ -62,6 +59,6 @@
 | 1 Environment Setup | ✅ Done |
 | 1.5 Sub-Agent Architecture | ✅ Done |
 | 2 Planning (/plan) | ✅ Done |
-| 3 Execution | 🔄 In Progress |
-| 4 Review | ⬜ Not Started |
-| 5 Integration & Verify | ⬜ Not Started |
+| 3 Execution | ✅ Done — all 24 tasks (T001–T024) implemented |
+| 4 Review | ✅ Done — code-review/security-review/migration-safety passed per-task |
+| 5 Integration & Verify | 🔄 In Progress — merges + live verify done per-task; `ship` not yet run |
