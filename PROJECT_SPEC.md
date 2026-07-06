@@ -14,7 +14,7 @@
 - **Repo**: /home/hungnguyenhuu/workspace/pets/hungnguyen111/kitchd (local, branch `develop`)
 - **Primary tech**: TypeScript — React (frontend), NestJS (backend), PostgreSQL
 - **Type**: Web app (monorepo: `/apps/web`, `/apps/api`, `/packages/shared`)
-- **Deployment target**: Local dev (primary) + Railway staging (auto-deploy on merge to `staging` branch). Production/`main` deploy deferred.
+- **Deployment target**: Local dev (primary) + Render staging (auto-deploy on merge to `staging` branch). Production/`main` deploy deferred. (Corrected 2026-07-06: Render, not Railway — Render is the only deploy target to use.)
 - **Key stakeholders**: Solo founder (hungnh1110@gmail.com) — self-use first, startup-idea framing for the future
 
 ---

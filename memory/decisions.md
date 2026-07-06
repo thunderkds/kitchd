@@ -29,10 +29,15 @@
 **Why**: First-class NestJS ecosystem support, readable migration diffs, `migrate deploy` cleanly separates dev-time vs deploy-time flows (needed by the `migrate` script used in verification and CI/CD), and `$transaction` made the transactional signup (Organization+Kitchen+User, all-or-nothing) straightforward. No alternative was seriously evaluated — no material downside at this MVP's scale.
 **Files**: `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/**`
 
-### 2026-07-02 — CI/CD added: staging-only auto-deploy to Railway, never main
-**Decision**: T023 adds a GitHub Actions CI workflow (lint/typecheck/test/build on every push+PR) and a separate CD workflow that deploys to Railway staging ONLY on merge to the `staging` branch. No workflow deploys on `main` pushes — production deployment remains explicitly out of scope for this milestone.
-**Why**: User flagged the missing CI/CD task after Stage 2 planning was already committed; this reopened (partially) the earlier "local dev only" hosting decision. Resolved via forced choice: CI+CD scope confirmed, staging host confirmed as Railway, deploy trigger confirmed as `staging` branch only (not `main`) to keep the earlier production-deferral decision intact.
+### 2026-07-02 — CI/CD added: staging-only auto-deploy, never main (host superseded 2026-07-06, see below)
+**Decision**: T023 adds a GitHub Actions CI workflow (lint/typecheck/test/build on every push+PR) and a separate CD workflow that deploys to a staging host ONLY on merge to the `staging` branch. No workflow deploys on `main` pushes — production deployment remains explicitly out of scope for this milestone.
+**Why**: User flagged the missing CI/CD task after Stage 2 planning was already committed; this reopened (partially) the earlier "local dev only" hosting decision. Resolved via forced choice: CI+CD scope confirmed, deploy trigger confirmed as `staging` branch only (not `main`) to keep the earlier production-deferral decision intact.
 **Files**: `.github/workflows/ci.yml`, `.github/workflows/deploy-staging.yml`, `tasks/TASK_GUIDE_T023.md`
+
+### 2026-07-06 — Staging host corrected: Render, not Railway
+**Decision**: The staging deploy target is Render, not Railway. T023 (not yet started) must build its CD workflow against Render's deploy mechanism (e.g. Render deploy hook or `render.yaml` + API), not Railway's.
+**Why**: User explicitly corrected the earlier Railway assumption on 2026-07-06 — Render is the only deploy target to use. Caught before T023 was implemented, so no rework needed; only the plan/spec needed updating.
+**Files**: `PROJECT_SPEC.md` (Deployment target), `tasks/TASK_GUIDE_T023.md` (not yet started)
 
 ### 2026-07-03 — RolesGuard: DB-current role, never JWT claim; 404-not-403 on cross-tenant access
 **Decision**: `RolesGuard` (the single RBAC enforcement point, T002) re-reads the caller's role from Postgres on every guarded request rather than trusting a JWT claim (the JWT payload deliberately carries no `role` field). Cross-tenant resource access (e.g. `GET/PATCH /kitchens/:id` for a kitchen the caller doesn't belong to) returns 404, never 403, to avoid leaking the existence of other orgs' data.

@@ -23,7 +23,8 @@
 - [Web dev server fixed at localhost:8766](decisions.md#2026-07-02--web-dev-server-fixed-at-localhost8766-for-ui-verify-mcp-evidence-capture) — `easy-ui-mcp` targets this port for all FE UI Evidence capture
 - [Symlinked CLAUDE.md/templates/.claude subfolders](learnings.md#2026-07-02--claudemd-templates-claudeagentshoootsskills-are-symlinks-to-supervisor) — exclude from git commits, only `.claude/settings*.json` are real files
 - Planning artifacts (PRD, spec, kanban, 22 task guides) pushed to `feat/kitchenos-planning` branch, commit 1fef6ea — merged into develop
-- [CI/CD added: staging-only Railway deploy](decisions.md#2026-07-02--cicd-added-staging-only-auto-deploy-to-railway-never-main) — T023 added post-hoc; CI on all push/PR, CD only on merge to `staging`, never `main`
+- [CI/CD added: staging-only auto-deploy](decisions.md#2026-07-02--cicd-added-staging-only-auto-deploy-never-main-host-superseded-2026-07-06-see-below) — T023 (not yet started); CI on all push/PR, CD only on merge to `staging`, never `main`
+- [Staging host corrected: Render, not Railway](decisions.md#2026-07-06--staging-host-corrected-render-not-railway) — user correction 2026-07-06, caught before T023 build; only Render is used for deploy
 - [easy-ui-mcp needs `network_mode: host`](decisions.md#2026-07-03--easy-ui-mcp-requires-network_mode-host-to-reach-app-dev-servers) — default bridge network had zero route to host; fixed in sibling easy-ui-mcp repo's docker-compose.yml
 - [ORM confirmed: Prisma](decisions.md#2026-07-02--orm-confirmed-prisma) — declarative schema, transactional signup, migrate deploy for CI/CD
 - [Stale untracked `.env` can drift silently](learnings.md#2026-07-03--local-untracked-env-can-silently-drift-from-envexample) — apps/web/.env pointed at wrong API port; check against .env.example when UI fetch fails
