@@ -236,13 +236,23 @@ model Task {
   recurrenceRule String?    @map("recurrence_rule")
   sourceRecipeId    String? @map("source_recipe_id")
   sourceGuidelineId String? @map("source_guideline_id")
+  // Recurrence (T010): a Task with `recurrenceRule` set (e.g. "daily") is
+  // a *template*. The nightly job clones it into a fresh occurrence Task
+  // stamped with `recurringTemplateId` + `occurrenceDate` (date-only, no
+  // time component). The unique constraint below is what makes re-running
+  // the job for the same day a no-op instead of a duplicate insert.
+  recurringTemplateId String?   @map("recurring_template_id")
+  occurrenceDate       DateTime? @map("occurrence_date") @db.Date
   checklistItems Json       @default("[]") @map("checklist_items")
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
   kitchen  Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
   assignee User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  recurringTemplate    Task?  @relation("TaskRecurrence", fields: [recurringTemplateId], references: [id], onDelete: SetNull)
+  generatedOccurrences Task[] @relation("TaskRecurrence")
 
+  @@unique([recurringTemplateId, occurrenceDate])
   @@index([kitchenId])
   @@index([assigneeId])
   @@map("tasks")

@@ -8,6 +8,8 @@ import { GenerateTaskController } from './generate-from-recipe/generate-task.con
 import { GenerateTaskService } from './generate-from-recipe/generate-task.service';
 import { TaskCompletionController } from './complete/task-completion.controller';
 import { TaskCompletionService } from './complete/task-completion.service';
+import { RecurrenceService } from './recurrence/recurrence.service';
+import { RecurrenceScheduler } from './recurrence/recurrence.scheduler';
 
 @Module({
   imports: [PrismaModule, AuthModule, InventoryModule],
@@ -16,6 +18,12 @@ import { TaskCompletionService } from './complete/task-completion.service';
     GenerateTaskController,
     TaskCompletionController,
   ],
-  providers: [TasksService, GenerateTaskService, TaskCompletionService],
+  providers: [
+    TasksService,
+    GenerateTaskService,
+    TaskCompletionService,
+    RecurrenceService,
+    RecurrenceScheduler,
+  ],
 })
 export class TasksModule {}
