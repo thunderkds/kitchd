@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 
 @Injectable()
 export class AnnouncementsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtimeGateway: RealtimeGateway,
+  ) {}
 
   async list(kitchenId: string) {
     return this.prisma.announcement.findMany({
@@ -21,7 +25,7 @@ export class AnnouncementsService {
     // No other-member check needed: an Announcement posted to a Kitchen
     // with zero other members yet is still a valid write — visibility to
     // future members is derived at read time via the kitchenId scope.
-    return this.prisma.announcement.create({
+    const announcement = await this.prisma.announcement.create({
       data: {
         kitchenId,
         authorId,
@@ -29,6 +33,12 @@ export class AnnouncementsService {
         body: dto.body,
       },
     });
+
+    // T017 hook: push the new Announcement to every client in the
+    // Kitchen. Additive only — never blocks/alters the create path above.
+    this.realtimeGateway.emitAnnouncementCreated(kitchenId, announcement);
+
+    return announcement;
   }
 
   // GETting the detail marks it read for the caller. Uses Prisma's atomic
