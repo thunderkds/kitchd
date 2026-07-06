@@ -75,15 +75,15 @@ npm --prefix apps/api run test -- realtime
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| UI: Visual regression | ☐ N/A — infra/plumbing task, no new visible UI | |
-| UI: Design-system compliance | ☐ N/A | |
-| UI: Responsiveness | ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/api/src/realtime/realtime.gateway.spec.ts` (unit: handshake reject on no/expired/garbage token, DB-fresh kitchen room join not JWT claim, `getCurrentRole` DB-fresh re-read for AC5, unique-eventId emit) + `apps/api/src/realtime/realtime.e2e.spec.ts` (real `socket.io-client` against a live `app.listen(0)` server: AC1 cross-session task.updated push, AC2 handshake reject for no-token/garbage-token, AC3 reconnect delivers later event exactly once, AC4 cross-kitchen isolation). Also `apps/web/src/lib/socket/socket.test.ts` (client-side eventId dedupe + unsubscribe). |
+| Verification command run | pass | `npm --prefix apps/api run test -- realtime` → `Test Suites: 2 passed, 2 total` / `Tests: 11 passed, 11 total` (see full output below) |
+| Negative cases hold | pass | AC2 covered by both the gateway unit spec (no token / expired token / unknown user id → handshake rejected via `connect_error`) and the e2e spec (`rejects a socket handshake with no token`, `rejects a socket handshake with a garbage token`); AC4 negative case (`receivedInB` stays `false`) passes |
+| verify | pass | Manual verification: ran the full realtime e2e suite against a real Socket.IO client/server pair (not mocked) covering the exact end-to-end flows in the Success Criteria table (signup → connect → REST mutation → socket event received/rejected/isolated). **Stage 4 re-verify (Supervisor, 2026-07-06)**: independently re-ran `npm --prefix apps/api run test -- realtime` (2 suites/11 tests passed), full backend suite (21 suites/157 tests passed), and `npx vitest run` in apps/web (13 files/54 tests passed) — all green, no regressions. Code-review: 0 P0/P1/P2, 2 P3 advisory (TaskCompletionService's complete/confirm path doesn't emit `task.updated` — out of scope, flagged as follow-up). Security-review: 0 HIGH/MEDIUM — WS auth reuses the same JwtService/secret as REST, kitchen-room membership derived from a fresh DB read (never the JWT claim), broadcast payloads carry no more data than the equivalent REST GET already exposes to the same caller. Removed a stray `apps/api/package-lock.json` (nested lockfile artifact from a scoped `npm install`, not meant to be committed in this npm-workspaces monorepo). pass. |
+| Review scope bounded to blast radius | pass | Touched only `apps/api/src/realtime/**` (new), one-line additive emit hooks in `tasks.service.ts`/`comments.service.ts`/`announcements.service.ts` (mirrors the existing T016 notification-hook shape), their `*.module.ts` imports, and new `apps/web/src/lib/socket/**`. No existing REST behavior/business logic changed — verified by the full `apps/api` suite staying green (157/157, unchanged pass count for pre-existing suites) |
+| Full smoke suite still green | pass | `npm --prefix apps/api run test` → `Test Suites: 21 passed, 21 total`, `Tests: 157 passed, 157 total`; `npm --prefix apps/web run test` → `Test Files 13 passed (13)`, `Tests 54 passed (54)` |
+| UI: Visual regression | N/A — infra/plumbing task, no new visible UI | |
+| UI: Design-system compliance | N/A | |
+| UI: Responsiveness | N/A | |
 
 ---
 
@@ -95,9 +95,9 @@ Socket.IO gateway under `/apps/api/src/realtime`, authenticated at handshake via
 
 ## Edge Case Checklist
 
-- [ ] Reconnect after dropped connection does not duplicate events (client-side dedupe by event id)
-- [ ] Role downgrade mid-session: existing WS connection re-checks role server-side on next privileged action, not the cached role at connect time
-- [ ] Client in a different Kitchen never receives another Kitchen's events (room isolation verified)
+- [x] Reconnect after dropped connection does not duplicate events (client-side dedupe by event id) — server never buffers/replays (`realtime.e2e.spec.ts` AC3), client Set-based dedupe as defense-in-depth (`apps/web/src/lib/socket/socket.ts`, tested in `socket.test.ts`)
+- [x] Role downgrade mid-session: existing WS connection re-checks role server-side on next privileged action, not the cached role at connect time — `RealtimeGateway.getCurrentRole()` always re-reads Prisma fresh, never caches at connect (`realtime.gateway.spec.ts`)
+- [x] Client in a different Kitchen never receives another Kitchen's events (room isolation verified) — `realtime.e2e.spec.ts` AC4
 
 ---
 
@@ -124,11 +124,11 @@ Automated tests with two concurrent socket clients simulating the multi-session 
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Medium risk, judgment call — tenant isolation over WS is the main concern, covered by tests)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — Skill tool not available to this sub-agent; Supervisor to run at Stage 4
+- [ ] Security review: N/A (Medium risk, judgment call — tenant isolation over WS is the main concern, covered by tests) — Supervisor to confirm at Stage 4
+- [x] Lint passes — `npm --prefix apps/api run lint` and `npm --prefix apps/web run lint` both clean
+- [x] Tests written AND pass — output pasted into Evidence table
+- [ ] `Skill({ skill: "verify" })` run — Skill tool not available to this sub-agent; manual e2e verification done instead (see Evidence `verify` row), Supervisor to run/confirm at Stage 5
+- [ ] `memory/MEMORY.md` updated — Supervisor-write-only, flagged below
+- [x] Supervisor notified: task ready for Stage 4 review (this report)

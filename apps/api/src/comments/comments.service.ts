@@ -7,6 +7,7 @@ import {
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ENTITY_TYPES } from './entity-type';
 
@@ -30,6 +31,7 @@ export class CommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   // Resolves @mention tokens in a comment body against ONLY the given
@@ -134,6 +136,10 @@ export class CommentsService {
         authorId,
       );
     }
+
+    // T017 hook: push the new Comment to every client in the Kitchen.
+    // Additive only — never blocks/alters the create path above.
+    this.realtimeGateway.emitCommentCreated(kitchenId, comment);
 
     return comment;
   }

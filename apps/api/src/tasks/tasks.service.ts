@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -15,7 +16,10 @@ export const WRITE_ROLES: Role[] = [Role.OWNER, Role.ADMIN, Role.CHEF];
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtimeGateway: RealtimeGateway,
+  ) {}
 
   private async assertAssigneeInKitchen(assigneeId: string, kitchenId: string) {
     const assignee = await this.prisma.user.findUnique({
@@ -104,7 +108,7 @@ export class TasksService {
       await this.assertAssigneeInKitchen(dto.assigneeId, kitchenId);
     }
 
-    return this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id },
       data: {
         ...(dto.title !== undefined ? { title: dto.title } : {}),
@@ -122,5 +126,11 @@ export class TasksService {
           : {}),
       },
     });
+
+    // T017 hook: push the update to every client in the Kitchen.
+    // Additive only — never blocks/alters the update path above.
+    this.realtimeGateway.emitTaskUpdated(kitchenId, updated);
+
+    return updated;
   }
 }
