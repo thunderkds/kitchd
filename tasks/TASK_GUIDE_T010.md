@@ -74,15 +74,15 @@ npm --prefix apps/api run test -- recurrence
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| UI: Visual regression | ☐ N/A — pure backend task | |
-| UI: Design-system compliance | ☐ N/A | |
-| UI: Responsiveness | ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/api/src/tasks/recurrence/recurrence.e2e.spec.ts` — 5 tests: AC1 (generates occurrence), AC2 (same-day re-run is no-op), AC2b (different-day generates 2nd occurrence), AC3 (forced failure logged, batch continues), edge case (template deleted, generated Task survives) |
+| Verification command run | ☑ pass | `npm --prefix apps/api run test -- recurrence` → `Test Suites: 1 passed, 1 total / Tests: 5 passed, 5 total` |
+| Negative cases hold | ☑ pass | AC3 test forces `prisma.task.upsert` to throw for the first template; asserts `logger.error` called once with the forced-failure message and `runNightlyGeneration` still resolves (doesn't throw/crash) |
+| verify | ☑ pass | Ran full suite `npm --prefix apps/api run test` → `Test Suites: 20 passed, 20 total / Tests: 151 passed, 151 total` (no regressions). Job invoked directly via `RecurrenceService.runNightlyGeneration(date)` against a real local Postgres instance (docker `kitchenos-postgres`), confirmed occurrence rows created/deduped in DB via Prisma queries in the test itself. **Stage 4 re-verify (Supervisor, 2026-07-06)**: code-review caught a P2 — the `recurringTemplate` FK was `onDelete: Cascade`, contradicting the edge-case test's own stated intent ("no cascade") and this codebase's established append-only-history pattern; the edge-case test also worked around the cascade manually instead of testing real deletion. Fixed: FK changed to `onDelete: SetNull`, migration SQL updated, applied directly to the local dev DB (`ALTER TABLE ... DROP/ADD CONSTRAINT`), test rewritten to call `prisma.task.delete` on the template directly (no manual null-out) and assert the occurrence survives with `recurringTemplateId` now `null`. Re-ran `npm --prefix apps/api run test -- recurrence` → 5/5 passed; full suite → 20/20 suites, 151/151 tests passed. `migration-safety` gate: GO (additive, reversible, no data loss). pass. |
+| Review scope bounded to blast radius | ☑ pass | Touched: `prisma/schema.prisma` (Task model additions only), new migration, new `src/tasks/recurrence/**` files, `tasks.module.ts` provider registration. Did not touch `/apps/api/src/tasks/complete` (T011 scope) or any other module. |
+| Full smoke suite still green | ☑ pass | `npm --prefix apps/api run test` → `Test Suites: 20 passed, 20 total / Tests: 151 passed, 151 total` |
+| UI: Visual regression | ☑ N/A — pure backend task | |
+| UI: Design-system compliance | ☑ N/A — pure backend task | |
+| UI: Responsiveness | ☑ N/A — pure backend task | |
 
 ---
 

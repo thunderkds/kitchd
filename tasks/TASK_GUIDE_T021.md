@@ -74,15 +74,15 @@ npm --prefix apps/web run test -- responsive
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail | before/after screenshots per screen |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail | |
-| **UI: Responsiveness** | ☐ pass / ☐ fail | this task's entire purpose |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/web/src/test/responsive.test.tsx` (new, 5 tests): asserts `KanbanBoard` keeps `overflow-x-auto` scoped to the board (AC2), `ListView`/`TasksWidget`/`LowStockWidget` rows apply `truncate min-w-0` to the growing title/name span and `shrink-0` to the fixed sibling (AC3), and `NotesPage` applies `break-words` to long title/body text (AC3). `npm --prefix apps/web run test -- responsive` → `Test Files 1 passed (1)`, `Tests 5 passed (5)`. |
+| Verification command run | pass | `npm --prefix apps/web run test -- responsive` → `RUN v4.1.9 ... Test Files 1 passed (1) / Tests 5 passed (5)` (run 2026-07-06 11:52:51, worktree T021). |
+| Negative cases hold | pass | Verified live: a 92-char task title (`Extra-Virgin-Cold-Pressed-Sicilian-Style-Olive-Oil-Premium-Bottle-Restock-And-Rotate-Task`) truncates in list/dashboard views and wraps in kanban/notes without pushing the page wider than the viewport at 375px — confirmed via Playwright `document.documentElement.scrollWidth <= clientWidth` check (see verify row) and visually in `reports/evidence/T021/*.png`. |
+| verify | pass | Live cross-viewport pass via Playwright (chromium) against the running dev server (localhost:8766, this worktree) + API (localhost:3000) with a real seeded Kitchen containing a long-title Task, a long Note, and a long Announcement. Script checked `scrollWidth <= clientWidth` for all 7 screens (dashboard, tasks-kanban, tasks-list, guidelines, inventory, notes, announcements) × 3 viewports (375/768/1024px) = 21/21 checks pass, zero horizontal overflow (raw JSON: `reports/evidence/T021/full-results2.json`). Additionally confirmed tap-to-move (built in T008) still works at 375px: clicked "Move to In Progress" on the kanban board at 375px viewport, task moved from To Do (2)→(1) to In Progress (0)→(1) — screenshot `reports/evidence/T021/tap-to-move-result-375.png`. Full component suite: `npm --prefix apps/web run test` → `Test Files 13 passed (13)`, `Tests 57 passed (57)`. Lint: `npm --prefix apps/web run lint` → clean (oxlint, no warnings). **Stage 4 re-verify (Supervisor, 2026-07-06)**: independently re-ran `npx vitest run` → 13 files/57 tests passed. Reviewed the archived screenshots directly (dashboard-375/768, tasks-list-375, tap-to-move-result-375) — confirmed correct truncation/wrapping and no overflow at each viewport. Code-review: 0 P0/P1/P2/P3 — minimal, surgical CSS-only diffs consistent with existing Tailwind idioms across all 7 touched files. pass. |
+| Review scope bounded to blast radius | pass | Touched only `apps/web/src/**` — 7 existing files got additive Tailwind class changes (`truncate`, `min-w-0`, `shrink-0`, `break-words`) plus 1 new test file. No `apps/api/**` changes, no component logic/behavior changes, matches "Files to Change (Predicted)"/"Files Must NOT Touch" in this guide. |
+| Full smoke suite still green | pass | `npm --prefix apps/web run test` → `Test Files 13 passed (13)`, `Tests 57 passed (57)` (all pre-existing suites, including `TasksPage.test.tsx`, `NotesPage.test.tsx`, `Dashboard.test.tsx`, unaffected). |
+| **UI: Visual regression** | pass | Screenshots captured at 375/768/1024px for Dashboard, Tasks (kanban+list), Guidelines, Inventory, Notes, Announcements — no layout breakage, no visual regression vs. prior structure (only text truncation/wrapping behavior changed on long strings). Screenshots archived at `reports/evidence/T021/t021-*.png`. |
+| **UI: Design-system compliance** | pass | No color/spacing/token changes — purely additive Tailwind utility classes (`truncate`, `min-w-0`, `shrink-0`, `break-words`, `whitespace-nowrap`) reusing the existing design language; verified visually across all captured screenshots that spacing/typography/colors are unchanged from pre-task appearance. |
+| **UI: Responsiveness** | pass | This task's entire purpose. Zero horizontal-scroll incidents across all 6 listed screens (7 counting kanban/list as one Tasks screen with 2 sub-views) at 375px (AC1) — verified programmatically (`scrollWidth<=clientWidth`, 21/21 pass) and visually via screenshots. Kanban tap-to-move fallback confirmed working at 375px, with column overflow contained within the board via `overflow-x-auto` on the board element, never at the page level (AC2). A 92-char long name truncates/wraps gracefully with no overflow in list view, dashboard widgets, kanban cards, and notes (AC3). |
 
 ---
 
@@ -120,8 +120,8 @@ Systematic audit pass: load each of the 6 screens at 375px/768px in a device emu
 
 ## Edge Case Checklist
 
-- [ ] Long Recipe/Ingredient names overflowing fixed-width containers are fixed with truncation/wrapping, not layout breakage
-- [ ] Kanban column overflow is contained WITHIN the board (acceptable), never at the page level (not acceptable) — explicit distinction verified per screen
+- [x] Long Recipe/Ingredient names overflowing fixed-width containers are fixed with truncation/wrapping, not layout breakage
+- [x] Kanban column overflow is contained WITHIN the board (acceptable), never at the page level (not acceptable) — explicit distinction verified per screen
 
 ---
 
@@ -148,11 +148,11 @@ MCP screenshot (Playwright MCP)-based visual regression at 3 breakpoints across 
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Low risk)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — pending Stage 4 (Supervisor/reviewer)
+- [x] Security review: N/A (Low risk)
+- [x] Lint passes
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run (live cross-viewport Playwright pass, see Evidence)
+- [ ] `memory/MEMORY.md` updated — Supervisor-write-only, flagged in report below
+- [x] Supervisor notified: task ready for Stage 4 review

@@ -73,15 +73,15 @@ npm --prefix apps/api run test -- export
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green | ☐ pass / ☐ fail | |
-| UI: Visual regression | ☐ N/A — export button only, minimal UI surface | |
-| UI: Design-system compliance | ☐ N/A | |
-| UI: Responsiveness | ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `apps/api/src/export/export.e2e.spec.ts` — 5 tests: AC1 (`AC1: exports the Ingredient list as CSV with correct headers and values`), AC3 (`AC3: exporting an empty Ingredient list returns 200 with header-only CSV`), AC2 (`AC2: escapes commas and newlines in Recipe steps and round-trips correctly`), plus 2 negative/RBAC tests (`Staff (read-only role) gets 403 attempting to export`, `Export is kitchen-scoped: another kitchen Ingredients never appear`). |
+| Verification command run | pass | `npm --prefix apps/api run test -- export` → `Test Suites: 1 passed, 1 total` / `Tests: 5 passed, 5 total` (run with `DATABASE_URL`/`JWT_SECRET`/`JWT_EXPIRES_IN` exported from root `.env`, matching how other e2e specs in this repo run locally). |
+| Negative cases hold | pass | STAFF role → 403 on `GET /export/ingredients` (RolesGuard, `EXPORT_ROLES = [OWNER, ADMIN, CHEF]`); cross-tenant isolation verified — Kitchen B's export never contains Kitchen A's Ingredient. |
+| verify | pass | Live end-to-end check against running app (`PORT=3099 npm run start`): signed up an Owner, created an Ingredient, `GET /export/ingredients` → `200`, `Content-Type: text/csv`, `Content-Disposition: attachment; filename="ingredients.csv"`, correct CSV body (`id,name,unit,costPerUnit,category,allergens,supplierId,minThreshold` header + one data row); `GET /export/recipes` on an empty Recipe table → `200` with header-only CSV (`recipeId,recipeName,servings,steps,ingredientId,ingredientName,qty,unit`). **Stage 4 re-verify (Supervisor, 2026-07-06)**: independently re-ran `npm --prefix apps/api run test -- export` (5/5 passed) and full suite (20 suites/151 tests passed). Code-review: 0 P0/P1/P2, 2 P3 advisory (multi-allergen test coverage, recipe cost not included in export — neither required by ACs). Removed a stray `.env` created for local test running (not committed). pass. |
+| Review scope bounded to blast radius | pass | Change is additive-only: new `apps/api/src/export/**` module (controller, service, e2e spec) + a one-line import/array addition in `apps/api/src/app.module.ts`. No existing file's logic was modified; Inventory/Recipes modules were read-only dependencies (Prisma reads via existing `PrismaService`), consistent with "Files Must NOT Touch". |
+| Full smoke suite still green | pass | `npm --prefix apps/api run test` → `Test Suites: 20 passed, 20 total` / `Tests: 151 passed, 151 total` (includes the new `src/export/export.e2e.spec.ts` alongside all pre-existing suites). |
+| UI: Visual regression | N/A — export button only, minimal UI surface | Pure backend task; no UI component added in this slice. |
+| UI: Design-system compliance | N/A | Pure backend task. |
+| UI: Responsiveness | N/A | Pure backend task. |
 
 ---
 
@@ -120,11 +120,11 @@ Automated tests including a round-trip parse of the generated CSV, and a special
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A (Low risk)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run (Supervisor/Stage 4)
+- [x] Security review: N/A (Low risk)
+- [x] Lint passes (`npx eslint "src/export/**/*.ts"` — clean after `--fix`)
+- [x] Tests written AND pass — output pasted into Evidence table
+- [x] `Skill({ skill: "verify" })` run — manual live e2e check documented in Evidence table (`verify` row)
+- [ ] `memory/MEMORY.md` updated (Supervisor-only write)
+- [x] Supervisor notified: task ready for Stage 4 review
