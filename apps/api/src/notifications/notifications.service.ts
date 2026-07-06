@@ -42,12 +42,17 @@ export class NotificationsService {
     authorId: string,
   ) {
     if (mentionedUserIds.length === 0) return;
+    const author = await this.prisma.user.findUnique({
+      where: { id: authorId },
+      select: { email: true },
+    });
+    const authorLabel = author?.email?.split('@')[0] ?? authorId;
     await this.prisma.notification.createMany({
       data: mentionedUserIds.map((recipientId) => ({
         kitchenId,
         recipientId,
         type: NotificationType.MENTION,
-        body: `You were mentioned in a comment by ${authorId}`,
+        body: `You were mentioned in a comment by ${authorLabel}`,
       })),
     });
   }
