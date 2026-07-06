@@ -20,8 +20,6 @@
 ### In Progress
 
 ### Ready for Review
-- [ ] **T018** — Home dashboard aggregation (today's tasks, low stock, announcements, pinned notes) | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-05
-
 
 
 
@@ -46,6 +44,7 @@
 - [x] **T014** — Shift log (per-shift feed, time-sorted) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
 - [x] **T015** — Comments component (reusable) + @mentions | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-05 | Done: 2026-07-05
 - [x] **T016** — Notification center (bell icon, unread count, mark-as-read) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
+- [x] **T018** — Home dashboard aggregation (today's tasks, low stock, announcements, pinned notes) | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-05 | Done: 2026-07-06
 
 ---
 
@@ -53,7 +52,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T010, T017–T018, T020–T023 | Not yet started | — (T001–T009, T011, T019, T007, T012–T016 complete) |
+| T010, T017, T020–T023 | Not yet started | — (T001–T009, T011, T019, T007, T012–T016, T018 complete) |
 | Follow-up RBAC audit (Notes/Announcements/ShiftLog/Comments) | Ready to schedule as new task (e.g. T024) — all 4 modules now exist | — |
 
 ---
