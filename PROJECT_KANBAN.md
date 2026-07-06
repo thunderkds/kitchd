@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-05
+**Last updated**: 2026-07-06
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -13,16 +13,8 @@
 - [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0
 
 ### In Progress
-- [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-06
-- [ ] **T017** — Socket.IO realtime wiring (tasks/comments/announcements) | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-06
-- [ ] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2 | Started: 2026-07-06
-- [ ] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1 | Started: 2026-07-06
-- [ ] **T023** — CI/CD: lint/test/build pipeline + Render staging auto-deploy | common-infrastructure | C2 | Risk: Med | P1 | Started: 2026-07-06
 
 ### Ready for Review
-
-
-
 
 
 
@@ -45,6 +37,11 @@
 - [x] **T015** — Comments component (reusable) + @mentions | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-05 | Done: 2026-07-05
 - [x] **T016** — Notification center (bell icon, unread count, mark-as-read) | backend-developer | C1 | Risk: Low | P1 | Started: 2026-07-05 | Done: 2026-07-05
 - [x] **T018** — Home dashboard aggregation (today's tasks, low stock, announcements, pinned notes) | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-05 | Done: 2026-07-06
+- [x] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T017** — Socket.IO realtime wiring (tasks/comments/announcements) | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T023** — CI/CD: lint/test/build pipeline + Render staging auto-deploy (human follow-up needed: create Render service + secrets before staging deploy is live) | common-infrastructure | C2 | Risk: Med | P1 | Started: 2026-07-06 | Done: 2026-07-06
 
 ---
 
@@ -52,7 +49,8 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T010, T017, T020–T023 | Not yet started | — (T001–T009, T011, T019, T007, T012–T016, T018 complete) |
+| T022 | Not yet started | — (all other tasks T001–T021, T023 complete) |
+| T023 staging deploy (not the CI/CD code itself) | Workflow merged, but the actual Render deploy cannot fire yet | Human: create Render service(s), add `RENDER_DEPLOY_HOOK_WEB`, `RENDER_DEPLOY_HOOK_API`, `STAGING_DATABASE_URL` (optionally `RENDER_API_KEY` + service IDs) as GitHub repo secrets |
 | Follow-up RBAC audit (Notes/Announcements/ShiftLog/Comments) | Ready to schedule as new task (e.g. T024) — all 4 modules now exist | — |
 
 ---
