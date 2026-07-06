@@ -57,8 +57,8 @@ export function AnnouncementsWidget() {
               data-testid={`announcement-row-${announcement.id}`}
               className="px-1 py-2 text-sm"
             >
-              <p className="font-medium text-gray-900">{announcement.title}</p>
-              <p className="text-gray-600 whitespace-pre-wrap">{announcement.body}</p>
+              <p className="font-medium text-gray-900 break-words">{announcement.title}</p>
+              <p className="text-gray-600 whitespace-pre-wrap break-words">{announcement.body}</p>
             </li>
           ))}
         </ul>

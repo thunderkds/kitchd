@@ -56,14 +56,14 @@ export function LowStockWidget() {
               <li
                 key={ingredient.id}
                 data-testid={`low-stock-row-${ingredient.id}`}
-                className={`flex items-center justify-between px-1 py-2 text-sm rounded ${
+                className={`flex items-center justify-between gap-2 px-1 py-2 text-sm rounded ${
                   isCritical
                     ? 'bg-red-50 text-red-700'
                     : 'bg-amber-50 text-amber-700'
                 }`}
               >
-                <span>{ingredient.name}</span>
-                <span>
+                <span className="truncate min-w-0">{ingredient.name}</span>
+                <span className="shrink-0 whitespace-nowrap">
                   {ingredient.currentStock} {ingredient.unit} (min{' '}
                   {ingredient.minThreshold})
                 </span>

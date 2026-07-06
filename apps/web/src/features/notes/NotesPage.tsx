@@ -159,9 +159,9 @@ export function NotesPage() {
           {notes.map((note) => (
             <li key={note.id} className="border rounded p-3" data-testid={`note-${note.id}`}>
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  {note.title && <p className="font-medium">{note.title}</p>}
-                  <p className="text-sm whitespace-pre-wrap">{note.body}</p>
+                <div className="min-w-0 flex-1">
+                  {note.title && <p className="font-medium break-words">{note.title}</p>}
+                  <p className="text-sm whitespace-pre-wrap break-words">{note.body}</p>
                   {note.tags.length > 0 && (
                     <p className="text-xs text-gray-500 mt-1">{note.tags.join(' ')}</p>
                   )}
