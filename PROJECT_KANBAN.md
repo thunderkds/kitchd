@@ -10,14 +10,14 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1
-- [ ] **T017** — Socket.IO realtime wiring (tasks/comments/announcements) | backend-developer | C2 | Risk: Med | P1
-- [ ] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2
-- [ ] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1
 - [ ] **T022** — QA pass + seed demo data + onboarding walkthrough | qa-expert | C2 | Risk: Med | P0
-- [ ] **T023** — CI/CD: lint/test/build pipeline + Render staging auto-deploy | common-infrastructure | C2 | Risk: Med | P1
 
 ### In Progress
+- [ ] **T010** — Recurrence support (cron-based daily prep list generation) | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-06
+- [ ] **T017** — Socket.IO realtime wiring (tasks/comments/announcements) | backend-developer | C2 | Risk: Med | P1 | Started: 2026-07-06
+- [ ] **T020** — CSV export for inventory & recipes | backend-developer | C1 | Risk: Low | P2 | Started: 2026-07-06
+- [ ] **T021** — Mobile responsive pass (tablet/phone breakpoints) | frontend-developer | C2 | Risk: Low | P1 | Started: 2026-07-06
+- [ ] **T023** — CI/CD: lint/test/build pipeline + Render staging auto-deploy | common-infrastructure | C2 | Risk: Med | P1 | Started: 2026-07-06
 
 ### Ready for Review
 
