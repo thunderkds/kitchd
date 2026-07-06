@@ -67,10 +67,10 @@ export function TasksWidget() {
             <li
               key={task.id}
               data-testid={`tasks-widget-row-${task.id}`}
-              className="flex items-center justify-between px-1 py-2 text-sm"
+              className="flex items-center justify-between gap-2 px-1 py-2 text-sm"
             >
-              <span>{task.title}</span>
-              <span className="text-gray-500">{task.status}</span>
+              <span className="truncate min-w-0">{task.title}</span>
+              <span className="text-gray-500 shrink-0">{task.status}</span>
             </li>
           ))}
         </ul>

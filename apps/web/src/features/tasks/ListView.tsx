@@ -20,9 +20,9 @@ export function ListView({
     <ul className="flex flex-col gap-2" data-testid="task-list-view">
       {tasks.map((task) => (
         <li key={task.id} className="bg-white border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-sm">{task.title}</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-gray-100">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium text-sm truncate min-w-0">{task.title}</span>
+            <span className="text-xs px-2 py-0.5 rounded bg-gray-100 shrink-0">
               {STATUS_LABEL[task.status]}
             </span>
           </div>

@@ -58,8 +58,8 @@ export function PinnedNotesWidget() {
               data-testid={`pinned-note-row-${note.id}`}
               className="px-1 py-2 text-sm"
             >
-              {note.title && <p className="font-medium text-gray-900">{note.title}</p>}
-              <p className="text-gray-600 whitespace-pre-wrap">{note.body}</p>
+              {note.title && <p className="font-medium text-gray-900 break-words">{note.title}</p>}
+              <p className="text-gray-600 whitespace-pre-wrap break-words">{note.body}</p>
             </li>
           ))}
         </ul>

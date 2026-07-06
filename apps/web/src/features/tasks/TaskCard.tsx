@@ -22,7 +22,7 @@ export function TaskCard({
       onDragStart={(e) => e.dataTransfer.setData('text/task-id', task.id)}
       data-testid={`task-card-${task.id}`}
     >
-      <p className="font-medium text-sm">{task.title}</p>
+      <p className="font-medium text-sm break-words">{task.title}</p>
       <p className="text-xs text-gray-500 mt-1">
         {task.assigneeId ? `Assigned: ${task.assigneeId.slice(0, 8)}` : 'Unassigned'}
       </p>
