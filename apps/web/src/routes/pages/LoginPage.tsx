@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { AuthResponseDto } from '@kitchenos/shared';
-import { setToken, setUser } from '../auth';
+import { setToken, setUser, type StoredUser } from '../auth';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
 type Mode = 'login' | 'signup';
+
+// Mirrors the API's AuthResponseDto shape (see apps/api/src/auth/auth.service.ts
+// buildAuthResult). Defined locally instead of importing @kitchenos/shared so
+// apps/web has no workspace-package dependency and can be built/deployed as a
+// fully standalone npm project (Render Root Directory: apps/web).
+interface AuthResponseDto {
+  accessToken: string;
+  user: StoredUser;
+}
 
 export function LoginPage() {
   const navigate = useNavigate();

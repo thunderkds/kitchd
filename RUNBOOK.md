@@ -19,18 +19,17 @@
 
 Ordered steps to ship a release. Migrations before app. Commands copy-pasteable.
 
-### One-time setup (required before the FIRST staging deploy — not yet done)
+### One-time setup (required before the FIRST staging deploy)
 
 1. Create a Render Postgres instance and two Render Web Services (one for `apps/api`, one for `apps/web`), or the Render Blueprint equivalent.
-2. On the API service, set environment variables: `DATABASE_URL` (Render Postgres connection string), `JWT_SECRET` (a real random secret — **never** the `dev-only-change-me` default in `apps/api/.env.example`), `JWT_EXPIRES_IN=1d`, `PORT` (Render sets this automatically, usually `10000`).
-3. On the web service, set `VITE_API_BASE_URL` to the API service's public Render URL.
-4. Grab each service's **Deploy Hook URL** from Render's dashboard (Settings → Deploy Hook).
-5. Add these as GitHub repo secrets (`Settings → Secrets and variables → Actions`):
-   - `RENDER_DEPLOY_HOOK_WEB`, `RENDER_DEPLOY_HOOK_API`
-   - `STAGING_DATABASE_URL` (same Postgres connection string as step 2, used by the CD workflow to run `prisma migrate deploy` before triggering the API deploy hook)
-   - Optional: `RENDER_API_KEY`, `RENDER_SERVICE_ID_WEB`, `RENDER_SERVICE_ID_API` (enables the workflow's post-deploy status poll)
-
-**TODO: confirm with operator** — none of the above has been done yet. This is the single blocking item before any staging deploy can succeed (see GO/NO-GO gate below).
+2. **Per-service Render dashboard config** (both `apps/api` and `apps/web` are now fully standalone npm projects — no monorepo-root install step required):
+   - **API service**: Root Directory `apps/api`; Build Command `npm run build`; Start Command `npm start`.
+   - **Web service**: Root Directory `apps/web`; Build Command `npm run build`; Start Command `npm start`.
+   - Both `build` scripts run `npm install --include=dev` internally — **required** because Render sets `NODE_ENV=production` during builds, which makes a plain `npm install`/`npm ci` skip `devDependencies` (this broke the first deploy attempt: `tsc` couldn't find `vite/client`/`node` type declarations, since `vite`/`@types/node`/`typescript` are all devDependencies). Don't remove the `npm install --include=dev &&` prefix from either build script.
+3. On the API service, set environment variables: `DATABASE_URL` (Render Postgres connection string), `JWT_SECRET` (a real random secret — **never** the `dev-only-change-me` default in `apps/api/.env.example`), `JWT_EXPIRES_IN=1d`. Render sets `PORT` automatically.
+4. On the web service, set `VITE_API_BASE_URL` to the API service's public Render URL (must be set at **build** time, since Vite bakes `import.meta.env.VITE_*` into the bundle — a post-build env var change requires a rebuild, not just a restart).
+5. On the API service, set `WEB_ORIGIN` to the web service's public Render URL (used by `RealtimeGateway`'s CORS config — a mismatch here silently breaks Socket.IO's handshake, see Common Failure Modes).
+6. *(Optional, for the GitHub Actions CD path instead of/in addition to manual Render dashboard deploys)*: grab each service's Deploy Hook URL (Settings → Deploy Hook) and add as GitHub repo secrets — `RENDER_DEPLOY_HOOK_WEB`, `RENDER_DEPLOY_HOOK_API`, `STAGING_DATABASE_URL`, optionally `RENDER_API_KEY` + `RENDER_SERVICE_ID_WEB`/`_API`. This lets `.github/workflows/deploy-staging.yml` auto-deploy on merge to `staging`, on top of Render's own auto-deploy-on-push-to-connected-branch behavior.
 
 ### Per-release steps (once the above is done)
 
@@ -97,6 +96,8 @@ Ordered steps to ship a release. Migrations before app. Commands copy-pasteable.
 
 | Symptom | Likely cause | Remediation |
 |---------|-------------|--------------|
+| `error TS2688: Cannot find type definition file for 'vite/client'`/`'node'` during `apps/web` build; or `nest build` fails needing `@nestjs/cli` during `apps/api` build | **Hit on the first real deploy (2026-07-06)**. Render sets `NODE_ENV=production` during builds, so a plain `npm install`/`npm ci` skips `devDependencies` — but `vite`, `@types/node`, `typescript` (web) and `@nestjs/cli` (api) are all devDependencies needed just to build. | Already fixed: both `apps/api` and `apps/web`'s `build` scripts now run `npm install --include=dev` explicitly before the actual build step. If this regresses, check that prefix wasn't accidentally removed from either `package.json`. |
+| `apps/api` fails to start with `Cannot find module '/opt/render/project/src/dist/main'` | `start`/`start:prod` pointed at `dist/main` but `nest build`'s actual compiled entry is `dist/src/main.js` (tsc's inferred rootDir nests `src/` under `outDir`) — this was wrong since the scripts were first written. | Already fixed: both scripts now run `node dist/src/main`. If you ever change `tsconfig.build.json`'s `rootDir`/`outDir`, verify the real output path with `ls dist/` before assuming `dist/main.js`. |
 | `deploy-staging.yml` fails at "Trigger Render deploy hook" with `RENDER_DEPLOY_HOOK_*  secret is not set` | One-time Render setup (above) was never completed | Complete the One-time setup section, add the missing GitHub secret, re-push to `staging` |
 | API returns 500 on every request after deploy | `DATABASE_URL`/`JWT_SECRET` env vars misconfigured on the Render service, or migration didn't apply | Check Render service env vars match `.env.example` shape; check the CD workflow's "Run Prisma migrations against staging DB" step log for migration errors |
 | Web app loads blank / shows a CORS error in console | `VITE_API_BASE_URL` on the web service doesn't point at the actual deployed API URL, or `WEB_ORIGIN` env var on the API (used by `RealtimeGateway`'s CORS config) doesn't match the deployed web URL | Update the mismatched env var on the relevant Render service and redeploy |
