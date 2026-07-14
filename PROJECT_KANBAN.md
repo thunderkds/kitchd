@@ -10,9 +10,9 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T028** — Frontend Team & Roles page: member list, invite form, role-change control, remove action, pending-invites list | frontend-developer | C2 | Risk: Medium | P1 | Unblocked (T027 merged 2026-07-14)
 
 ### In Progress
+- [ ] **T028** — Frontend Team & Roles page: member list, invite form, role-change control, remove action, pending-invites list | frontend-developer | C2 | Risk: Medium | P1 | Worktree: `.claude/worktrees/T028` (branch `task/T028-team-roles-frontend`) | Started: 2026-07-14
 
 ### Ready for Review
 
