@@ -35,28 +35,66 @@
   --color-warning: var(--knos-warning);
 }
 
+/*
+ * 2026-07-14 — borderless / gradient-box revision.
+ *
+ * `--knos-border` is `transparent` in both themes below: Tailwind v4's
+ * preflight sets `border-color: var(--color-border, currentColor)` on
+ * every element, so every bare `border`/`border-t-*` class across the app
+ * already resolves through this one token (confirmed — no component file
+ * needed editing). Semantic accent stripes that use a *different* token
+ * (e.g. Kanban's `border-t-warning`/`border-t-success`) are untouched,
+ * since those aren't `--color-border`.
+ *
+ * `bg-surface-raised` gets a `linear-gradient` background-image instead of
+ * a flat fill, via the override rule at the bottom of this file — a subtle
+ * two-stop gradient (`--knos-surface-raised` -> `--knos-surface-raised-2`)
+ * that reads as elevation now that there's no border line to imply it.
+ * `--knos-surface-raised` itself is kept as the `background-color`
+ * fallback (e.g. for `<select>` internals a gradient can't reach).
+ */
 :root,
 [data-theme='simple'] {
   --knos-surface: #f9fafb;
   --knos-surface-raised: #ffffff;
+  --knos-surface-raised-2: #eef0f4;
   --knos-text-primary: #111827;
   --knos-text-muted: #6b7280;
   --knos-accent: #9333ea;
-  --knos-border: #e5e7eb;
+  --knos-border: transparent;
+  --knos-border-input: #d1d5db;
   --knos-danger: #dc2626;
   --knos-success: #16a34a;
   --knos-warning: #d97706;
 }
 
+/*
+ * Dark Neon palette (2026-07-14 revision) — rebased on Carlos Alfaro's
+ * "DarkNeon" Bootstrap admin template (github.com/Carlos007007/DarkNeon,
+ * css/style.css :root block) rather than an invented palette. That
+ * reference uses a tight 6-color set: near-black background (#14111A),
+ * darker sidebar/modal tone (#06030D), a muted plum border (#2F2A3D),
+ * off-white text (#EEEEEE), a crimson/hot-pink accent (#D51944, with a
+ * brighter rgba(250,30,78,.1) glow on hover states), and a desaturated
+ * gray for secondary text (#6E6C74). We keep our own surface/surface-raised
+ * two-tier elevation model (the reference doesn't distinguish card levels)
+ * but pull hues from the same family, and brighten --knos-text-muted
+ * slightly past the reference's #6E6C74 for body-text contrast at 14px on
+ * a near-black background. No dedicated status colors exist in the
+ * reference (it leans on Bootstrap defaults elsewhere) — danger/success
+ * chosen to sit in the same magenta/teal-neon register as the accent.
+ */
 [data-theme='dark-neon'] {
-  --knos-surface: #0b0d1a;
-  --knos-surface-raised: #12162e;
-  --knos-text-primary: #f5f5fa;
-  --knos-text-muted: #9ca0c9;
-  --knos-accent: #ff2ec4;
-  --knos-border: #2c3155;
-  --knos-danger: #ff5470;
-  --knos-success: #39ff88;
+  --knos-surface: #14111a;
+  --knos-surface-raised: #1c1730;
+  --knos-surface-raised-2: #34163a;
+  --knos-text-primary: #eeeeee;
+  --knos-text-muted: #948fa0;
+  --knos-accent: #d51944;
+  --knos-border: transparent;
+  --knos-border-input: #4a3f5c;
+  --knos-danger: #fa1e4e;
+  --knos-success: #00e0a0;
   --knos-warning: #ffb020;
 }
 
@@ -65,4 +103,58 @@ body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--color-surface);
   color: var(--color-text-primary);
+}
+
+/*
+ * Gradient box override — see the borderless/gradient-box revision note
+ * above the :root block. `background-color` stays the flat
+ * `--knos-surface-raised` as a fallback for contexts a background-image
+ * can't reach (e.g. a <select>'s native dropdown panel); `background-image`
+ * is what actually paints in normal box/card contexts. Dark Neon's second
+ * stop (`--knos-surface-raised-2`) is deliberately accent-tinted (plum
+ * toward the crimson accent hue) rather than another flat near-black, so
+ * the gradient reads as a "neon glow" instead of a muddy gray wash — first
+ * revision (2026-07-14) used two close-in-value dark tones and the user
+ * correctly called it out as looking bad.
+ */
+.bg-surface-raised {
+  background-color: var(--knos-surface-raised);
+  background-image: linear-gradient(
+    135deg,
+    var(--knos-surface-raised),
+    var(--knos-surface-raised-2)
+  );
+}
+
+/*
+ * Border-color override for the bare `border`/`border-t`/`border-b`/
+ * `border-l`/`border-r` utilities used across the app. Tailwind v4's
+ * preflight resets these to `border-color: currentColor` by design (a
+ * deliberate v4 change from v3's gray-200 default) — NOT `var(--color-border)`
+ * as the `@theme inline` mapping alone would suggest, so the token swap
+ * above is a no-op without this explicit rule. Colored variants like
+ * `border-t-warning`/`border-t-success` generate their own `border-*-color`
+ * declaration from a *different* token and are untouched by this rule.
+ */
+.border,
+.border-t,
+.border-b,
+.border-l,
+.border-r {
+  border-color: var(--color-border);
+}
+
+/*
+ * Form-control border exception (2026-07-14): removing borders app-wide
+ * made `<input>`/`<select>`/`<textarea>` illegible as fields — the user
+ * flagged this directly. These keep a real, visible border via
+ * `--knos-border-input` (distinct from `--knos-border`, which stays
+ * `transparent` for card/box/divider borders). Higher specificity
+ * (element + class) than the bare `.border` rule above, so this wins
+ * regardless of source order.
+ */
+input.border,
+select.border,
+textarea.border {
+  border-color: var(--knos-border-input);
 }

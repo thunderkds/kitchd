@@ -106,6 +106,38 @@ cd apps/web && npm test -- theme && grep -rEn "bg-(slate|gray|indigo|zinc|neutra
 >
 > **Tooling note**: easy-ui-mcp was not available as a callable tool in this implementer agent's session (no browser/screenshot MCP tool was exposed). Used Playwright directly instead (already cached on this machine, same DOM-assertion + screenshot methodology documented for T021's responsive workaround) — dev server run on the fixed port 8766 from this worktree, stopped after capture. 18 screenshots + `results.json` archived to `reports/evidence/T026/`.
 
+### Follow-up fix — 2026-07-14, same-day (commit `273c7a1`, post-merge)
+
+User reported the shipped Dark Neon palette "does not look good at all" and pointed to `github.com/Carlos007007/DarkNeon` as a reference. `apps/web/src/index.css`'s `[data-theme='dark-neon']` block was rebased on that reference's actual `css/style.css` `:root` hex values (near-black `#14111A` background, `#D51944` crimson accent, `#2F2A3D` muted-plum border, `#EEEEEE` text, brightened `#948fa0` muted text for contrast) rather than the original invented saturated purple/magenta/lime combination. Token names/architecture unchanged — hex values only.
+
+**Verification**: easy-ui-mcp again unavailable in this session (confirmed via `ToolSearch` — no matching MCP tools registered at all, not just unused). Used Playwright directly, same substitute methodology as the original T026 note above: signed up a fresh account, switched to Dark Neon via the Settings page, then screenshotted every major screen — Settings (Simple + Dark Neon), Dashboard, Tasks, Inventory, Notes, Announcements, Guidelines. Verdict: coherent near-black/crimson palette throughout, no clashing hues, no unstyled elements, matches the reference's visual register. `npm test -- theme` (12/12 passed) confirms no functional regression from the value-only change. Screenshots archived to `reports/evidence/T026-palette-fix/` (`01`–`09`, see directory listing).
+
+**Gap acknowledged**: this fix was initially committed (`273c7a1`) without going through this Evidence-table update or a Stage 4 HTML report — a same-day CSS tweak was treated as too small for the pipeline's UI-evidence requirement, which was wrong; any UI-visible change carries the same visual-regression risk regardless of diff size. Evidence backfilled here after the gap was pointed out.
+
+### Follow-up fix #2 — 2026-07-14, same-day (borderless / gradient boxes)
+
+User asked to remove the border line for both themes and use a gradient for boxes/components instead. `--knos-border` set to `transparent` in both `[data-theme]` blocks; `.bg-surface-raised` overridden with a `linear-gradient(135deg, ...)` background-image (new `--knos-surface-raised-2` token per theme for the second stop).
+
+**Bug caught during live verification**: the initial `--knos-border: transparent` change had **zero visible effect** — Playwright screenshot showed borders still rendering, and `getComputedStyle(...).borderColor` on a login input read `rgb(17, 24, 39)` (exactly `--knos-text-primary`), not our token. Root cause: Tailwind v4's preflight resets bare `.border`/`.border-t`/`.border-b`/`.border-l`/`.border-r` to `border-color: currentColor` by design (a v4 behavior change from v3's gray-200 default) — the `@theme inline` mapping of `--color-border` alone does nothing for these bare utility classes, only for explicit `border-{token}` variants like `border-t-warning`. Fixed with an explicit `.border, .border-t, .border-b, .border-l, .border-r { border-color: var(--color-border); }` override rule. Re-verified: `getComputedStyle(...).borderColor` now reads `rgba(0, 0, 0, 0)`.
+
+**Verification**: `npm test` (full suite) 73/73 passed after the fix. Live Playwright check across Login (Simple), Dashboard (Simple + Dark Neon), Settings (Dark Neon), Tasks (Dark Neon) — no border lines visible anywhere, gradient boxes render correctly in sidebar/topbar/cards in both themes, Kanban's colored `border-t-warning`/`border-t-success` status stripes confirmed unaffected (different token). Dev server started/stopped cleanly on port 8766 for this check. Screenshots archived to `reports/evidence/T026-borderless-gradient/` (`01`–`05`).
+
+### Follow-up fix #3 — 2026-07-14, same-day (restore input borders; rework Dark Neon gradient)
+
+User feedback on fix #2: (1) removing the border from `<input>`/`<select>`/`<textarea>` made form fields hard to read as fields — should stay bordered; (2) the Dark Neon gradient "is not good at all."
+
+**Input borders**: added `--knos-border-input` (distinct from `--knos-border`, which stays `transparent` for card/box/divider borders) and an `input.border, select.border, textarea.border { border-color: var(--knos-border-input) }` override — higher specificity (element + class) than the bare `.border` rule, wins regardless of source order. Simple: `#d1d5db` (light neutral gray). Dark Neon: `#4a3f5c` (visible plum, legible against the near-black background).
+
+**Dark Neon gradient rework**: the fix-#2 gradient used two close-in-value near-black/purple stops (`#1c1730` → `#241a3d`) — read as a flat, muddy wash rather than a "neon" glow. Reworked `--knos-surface-raised-2` to `#34163a`, a more saturated plum pulled toward the crimson accent hue, so the 135° gradient now visibly shifts from surface-tone toward an accent-tinted glow — closer to the reference template's actual use of accent-tinted rgba glows (`rgba(250,30,68,.1)` hover washes in `css/style.css`), not another flat gray.
+
+**Verification**: computed-style check confirmed both input border colors resolve correctly (`rgb(209,213,219)` Simple, `rgb(74,63,92)` Dark Neon — not `transparent`). `npm test` (full suite) 73/73 passed. Live Playwright screenshots across Login (Simple, input borders visible), Settings/Dashboard/Notes (Dark Neon, glow gradient + input borders visible). Dev server started/stopped cleanly on 8766. Screenshots archived to `reports/evidence/T026-input-border-gradient-fix/` (`01`–`04`).
+
+### Follow-up fix #4 — 2026-07-14, same-day (extend gradient to Dashboard widgets + Notes list items)
+
+User asked to apply the gradient to the Dashboard widget components and the Notes list items in both themes. These had never had a `bg-surface-raised` class at all (only `border rounded-lg p-4`/`border rounded p-3`) — pre-T026 they had no fill either, just an outline; once borders went transparent (fix #2) they became fully invisible boxes. Added `bg-surface-raised` to: `TasksWidget.tsx`, `LowStockWidget.tsx`, `AnnouncementsWidget.tsx`, `PinnedNotesWidget.tsx` (all 4 Dashboard widgets), and `NotesPage.tsx`'s `<li>` note-list-item.
+
+**Verification**: `npm test` (full suite) 73/73 passed. Live Playwright check: signed up, seeded 2 real notes (to see populated list items, not just the empty state), captured Dashboard + Notes in both Simple and Dark Neon. All 4 widgets and both note items now show the diagonal gradient — subtle white-to-light-gray in Simple, visible plum-to-crimson-glow in Dark Neon. Dev server started/stopped cleanly on 8766. Screenshots archived to `reports/evidence/T026-dashboard-notes-gradient/` (`01`–`04`).
+
 ---
 
 ## UI / Design Acceptance Criteria

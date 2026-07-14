@@ -42,7 +42,7 @@ export function TasksWidget() {
   const visible = (scoped ?? []).slice(0, MAX_ITEMS);
 
   return (
-    <div className="border rounded-lg p-4 w-full" data-testid="tasks-widget">
+    <div className="border bg-surface-raised rounded-lg p-4 w-full" data-testid="tasks-widget">
       <h3 className="text-sm font-semibold text-primary mb-3">
         {showAll ? 'Kitchen Tasks' : 'My Tasks'}
       </h3>

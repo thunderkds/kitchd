@@ -157,7 +157,7 @@ export function NotesPage() {
       ) : (
         <ul className="flex flex-col gap-3" data-testid="notes-list">
           {notes.map((note) => (
-            <li key={note.id} className="border rounded p-3" data-testid={`note-${note.id}`}>
+            <li key={note.id} className="border bg-surface-raised rounded p-3" data-testid={`note-${note.id}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   {note.title && <p className="font-medium break-words">{note.title}</p>}
