@@ -1,16 +1,30 @@
 import {
+  BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { Invite, Theme, User } from '@prisma/client';
+import { Invite, Role, Theme, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService, AuthResult } from '../auth/auth.service';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { AcceptInviteDto } from './dto/accept-invite.dto';
+
+/** Public-safe member fields — never selects passwordHash. */
+const MEMBER_SELECT = {
+  id: true,
+  email: true,
+  role: true,
+  isActive: true,
+} as const;
+
+/** Roles that cannot be targeted by role-change or removal — protects
+ * against a kitchen ever being left without an Owner/Admin by accident. */
+const PROTECTED_ROLES: Role[] = [Role.OWNER, Role.ADMIN];
 
 const SALT_ROUNDS = 10;
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -132,5 +146,103 @@ export class UsersService {
       data: { themePreference: theme },
       select: { id: true, email: true, themePreference: true },
     });
+  }
+
+  // --- Team management (T027) --------------------------------------
+
+  /** Kitchen-scoped: derived from the caller's own kitchenId, never a param. */
+  async listMembers(callerId: string) {
+    const caller = await this.getCallerOrThrow(callerId);
+    return this.prisma.user.findMany({
+      where: { kitchenId: caller.kitchenId, isActive: true },
+      select: MEMBER_SELECT,
+      orderBy: { email: 'asc' },
+    });
+  }
+
+  async updateRole(callerId: string, targetId: string, role: Role) {
+    const caller = await this.getCallerOrThrow(callerId);
+    const target = await this.findMemberOrThrow(targetId, caller.kitchenId);
+
+    if (PROTECTED_ROLES.includes(target.role)) {
+      throw new ForbiddenException('Cannot change the role of an Owner/Admin');
+    }
+
+    return this.prisma.user.update({
+      where: { id: target.id },
+      data: { role },
+      select: MEMBER_SELECT,
+    });
+  }
+
+  async deactivate(callerId: string, targetId: string) {
+    if (callerId === targetId) {
+      throw new BadRequestException('Cannot remove yourself');
+    }
+
+    const caller = await this.getCallerOrThrow(callerId);
+    const target = await this.findMemberOrThrow(targetId, caller.kitchenId);
+
+    if (PROTECTED_ROLES.includes(target.role)) {
+      throw new ForbiddenException('Cannot remove an Owner/Admin');
+    }
+
+    return this.prisma.user.update({
+      where: { id: target.id },
+      data: { isActive: false },
+      select: MEMBER_SELECT,
+    });
+  }
+
+  async listPendingInvites(callerId: string) {
+    const caller = await this.getCallerOrThrow(callerId);
+    return this.prisma.invite.findMany({
+      where: { kitchenId: caller.kitchenId, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async revokeInvite(callerId: string, inviteId: string) {
+    const caller = await this.getCallerOrThrow(callerId);
+    const invite = await this.prisma.invite.findUnique({
+      where: { id: inviteId },
+    });
+    if (!invite || invite.kitchenId !== caller.kitchenId) {
+      throw new NotFoundException('Invite not found');
+    }
+    if (invite.status !== 'PENDING') {
+      throw new ConflictException('Invite is no longer pending');
+    }
+
+    return this.prisma.invite.update({
+      where: { id: invite.id },
+      data: { status: 'REVOKED' },
+    });
+  }
+
+  private async getCallerOrThrow(callerId: string): Promise<User> {
+    const caller = await this.prisma.user.findUnique({
+      where: { id: callerId },
+    });
+    if (!caller) {
+      throw new UnauthorizedException('Calling user no longer exists');
+    }
+    return caller;
+  }
+
+  /** Never confirms existence of a user outside the caller's own kitchen —
+   * a cross-tenant target id returns 404, matching the established
+   * kitchen-scoped-controller pattern (see memory/decisions.md). */
+  private async findMemberOrThrow(
+    targetId: string,
+    kitchenId: string,
+  ): Promise<User> {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetId },
+    });
+    if (!target || target.kitchenId !== kitchenId) {
+      throw new NotFoundException('User not found');
+    }
+    return target;
   }
 }

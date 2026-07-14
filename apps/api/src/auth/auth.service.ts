@@ -93,6 +93,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // A deactivated (removed) user gets the same generic 401 as a wrong
+    // password — never leak account state via a distinct error message.
+    if (!user.isActive) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     return this.buildAuthResult(
       user.id,
       user.email,
