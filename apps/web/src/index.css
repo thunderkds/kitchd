@@ -35,14 +35,33 @@
   --color-warning: var(--knos-warning);
 }
 
+/*
+ * 2026-07-14 — borderless / gradient-box revision.
+ *
+ * `--knos-border` is `transparent` in both themes below: Tailwind v4's
+ * preflight sets `border-color: var(--color-border, currentColor)` on
+ * every element, so every bare `border`/`border-t-*` class across the app
+ * already resolves through this one token (confirmed — no component file
+ * needed editing). Semantic accent stripes that use a *different* token
+ * (e.g. Kanban's `border-t-warning`/`border-t-success`) are untouched,
+ * since those aren't `--color-border`.
+ *
+ * `bg-surface-raised` gets a `linear-gradient` background-image instead of
+ * a flat fill, via the override rule at the bottom of this file — a subtle
+ * two-stop gradient (`--knos-surface-raised` -> `--knos-surface-raised-2`)
+ * that reads as elevation now that there's no border line to imply it.
+ * `--knos-surface-raised` itself is kept as the `background-color`
+ * fallback (e.g. for `<select>` internals a gradient can't reach).
+ */
 :root,
 [data-theme='simple'] {
   --knos-surface: #f9fafb;
   --knos-surface-raised: #ffffff;
+  --knos-surface-raised-2: #eef0f4;
   --knos-text-primary: #111827;
   --knos-text-muted: #6b7280;
   --knos-accent: #9333ea;
-  --knos-border: #e5e7eb;
+  --knos-border: transparent;
   --knos-danger: #dc2626;
   --knos-success: #16a34a;
   --knos-warning: #d97706;
@@ -67,10 +86,11 @@
 [data-theme='dark-neon'] {
   --knos-surface: #14111a;
   --knos-surface-raised: #1c1730;
+  --knos-surface-raised-2: #241a3d;
   --knos-text-primary: #eeeeee;
   --knos-text-muted: #948fa0;
   --knos-accent: #d51944;
-  --knos-border: #2f2a3d;
+  --knos-border: transparent;
   --knos-danger: #fa1e4e;
   --knos-success: #00e0a0;
   --knos-warning: #ffb020;
@@ -81,4 +101,38 @@ body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--color-surface);
   color: var(--color-text-primary);
+}
+
+/*
+ * Gradient box override — see the borderless/gradient-box revision note
+ * above the :root block. `background-color` stays the flat
+ * `--knos-surface-raised` as a fallback for contexts a background-image
+ * can't reach (e.g. a <select>'s native dropdown panel); `background-image`
+ * is what actually paints in normal box/card contexts.
+ */
+.bg-surface-raised {
+  background-color: var(--knos-surface-raised);
+  background-image: linear-gradient(
+    135deg,
+    var(--knos-surface-raised),
+    var(--knos-surface-raised-2)
+  );
+}
+
+/*
+ * Border-color override for the bare `border`/`border-t`/`border-b`/
+ * `border-l`/`border-r` utilities used across the app. Tailwind v4's
+ * preflight resets these to `border-color: currentColor` by design (a
+ * deliberate v4 change from v3's gray-200 default) — NOT `var(--color-border)`
+ * as the `@theme inline` mapping alone would suggest, so the token swap
+ * above is a no-op without this explicit rule. Colored variants like
+ * `border-t-warning`/`border-t-success` generate their own `border-*-color`
+ * declaration from a *different* token and are untouched by this rule.
+ */
+.border,
+.border-t,
+.border-b,
+.border-l,
+.border-r {
+  border-color: var(--color-border);
 }

@@ -114,6 +114,14 @@ User reported the shipped Dark Neon palette "does not look good at all" and poin
 
 **Gap acknowledged**: this fix was initially committed (`273c7a1`) without going through this Evidence-table update or a Stage 4 HTML report — a same-day CSS tweak was treated as too small for the pipeline's UI-evidence requirement, which was wrong; any UI-visible change carries the same visual-regression risk regardless of diff size. Evidence backfilled here after the gap was pointed out.
 
+### Follow-up fix #2 — 2026-07-14, same-day (borderless / gradient boxes)
+
+User asked to remove the border line for both themes and use a gradient for boxes/components instead. `--knos-border` set to `transparent` in both `[data-theme]` blocks; `.bg-surface-raised` overridden with a `linear-gradient(135deg, ...)` background-image (new `--knos-surface-raised-2` token per theme for the second stop).
+
+**Bug caught during live verification**: the initial `--knos-border: transparent` change had **zero visible effect** — Playwright screenshot showed borders still rendering, and `getComputedStyle(...).borderColor` on a login input read `rgb(17, 24, 39)` (exactly `--knos-text-primary`), not our token. Root cause: Tailwind v4's preflight resets bare `.border`/`.border-t`/`.border-b`/`.border-l`/`.border-r` to `border-color: currentColor` by design (a v4 behavior change from v3's gray-200 default) — the `@theme inline` mapping of `--color-border` alone does nothing for these bare utility classes, only for explicit `border-{token}` variants like `border-t-warning`. Fixed with an explicit `.border, .border-t, .border-b, .border-l, .border-r { border-color: var(--color-border); }` override rule. Re-verified: `getComputedStyle(...).borderColor` now reads `rgba(0, 0, 0, 0)`.
+
+**Verification**: `npm test` (full suite) 73/73 passed after the fix. Live Playwright check across Login (Simple), Dashboard (Simple + Dark Neon), Settings (Dark Neon), Tasks (Dark Neon) — no border lines visible anywhere, gradient boxes render correctly in sidebar/topbar/cards in both themes, Kanban's colored `border-t-warning`/`border-t-success` status stripes confirmed unaffected (different token). Dev server started/stopped cleanly on port 8766 for this check. Screenshots archived to `reports/evidence/T026-borderless-gradient/` (`01`–`05`).
+
 ---
 
 ## UI / Design Acceptance Criteria
