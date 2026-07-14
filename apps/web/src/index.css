@@ -48,15 +48,31 @@
   --knos-warning: #d97706;
 }
 
+/*
+ * Dark Neon palette (2026-07-14 revision) — rebased on Carlos Alfaro's
+ * "DarkNeon" Bootstrap admin template (github.com/Carlos007007/DarkNeon,
+ * css/style.css :root block) rather than an invented palette. That
+ * reference uses a tight 6-color set: near-black background (#14111A),
+ * darker sidebar/modal tone (#06030D), a muted plum border (#2F2A3D),
+ * off-white text (#EEEEEE), a crimson/hot-pink accent (#D51944, with a
+ * brighter rgba(250,30,78,.1) glow on hover states), and a desaturated
+ * gray for secondary text (#6E6C74). We keep our own surface/surface-raised
+ * two-tier elevation model (the reference doesn't distinguish card levels)
+ * but pull hues from the same family, and brighten --knos-text-muted
+ * slightly past the reference's #6E6C74 for body-text contrast at 14px on
+ * a near-black background. No dedicated status colors exist in the
+ * reference (it leans on Bootstrap defaults elsewhere) — danger/success
+ * chosen to sit in the same magenta/teal-neon register as the accent.
+ */
 [data-theme='dark-neon'] {
-  --knos-surface: #0b0d1a;
-  --knos-surface-raised: #12162e;
-  --knos-text-primary: #f5f5fa;
-  --knos-text-muted: #9ca0c9;
-  --knos-accent: #ff2ec4;
-  --knos-border: #2c3155;
-  --knos-danger: #ff5470;
-  --knos-success: #39ff88;
+  --knos-surface: #14111a;
+  --knos-surface-raised: #1c1730;
+  --knos-text-primary: #eeeeee;
+  --knos-text-muted: #948fa0;
+  --knos-accent: #d51944;
+  --knos-border: #2f2a3d;
+  --knos-danger: #fa1e4e;
+  --knos-success: #00e0a0;
   --knos-warning: #ffb020;
 }
 
