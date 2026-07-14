@@ -14,7 +14,6 @@
 ### In Progress
 
 ### Ready for Review
-- [ ] **T028** — Frontend Team & Roles page: member list, invite form, role-change control, remove action, pending-invites list | frontend-developer | C2 | Risk: Medium | P1 | code-review: 0 P0/P1, 1 P2 | Evidence filled | UI evidence archived
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
@@ -44,6 +43,7 @@
 - [x] **T025** — Backend theme-preference: `User.themePreference` enum (`Theme { simple, dark_neon }`) + self-service `PATCH /users/me/theme` endpoint | backend-developer | C1 | Risk: Low | P1 | migration-safety: GO | code-review: 0 findings | 186/186 tests green post-merge | Started: 2026-07-14 | Done: 2026-07-14
 - [x] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 18-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | code-review: 0 findings | 73/73 frontend tests green post-merge | UI evidence archived | Started: 2026-07-14 | Done: 2026-07-14
 - [x] **T027** — Backend team management: member list, role-change (Chef/Staff/Viewer only), remove/deactivate, pending-invite list + revoke | backend-developer | C2 | Risk: High | P1 | migration-safety: GO | code-review 0 P0/1 P1(accepted) | security-review 0 High/1 Med(accepted) | 202/202 tests green post-merge | Started: 2026-07-14 | Done: 2026-07-14
+- [x] **T028** — Frontend Team & Roles page: member roster, role-change, remove, invite, revoke, Owner/Admin-gated | frontend-developer | C2 | Risk: Medium | P1 | code-review 0 P0/P1, 1 P2 advisory | 82/82 frontend tests green post-merge | UI evidence archived | Started: 2026-07-14 | Done: 2026-07-14
 
 ---
 
