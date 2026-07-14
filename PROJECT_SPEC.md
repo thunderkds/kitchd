@@ -66,8 +66,10 @@ KitchenOS is a monorepo with a NestJS backend (`/apps/api`) organized into one m
 |----|-------|--------|---------------|-----------|------|----------|
 | T025 | Backend theme-preference (`User.themePreference` enum + endpoint) | Done | backend-developer | C1 | Low | P1 |
 | T026 | Frontend theme system (tokens, Dark Neon, full migration, switcher) | Done | frontend-developer | C2 | Low | P1 |
+| T027 | Backend team management (member list, role-change, remove, invite management) | Todo | backend-developer | C2 | High | P1 |
+| T028 | Frontend Team & Roles page | Todo | frontend-developer | C2 | Medium | P1 |
 
-> Full detail lives in `tasks/TASK_GUIDE_T025.md` / `tasks/TASK_GUIDE_T026.md`.
+> Full detail lives in `tasks/TASK_GUIDE_T025.md` / `tasks/TASK_GUIDE_T026.md` / `tasks/TASK_GUIDE_T027.md` / `tasks/TASK_GUIDE_T028.md`.
 
 ---
 
