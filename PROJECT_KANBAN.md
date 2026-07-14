@@ -10,12 +10,11 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 17-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | Blocked by: T025
+- [ ] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 17-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | Unblocked (T025 merged 2026-07-14)
 
 ### In Progress
 
 ### Ready for Review
-- [ ] **T025** — Backend theme-preference: `User.themePreference` enum (`Theme { simple, dark_neon }`) + self-service update endpoint | backend-developer | C1 | Risk: Low | P1 | migration-safety: GO | code-review: 0 findings | Evidence filled
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
@@ -42,6 +41,7 @@
 - [x] **T023** — CI/CD: lint/test/build pipeline + Render staging auto-deploy (human follow-up needed: create Render service + secrets before staging deploy is live) | common-infrastructure | C2 | Risk: Med | P1 | Started: 2026-07-06 | Done: 2026-07-06
 - [x] **T022** — QA pass + seed demo data + onboarding walkthrough (all 8 PRD MVP acceptance criteria verified live; 1 bug found+fixed: mention notification body UUID) | qa-expert | C2 | Risk: Med | P0 | Started: 2026-07-06 | Done: 2026-07-06
 - [x] **T024** — RBAC enforcement audit — Notes, Announcements, ShiftLog, Comments (no gap found, all 4 already correct; surfaced product finding: ADMIN role has no creation path anywhere) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-06 | Done: 2026-07-06
+- [x] **T025** — Backend theme-preference: `User.themePreference` enum (`Theme { simple, dark_neon }`) + self-service `PATCH /users/me/theme` endpoint | backend-developer | C1 | Risk: Low | P1 | migration-safety: GO | code-review: 0 findings | 186/186 tests green post-merge | Started: 2026-07-14 | Done: 2026-07-14
 
 ---
 
