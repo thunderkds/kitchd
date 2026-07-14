@@ -62,6 +62,7 @@
   --knos-text-muted: #6b7280;
   --knos-accent: #9333ea;
   --knos-border: transparent;
+  --knos-border-input: #d1d5db;
   --knos-danger: #dc2626;
   --knos-success: #16a34a;
   --knos-warning: #d97706;
@@ -86,11 +87,12 @@
 [data-theme='dark-neon'] {
   --knos-surface: #14111a;
   --knos-surface-raised: #1c1730;
-  --knos-surface-raised-2: #241a3d;
+  --knos-surface-raised-2: #34163a;
   --knos-text-primary: #eeeeee;
   --knos-text-muted: #948fa0;
   --knos-accent: #d51944;
   --knos-border: transparent;
+  --knos-border-input: #4a3f5c;
   --knos-danger: #fa1e4e;
   --knos-success: #00e0a0;
   --knos-warning: #ffb020;
@@ -108,7 +110,12 @@ body {
  * above the :root block. `background-color` stays the flat
  * `--knos-surface-raised` as a fallback for contexts a background-image
  * can't reach (e.g. a <select>'s native dropdown panel); `background-image`
- * is what actually paints in normal box/card contexts.
+ * is what actually paints in normal box/card contexts. Dark Neon's second
+ * stop (`--knos-surface-raised-2`) is deliberately accent-tinted (plum
+ * toward the crimson accent hue) rather than another flat near-black, so
+ * the gradient reads as a "neon glow" instead of a muddy gray wash — first
+ * revision (2026-07-14) used two close-in-value dark tones and the user
+ * correctly called it out as looking bad.
  */
 .bg-surface-raised {
   background-color: var(--knos-surface-raised);
@@ -135,4 +142,19 @@ body {
 .border-l,
 .border-r {
   border-color: var(--color-border);
+}
+
+/*
+ * Form-control border exception (2026-07-14): removing borders app-wide
+ * made `<input>`/`<select>`/`<textarea>` illegible as fields — the user
+ * flagged this directly. These keep a real, visible border via
+ * `--knos-border-input` (distinct from `--knos-border`, which stays
+ * `transparent` for card/box/divider borders). Higher specificity
+ * (element + class) than the bare `.border` rule above, so this wins
+ * regardless of source order.
+ */
+input.border,
+select.border,
+textarea.border {
+  border-color: var(--knos-border-input);
 }

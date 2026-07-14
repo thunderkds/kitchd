@@ -122,6 +122,16 @@ User asked to remove the border line for both themes and use a gradient for boxe
 
 **Verification**: `npm test` (full suite) 73/73 passed after the fix. Live Playwright check across Login (Simple), Dashboard (Simple + Dark Neon), Settings (Dark Neon), Tasks (Dark Neon) — no border lines visible anywhere, gradient boxes render correctly in sidebar/topbar/cards in both themes, Kanban's colored `border-t-warning`/`border-t-success` status stripes confirmed unaffected (different token). Dev server started/stopped cleanly on port 8766 for this check. Screenshots archived to `reports/evidence/T026-borderless-gradient/` (`01`–`05`).
 
+### Follow-up fix #3 — 2026-07-14, same-day (restore input borders; rework Dark Neon gradient)
+
+User feedback on fix #2: (1) removing the border from `<input>`/`<select>`/`<textarea>` made form fields hard to read as fields — should stay bordered; (2) the Dark Neon gradient "is not good at all."
+
+**Input borders**: added `--knos-border-input` (distinct from `--knos-border`, which stays `transparent` for card/box/divider borders) and an `input.border, select.border, textarea.border { border-color: var(--knos-border-input) }` override — higher specificity (element + class) than the bare `.border` rule, wins regardless of source order. Simple: `#d1d5db` (light neutral gray). Dark Neon: `#4a3f5c` (visible plum, legible against the near-black background).
+
+**Dark Neon gradient rework**: the fix-#2 gradient used two close-in-value near-black/purple stops (`#1c1730` → `#241a3d`) — read as a flat, muddy wash rather than a "neon" glow. Reworked `--knos-surface-raised-2` to `#34163a`, a more saturated plum pulled toward the crimson accent hue, so the 135° gradient now visibly shifts from surface-tone toward an accent-tinted glow — closer to the reference template's actual use of accent-tinted rgba glows (`rgba(250,30,68,.1)` hover washes in `css/style.css`), not another flat gray.
+
+**Verification**: computed-style check confirmed both input border colors resolve correctly (`rgb(209,213,219)` Simple, `rgb(74,63,92)` Dark Neon — not `transparent`). `npm test` (full suite) 73/73 passed. Live Playwright screenshots across Login (Simple, input borders visible), Settings/Dashboard/Notes (Dark Neon, glow gradient + input borders visible). Dev server started/stopped cleanly on 8766. Screenshots archived to `reports/evidence/T026-input-border-gradient-fix/` (`01`–`04`).
+
 ---
 
 ## UI / Design Acceptance Criteria
