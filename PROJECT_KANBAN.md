@@ -10,11 +10,11 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 17-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | Unblocked (T025 merged 2026-07-14)
 
 ### In Progress
 
 ### Ready for Review
+- [ ] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 18-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | code-review: 0 findings | Evidence filled | UI evidence archived
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
