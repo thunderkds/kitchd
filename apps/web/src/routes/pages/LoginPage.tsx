@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setToken, setUser, type StoredUser } from '../auth';
+import { apiThemeToId } from '../../theme/themeMapping';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -10,9 +11,15 @@ type Mode = 'login' | 'signup';
 // buildAuthResult). Defined locally instead of importing @kitchenos/shared so
 // apps/web has no workspace-package dependency and can be built/deployed as a
 // fully standalone npm project (Render Root Directory: apps/web).
+//
+// `themePreference` on the wire is the backend's raw snake_case Theme enum
+// value (e.g. "dark_neon") — StoredUser.themePreference is the frontend's
+// kebab-case ThemeId, so `user` here is typed as the raw API shape and
+// translated via apiThemeToId() before it's ever stored (T026 Edge Case
+// Checklist: don't leak one casing convention into the other's context).
 interface AuthResponseDto {
   accessToken: string;
-  user: StoredUser;
+  user: Omit<StoredUser, 'themePreference'> & { themePreference?: string | null };
 }
 
 export function LoginPage() {
@@ -48,7 +55,7 @@ export function LoginPage() {
       }
       setResult(data);
       setToken(data.accessToken);
-      setUser(data.user);
+      setUser({ ...data.user, themePreference: apiThemeToId(data.user.themePreference) });
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -58,20 +65,20 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white p-8 rounded-lg shadow">
+    <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="w-full max-w-sm bg-surface-raised p-8 rounded-lg shadow">
         <h1 className="text-2xl font-semibold mb-6 text-center">KitchenOS</h1>
         <div className="flex mb-6 rounded overflow-hidden border">
           <button
             type="button"
-            className={`flex-1 py-2 ${mode === 'signup' ? 'bg-purple-600 text-white' : 'bg-white'}`}
+            className={`flex-1 py-2 ${mode === 'signup' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
             onClick={() => setMode('signup')}
           >
             Sign up
           </button>
           <button
             type="button"
-            className={`flex-1 py-2 ${mode === 'login' ? 'bg-purple-600 text-white' : 'bg-white'}`}
+            className={`flex-1 py-2 ${mode === 'login' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
             onClick={() => setMode('login')}
           >
             Log in
@@ -116,15 +123,15 @@ export function LoginPage() {
           )}
           <button
             type="submit"
-            className="bg-purple-600 text-white rounded py-2 disabled:opacity-50"
+            className="bg-accent text-white rounded py-2 disabled:opacity-50"
             disabled={loading}
           >
             {loading ? 'Please wait...' : mode === 'signup' ? 'Sign up' : 'Log in'}
           </button>
         </form>
-        {error && <p className="text-red-600 mt-4 text-sm">{error}</p>}
+        {error && <p className="text-danger mt-4 text-sm">{error}</p>}
         {result && (
-          <p className="text-green-600 mt-4 text-sm break-all">
+          <p className="text-success mt-4 text-sm break-all">
             Signed in as {result.user.email}. Token: {result.accessToken.slice(0, 24)}...
           </p>
         )}

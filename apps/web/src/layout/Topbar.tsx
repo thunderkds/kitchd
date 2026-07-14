@@ -15,7 +15,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="flex items-center justify-between border-b bg-white px-4 py-3">
+    <header className="flex items-center justify-between border-b bg-surface-raised px-4 py-3">
       <button
         type="button"
         aria-label="Toggle navigation menu"
@@ -27,7 +27,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       <span className="font-semibold">KitchenOS</span>
       <div className="flex items-center gap-3">
         <NotificationBell />
-        <button type="button" className="text-sm text-gray-600 hover:text-gray-900" onClick={logout}>
+        <button type="button" className="text-sm text-muted hover:text-primary" onClick={logout}>
           Log out
         </button>
       </div>

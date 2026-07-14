@@ -34,18 +34,18 @@ export function PinnedNotesWidget() {
 
   return (
     <div className="border rounded-lg p-4 w-full" data-testid="pinned-notes-widget">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">Pinned Notes</h3>
+      <h3 className="text-sm font-semibold text-primary mb-3">Pinned Notes</h3>
 
       {error && (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {error}
         </p>
       )}
 
-      {!error && notes === null && <p className="text-sm text-gray-500">Loading…</p>}
+      {!error && notes === null && <p className="text-sm text-muted">Loading…</p>}
 
       {!error && notes !== null && pinned.length === 0 && (
-        <p className="text-sm text-gray-500" data-testid="pinned-notes-empty">
+        <p className="text-sm text-muted" data-testid="pinned-notes-empty">
           No pinned notes yet.
         </p>
       )}
@@ -58,8 +58,8 @@ export function PinnedNotesWidget() {
               data-testid={`pinned-note-row-${note.id}`}
               className="px-1 py-2 text-sm"
             >
-              {note.title && <p className="font-medium text-gray-900 break-words">{note.title}</p>}
-              <p className="text-gray-600 whitespace-pre-wrap break-words">{note.body}</p>
+              {note.title && <p className="font-medium text-primary break-words">{note.title}</p>}
+              <p className="text-muted whitespace-pre-wrap break-words">{note.body}</p>
             </li>
           ))}
         </ul>

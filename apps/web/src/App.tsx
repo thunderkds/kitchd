@@ -8,8 +8,18 @@ import { SectionPage } from './routes/pages/SectionPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { NotesPage } from './features/notes/NotesPage';
 import { Dashboard } from './pages/Dashboard/Dashboard';
+import { SettingsPage } from './pages/Settings/SettingsPage';
+import { ThemeProvider } from './theme/ThemeProvider';
 
 function App() {
+  return (
+    <ThemeProvider>
+      <AppRoutes />
+    </ThemeProvider>
+  );
+}
+
+function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -24,6 +34,9 @@ function App() {
             }
             if (item.path === '/notes') {
               return <Route key={item.path} path={item.path} element={<NotesPage />} />;
+            }
+            if (item.path === '/settings') {
+              return <Route key={item.path} path={item.path} element={<SettingsPage />} />;
             }
             return <Route key={item.path} path={item.path} element={<SectionPage item={item} />} />;
           })}
