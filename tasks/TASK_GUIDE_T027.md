@@ -101,17 +101,23 @@ cd apps/api && npm test -- team
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `apps/api/src/users/team.e2e.spec.ts` — 16 tests covering all 10 Acceptance Criteria + full 4-route × 3-role RBAC matrix |
+| Verification command run | ☒ pass | `cd apps/api && npm test -- team` → 16/16 passed, see `reports/evidence/T027/verify-session.md` |
+| Negative cases hold | ☒ pass | OWNER/ADMIN-as-role-target 400, cross-tenant 404, target-is-Owner/Admin 403, self-removal 400, deactivated-login 401, revoke-then-reuse 404, double-revoke 409 — all verified live and in the e2e spec |
+| verify | ☒ pass | pass — live API session (curl, 13 probes: signup/invite/accept, list/role-change/reject-Owner-role/403-non-privileged/self-removal-400/deactivate/deactivated-login-401/pending-invites/revoke/reuse-404/cross-tenant-404) all behaved exactly as specified — see `reports/evidence/T027/verify-session.md` |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☒ pass | Reviewed the 4 changed files (schema.prisma, auth.service.ts, users.controller.ts, users.service.ts) + 2 new files (DTO, e2e spec) only; `roles.guard.ts` and every other module confirmed untouched, matching "Files Must NOT Touch" |
+| Full smoke suite still green (no regression) | ☒ pass | `npm test` → 25 suites / 202 tests passed (up from 186 pre-T025/T026/T027), see `reports/evidence/T027/verify-session.md` |
 | **UI: Visual regression** | ☒ N/A | pure-backend task |
 | **UI: Design-system compliance** | ☒ N/A | pure-backend task |
 | **UI: Responsiveness** | ☒ N/A | pure-backend task |
 
 > **Evidence-archiving rule (required):** copy any external-tool artifacts into `reports/evidence/T027/` and commit — reference the repo-local path in Notes, not an external path.
+
+### Stage 4 outcome
+
+- `migration-safety`: **GO** (additive column + enum value, reversible for the column; enum-value removal is a standard accepted Postgres limitation, consistent with every prior enum addition in this codebase).
+- `code-review`: **0 P0 / 1 P1 (accepted) / 0 P2 / 0 P3**. The P1 — a deactivated user's still-valid JWT keeps working on non-login routes until natural expiry (`roles.guard.ts` doesn't re-check `isActive` per-request) — was self-flagged by the implementer per the TASK_GUIDE's explicit "Files Must NOT Touch: roles.guard.ts" boundary. Accepted as a tracked fast-follow, not a merge blocker.
+- `security-review`: **0 High / 1 Medium (same finding as the P1 above) / 0 Low**. No privilege-escalation, IDOR, injection, or data-exposure issues found. Reports: `reports/code-review_task-T027-team-management-backend_20260714T035000.html`, `reports/security-review_task-T027-team-management-backend_20260714T040000.html`.
 
 ---
 
