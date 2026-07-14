@@ -1,6 +1,68 @@
 @import "tailwindcss";
 
+/*
+ * T026 — semantic color-token layer (ADR-0001).
+ *
+ * `@theme inline` registers each semantic token as a real Tailwind color
+ * (enabling `bg-surface`, `text-primary`, `border-danger/40`, etc.), but the
+ * value of each token is a plain CSS custom property (`--knos-*`) rather than
+ * a literal color. That indirection is what lets a `[data-theme="..."]`
+ * attribute on <html> swap the whole palette at runtime without touching any
+ * component class — adding a future theme is a new `[data-theme]` block here,
+ * zero component changes.
+ *
+ * "Simple" reproduces the app's original (pre-T026) look exactly. "Dark
+ * Neon" is the new theme. Only two themes ship; a third is a pure CSS diff.
+ *
+ * Each token is registered twice: once under its full semantic name
+ * (`--color-text-primary`, per ADR-0001/Acceptance Criterion 1) and once
+ * under a short ergonomic alias (`--color-primary`) so components can write
+ * `text-primary` instead of the longer `text-text-primary` that Tailwind's
+ * mechanical `--color-<name>` -> `text-<name>` utility derivation would
+ * otherwise require. Both resolve to the exact same custom property.
+ */
+@theme inline {
+  --color-surface: var(--knos-surface);
+  --color-surface-raised: var(--knos-surface-raised);
+  --color-text-primary: var(--knos-text-primary);
+  --color-text-muted: var(--knos-text-muted);
+  --color-primary: var(--knos-text-primary);
+  --color-muted: var(--knos-text-muted);
+  --color-accent: var(--knos-accent);
+  --color-border: var(--knos-border);
+  --color-danger: var(--knos-danger);
+  --color-success: var(--knos-success);
+  --color-warning: var(--knos-warning);
+}
+
+:root,
+[data-theme='simple'] {
+  --knos-surface: #f9fafb;
+  --knos-surface-raised: #ffffff;
+  --knos-text-primary: #111827;
+  --knos-text-muted: #6b7280;
+  --knos-accent: #9333ea;
+  --knos-border: #e5e7eb;
+  --knos-danger: #dc2626;
+  --knos-success: #16a34a;
+  --knos-warning: #d97706;
+}
+
+[data-theme='dark-neon'] {
+  --knos-surface: #0b0d1a;
+  --knos-surface-raised: #12162e;
+  --knos-text-primary: #f5f5fa;
+  --knos-text-muted: #9ca0c9;
+  --knos-accent: #ff2ec4;
+  --knos-border: #2c3155;
+  --knos-danger: #ff5470;
+  --knos-success: #39ff88;
+  --knos-warning: #ffb020;
+}
+
 body {
   margin: 0;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 }

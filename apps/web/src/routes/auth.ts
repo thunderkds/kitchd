@@ -1,3 +1,5 @@
+import type { ThemeId } from '../theme/themeMapping';
+
 const TOKEN_KEY = 'accessToken';
 const USER_KEY = 'authUser';
 
@@ -9,6 +11,12 @@ export interface StoredUser {
   organizationId: string;
   kitchenId: string;
   role: UserRole;
+  // T026 — already translated to the frontend's kebab-case ThemeId at the
+  // API boundary (see theme/themeMapping.ts) before being stored here.
+  // Optional: existing call sites (tests, pre-T026 code paths) that don't
+  // set it are still valid; ThemeProvider treats a missing value the same
+  // as an unset account preference and falls back to "simple".
+  themePreference?: ThemeId;
 }
 
 export function getToken(): string | null {

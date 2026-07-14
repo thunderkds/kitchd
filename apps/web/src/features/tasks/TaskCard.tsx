@@ -17,13 +17,13 @@ export function TaskCard({
 
   return (
     <div
-      className="bg-white border rounded-lg shadow-sm p-3 mb-3"
+      className="bg-surface-raised border rounded-lg shadow-sm p-3 mb-3"
       draggable
       onDragStart={(e) => e.dataTransfer.setData('text/task-id', task.id)}
       data-testid={`task-card-${task.id}`}
     >
       <p className="font-medium text-sm break-words">{task.title}</p>
-      <p className="text-xs text-gray-500 mt-1">
+      <p className="text-xs text-muted mt-1">
         {task.assigneeId ? `Assigned: ${task.assigneeId.slice(0, 8)}` : 'Unassigned'}
       </p>
       <div className="flex flex-wrap gap-1 mt-2">
@@ -31,7 +31,7 @@ export function TaskCard({
           <button
             key={s.value}
             type="button"
-            className="text-xs px-2 py-1 min-h-[44px] min-w-[44px] rounded border bg-gray-50 hover:bg-gray-100"
+            className="text-xs px-2 py-1 min-h-[44px] min-w-[44px] rounded border bg-surface hover:opacity-80"
             onClick={() => onMove(task.id, s.value)}
           >
             Move to {s.label}

@@ -26,16 +26,16 @@ export function CompleteTaskDialog({
       aria-modal="true"
       aria-labelledby="complete-task-dialog-title"
     >
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4 sm:p-6">
+      <div className="bg-surface-raised rounded-lg shadow-lg w-full max-w-md p-4 sm:p-6">
         <h2 id="complete-task-dialog-title" className="text-lg font-semibold mb-2">
           Confirm stock deduction
         </h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-muted mb-4">
           Completing this task will deduct the following ingredients:
         </p>
 
         {preview.hasNegativeWarning && (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
+          <p className="text-sm text-warning bg-warning/10 border border-warning/40 rounded px-3 py-2 mb-3">
             Warning: at least one ingredient will go below zero on-hand. The
             deduction will still be applied.
           </p>
@@ -49,7 +49,7 @@ export function CompleteTaskDialog({
               data-testid={`deduction-row-${d.ingredientId}`}
             >
               <span>{d.ingredientId.slice(0, 8)}</span>
-              <span className={d.wouldGoNegative ? 'text-amber-700 font-medium' : ''}>
+              <span className={d.wouldGoNegative ? 'text-warning font-medium' : ''}>
                 -{d.deductQty} (→ {d.resultingStock})
               </span>
             </li>
@@ -59,7 +59,7 @@ export function CompleteTaskDialog({
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded border bg-gray-50 hover:bg-gray-100"
+            className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded border bg-surface hover:opacity-80"
             onClick={onCancel}
             disabled={loading}
           >
@@ -67,7 +67,7 @@ export function CompleteTaskDialog({
           </button>
           <button
             type="button"
-            className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90 disabled:opacity-50"
             onClick={onConfirm}
             disabled={loading}
           >

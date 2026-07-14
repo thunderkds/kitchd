@@ -1,10 +1,13 @@
 import { TASK_STATUSES, type Task, type TaskStatus } from './types';
 import { TaskCard } from './TaskCard';
 
+// Semantic mapping: TODO is neutral (border), IN_PROGRESS is in-flight
+// (warning), DONE is complete (success) — reuses the same 9-token set,
+// no status-specific tokens invented.
 const COLUMN_COLORS: Record<TaskStatus, string> = {
-  TODO: 'border-t-gray-400',
-  IN_PROGRESS: 'border-t-amber-500',
-  DONE: 'border-t-green-500',
+  TODO: 'border-t-border',
+  IN_PROGRESS: 'border-t-warning',
+  DONE: 'border-t-success',
 };
 
 export function KanbanBoard({
@@ -24,7 +27,7 @@ export function KanbanBoard({
         return (
           <div
             key={column.value}
-            className={`flex-1 min-w-[260px] bg-gray-50 rounded-lg p-3 border-t-4 ${COLUMN_COLORS[column.value]}`}
+            className={`flex-1 min-w-[260px] bg-surface rounded-lg p-3 border-t-4 ${COLUMN_COLORS[column.value]}`}
             data-testid={`kanban-column-${column.value}`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {

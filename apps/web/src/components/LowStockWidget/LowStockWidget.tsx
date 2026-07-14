@@ -28,20 +28,20 @@ export function LowStockWidget() {
 
   return (
     <div className="border rounded-lg p-4 w-full" data-testid="low-stock-widget">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">Low Stock</h3>
+      <h3 className="text-sm font-semibold text-primary mb-3">Low Stock</h3>
 
       {error && (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {error}
         </p>
       )}
 
       {!error && ingredients === null && (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <p className="text-sm text-muted">Loading…</p>
       )}
 
       {!error && ingredients !== null && ingredients.length === 0 && (
-        <p className="text-sm text-gray-500" data-testid="low-stock-empty">
+        <p className="text-sm text-muted" data-testid="low-stock-empty">
           All ingredients are above their thresholds.
         </p>
       )}
@@ -58,8 +58,8 @@ export function LowStockWidget() {
                 data-testid={`low-stock-row-${ingredient.id}`}
                 className={`flex items-center justify-between gap-2 px-1 py-2 text-sm rounded ${
                   isCritical
-                    ? 'bg-red-50 text-red-700'
-                    : 'bg-amber-50 text-amber-700'
+                    ? 'bg-danger/10 text-danger'
+                    : 'bg-warning/10 text-warning'
                 }`}
               >
                 <span className="truncate min-w-0">{ingredient.name}</span>

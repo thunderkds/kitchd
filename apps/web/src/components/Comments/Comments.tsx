@@ -60,20 +60,20 @@ export function Comments({ entityType, entityId }: CommentsProps) {
 
   return (
     <div className="border rounded-lg p-4 w-full" data-testid="comments">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">Comments</h3>
+      <h3 className="text-sm font-semibold text-primary mb-3">Comments</h3>
 
       {error && (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {error}
         </p>
       )}
 
       {!error && comments === null && (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <p className="text-sm text-muted">Loading…</p>
       )}
 
       {!error && comments !== null && topLevel.length === 0 && (
-        <p className="text-sm text-gray-500" data-testid="comments-empty">
+        <p className="text-sm text-muted" data-testid="comments-empty">
           No comments yet.
         </p>
       )}
@@ -82,13 +82,13 @@ export function Comments({ entityType, entityId }: CommentsProps) {
         <ul className="divide-y" data-testid="comments-list">
           {topLevel.map((comment) => (
             <li key={comment.id} data-testid={`comment-${comment.id}`} className="py-2">
-              <p className="text-sm text-gray-900">{comment.body}</p>
+              <p className="text-sm text-primary">{comment.body}</p>
               {comment.mentions.length > 0 && (
                 <div className="flex gap-1 mt-1">
                   {comment.mentions.map((userId) => (
                     <span
                       key={userId}
-                      className="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5"
+                      className="text-xs bg-accent/10 text-accent rounded px-1.5 py-0.5"
                       data-testid={`mention-chip-${userId}`}
                     >
                       @{userId}
@@ -98,7 +98,7 @@ export function Comments({ entityType, entityId }: CommentsProps) {
               )}
               <button
                 type="button"
-                className="text-xs text-gray-500 mt-1"
+                className="text-xs text-muted mt-1"
                 onClick={() => setReplyTo(comment.id)}
                 data-testid={`reply-button-${comment.id}`}
               >
@@ -109,7 +109,7 @@ export function Comments({ entityType, entityId }: CommentsProps) {
                 <ul className="pl-4 mt-1 space-y-1" data-testid={`replies-${comment.id}`}>
                   {repliesOf(comment.id).map((reply) => (
                     <li key={reply.id} data-testid={`comment-${reply.id}`}>
-                      <p className="text-sm text-gray-700">{reply.body}</p>
+                      <p className="text-sm text-primary">{reply.body}</p>
                     </li>
                   ))}
                 </ul>
@@ -121,7 +121,7 @@ export function Comments({ entityType, entityId }: CommentsProps) {
 
       <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-2">
         {replyTo && (
-          <div className="text-xs text-gray-500 flex items-center gap-2">
+          <div className="text-xs text-muted flex items-center gap-2">
             Replying to a comment
             <button
               type="button"
@@ -142,7 +142,7 @@ export function Comments({ entityType, entityId }: CommentsProps) {
         <button
           type="submit"
           disabled={submitting || !draft.trim()}
-          className="self-end text-sm bg-blue-600 text-white rounded px-3 py-1.5 disabled:opacity-50"
+          className="self-end text-sm bg-accent text-white rounded px-3 py-1.5 disabled:opacity-50"
           data-testid="comment-submit"
         >
           Post

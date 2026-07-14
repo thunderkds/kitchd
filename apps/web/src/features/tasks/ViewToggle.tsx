@@ -9,7 +9,7 @@ export function ViewToggle({
     <div className="flex rounded overflow-hidden border w-fit">
       <button
         type="button"
-        className={`px-3 py-2 text-sm ${view === 'kanban' ? 'bg-purple-600 text-white' : 'bg-white'}`}
+        className={`px-3 py-2 text-sm ${view === 'kanban' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
         onClick={() => onChange('kanban')}
         aria-pressed={view === 'kanban'}
       >
@@ -17,7 +17,7 @@ export function ViewToggle({
       </button>
       <button
         type="button"
-        className={`px-3 py-2 text-sm ${view === 'list' ? 'bg-purple-600 text-white' : 'bg-white'}`}
+        className={`px-3 py-2 text-sm ${view === 'list' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
         onClick={() => onChange('list')}
         aria-pressed={view === 'list'}
       >

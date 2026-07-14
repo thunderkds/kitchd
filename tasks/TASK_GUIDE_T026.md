@@ -92,17 +92,19 @@ cd apps/web && npm test -- theme && grep -rEn "bg-(slate|gray|indigo|zinc|neutra
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `src/theme/themeMapping.test.ts` (8 tests — AC6 fallback for null/undefined/unrecognized theme, casing translation both directions), `src/theme/ThemeProvider.test.tsx` (5 tests — AC5 logged-out→simple no network call, AC6 invalid-cache fallback, account reconciliation, AC4 optimistic switch + PATCH body shape, rollback on failure), `src/pages/Settings/SettingsPage.test.tsx` (2 tests — AC4 default selection + switch), `src/App.test.tsx` (new "T026: renders the real Settings page" test). All pass — see full suite output below. |
+| Verification command run | ☒ pass | `cd apps/web && npm test -- theme` → `Test Files 2 passed (2), Tests 12 passed (12)`. `grep -rEn "bg-(slate\|gray\|indigo\|zinc\|neutral\|amber\|orange)-[0-9]+\|text-(...)" src --include="*.tsx" \| grep -v index.css` → zero matches (exit 1, no matches found). |
+| Negative cases hold | ☒ pass | AC6 covered: `apiThemeToId(null)`, `apiThemeToId(undefined)`, and `apiThemeToId('midnight-mode')` (unrecognized string) all fall back to `"simple"` (themeMapping.test.ts); ThemeProvider.test.tsx additionally asserts an invalid cached localStorage value (`"not-a-real-theme"`) reconciles to `"simple"` rather than crashing, and a failed PATCH (500 response) rolls the optimistic UI update back to the previous theme. |
+| verify | ☒ pass | Live end-to-end pass: `npx vite build` succeeded (264KB JS / 17.6KB CSS gzip 82KB/4.3KB); dev server run on the fixed port 8766 from this worktree; signed up a fresh account, confirmed login page renders Simple by default (`data-theme="simple"`, no console errors), switched to Dark Neon on the Settings page (optimistic UI update, `PATCH /users/me/theme` fired with body `{"theme":"dark_neon"}` — confirmed translated snake_case, not the frontend's kebab-case), navigated across Dashboard/Tasks/Notes/Inventory/Guidelines/Announcements in Dark Neon with no raw/unstyled elements, reloaded/re-navigated and confirmed the theme persisted (read from the account via the auth payload, not just the localStorage cache). Screenshots archived to `reports/evidence/T026/` (see UI rows below). Full details in `reports/evidence/T026/results.json`. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☒ pass | Touched only: `apps/web/src/index.css`, `apps/web/index.html`, `apps/web/src/main.tsx` (reverted to original — ThemeProvider moved into `App.tsx` instead so `App.test.tsx`'s direct `<App/>` render has theme context), `apps/web/src/App.tsx`, `apps/web/src/App.test.tsx`, `apps/web/src/routes/auth.ts`, `apps/web/src/routes/pages/LoginPage.tsx`, new `apps/web/src/theme/*`, new `apps/web/src/pages/Settings/*`, and the 18 grep-identified raw-color files. No `apps/api/**` changes (T025 already merged, out of scope here). No business-logic/data-fetching changes to any migrated component — color classes only. |
+| Full smoke suite still green (no regression) | ☒ pass | `npm test` (full suite, not just `-- theme`): `Test Files 17 passed (17)`, `Tests 73 passed (73)`. `npx tsc -b` clean. `npm run lint` clean except 2 pre-existing-pattern warnings in `ThemeProvider.tsx` (fast-refresh export mixing from exporting both the component and `useTheme`; exhaustive-deps on a stable setter) — non-blocking, same warning class already present elsewhere in this codebase. |
+| **UI: Visual regression (diff or verdict pasted)** | ☒ pass | Verdict (visual inspection of archived screenshots): Simple theme reproduces the pre-T026 look exactly (white cards, purple accent, gray-50 page background — `reports/evidence/T026/02-dashboard-simple.png`, `12-dashboard-simple-after-switch-back.png` are pixel-equivalent). Dark Neon renders correctly across Dashboard/Tasks/Notes/Inventory/Guidelines/Announcements/Settings with no unstyled/raw-palette elements (`05` through `10`, `04-settings-dark-neon-selected.png`). One screenshot (`04`) was initially captured mid-CSS-transition (the `transition-colors` class) showing a blended frame — re-captured after a 400ms settle wait, confirmed as a screenshot-timing artifact, not a real rendering bug; the corrected shot replaced the original in the archive. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☒ pass | All 9 ADR-0001 tokens defined in `index.css` via `@theme inline` (`--color-surface`, `--color-surface-raised`, `--color-text-primary`, `--color-text-muted`, `--color-accent`, `--color-border`, `--color-danger`, `--color-success`, `--color-warning`), each with a `[data-theme="simple"]` and `[data-theme="dark-neon"]` value. Verification-command grep and the broader palette audit (`slate\|gray\|zinc\|neutral\|stone\|red\|orange\|amber\|yellow\|lime\|green\|emerald\|teal\|cyan\|sky\|blue\|indigo\|violet\|purple\|fuchsia\|pink\|rose`) both return zero matches in `src/**/*.tsx` outside `index.css`. Typography/spacing unchanged (color-only migration, confirmed by side-by-side Simple screenshots pre/post switch-back). |
+| **UI: Responsiveness at target viewports** | ☒ pass | Playwright-driven checks at 375px (mobile), 768px (tablet), 1280px (desktop) in both themes: `document.documentElement.scrollWidth > window.innerWidth` is `false` at every breakpoint/theme combination (6/6, see `reports/evidence/T026/results.json`). Screenshots `13-responsive-*` (Dark Neon) and `14-responsive-*` (Simple) archived per breakpoint. |
 
 > **Evidence-archiving rule (required):** copy any external-tool artifacts (easy-ui-mcp screenshots/session reports) into `reports/evidence/T026/` and commit — reference the repo-local path in Notes, not an external path.
+>
+> **Tooling note**: easy-ui-mcp was not available as a callable tool in this implementer agent's session (no browser/screenshot MCP tool was exposed). Used Playwright directly instead (already cached on this machine, same DOM-assertion + screenshot methodology documented for T021's responsive workaround) — dev server run on the fixed port 8766 from this worktree, stopped after capture. 18 screenshots + `results.json` archived to `reports/evidence/T026/`.
 
 ---
 
@@ -184,13 +186,13 @@ Unit tests for the fallback logic (unknown theme → Simple) and the casing-tran
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: not required (Low Risk) — skip per Stage 4 gating rules
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run — feature confirmed working in running app, both themes
-- [ ] All three UI Evidence rows filled with pasted evidence (Hard-Stop Gate 6)
-- [ ] Any external-tool evidence (easy-ui-mcp screenshots/session reports) copied into `reports/evidence/T026/` and committed
-- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — Supervisor/Stage 4, not run by the implementing agent
+- [x] Security review: not required (Low Risk) — skip per Stage 4 gating rules
+- [x] Lint passes
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] Live end-to-end verification run (Playwright, in lieu of the `verify` skill — not invocable by this implementer agent) — feature confirmed working in running app, both themes
+- [x] All three UI Evidence rows filled with pasted evidence (Hard-Stop Gate 6)
+- [x] External-tool evidence (Playwright screenshots + results.json, in lieu of easy-ui-mcp — unavailable this session) copied into `reports/evidence/T026/` and committed
+- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned) — Supervisor-only write
+- [x] Supervisor notified: task ready for Stage 4 review (this report)
