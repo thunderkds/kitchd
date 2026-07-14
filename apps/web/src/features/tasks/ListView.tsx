@@ -19,14 +19,14 @@ export function ListView({
   return (
     <ul className="flex flex-col gap-2" data-testid="task-list-view">
       {tasks.map((task) => (
-        <li key={task.id} className="bg-white border rounded-lg p-3">
+        <li key={task.id} className="bg-surface-raised border rounded-lg p-3">
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium text-sm truncate min-w-0">{task.title}</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-gray-100 shrink-0">
+            <span className="text-xs px-2 py-0.5 rounded bg-surface shrink-0">
               {STATUS_LABEL[task.status]}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted mt-1">
             {task.assigneeId ? `Assigned: ${task.assigneeId.slice(0, 8)}` : 'Unassigned'}
           </p>
           {task.checklistItems.length > 0 && (
@@ -41,7 +41,7 @@ export function ListView({
                       onToggleChecklistItem(task.id, item.id, e.target.checked)
                     }
                   />
-                  <span className={item.done ? 'line-through text-gray-400' : ''}>
+                  <span className={item.done ? 'line-through text-muted' : ''}>
                     {item.text}
                   </span>
                 </li>

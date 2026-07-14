@@ -36,11 +36,12 @@ describe('App routing', () => {
     expect(screen.getByPlaceholderText('Kitchen name')).toBeInTheDocument();
   });
 
-  // /tasks, /notes, and /dashboard render real feature pages (T008/T012/T018)
-  // instead of the SectionPage placeholder — each has its own dedicated test
-  // suite (TasksPage.test.tsx, NotesPage.test.tsx, Dashboard.test.tsx).
+  // /tasks, /notes, /dashboard, and /settings render real feature pages
+  // (T008/T012/T018/T026) instead of the SectionPage placeholder — each has
+  // its own dedicated test suite (TasksPage.test.tsx, NotesPage.test.tsx,
+  // Dashboard.test.tsx, this suite's "real Settings page" test below).
   const placeholderItems = NAV_ITEMS.filter(
-    (item) => !['/tasks', '/notes', '/dashboard'].includes(item.path),
+    (item) => !['/tasks', '/notes', '/dashboard', '/settings'].includes(item.path),
   );
 
   it.each(placeholderItems)('renders a distinct empty-state page for $label when authenticated', (item) => {
@@ -55,6 +56,13 @@ describe('App routing', () => {
     renderAt('/dashboard');
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
+  });
+
+  it('T026: renders the real Settings page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    renderAt('/settings');
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
   });
 
   it('shows the sidebar nav for an authenticated user', () => {

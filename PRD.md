@@ -43,6 +43,7 @@ Chefs and kitchen teams currently juggle recipes on paper, prep lists on whitebo
 | US-011 | As Kitchen Staff, I want the whole app to work on a phone/tablet without horizontal scrolling so that I can use it at the pass. | P1, P2, P3 |
 | US-012 | As a Head Chef, I want a home dashboard showing today's tasks, low-stock alerts, latest announcements, and pinned notes so that I get a full picture at a glance. | P1 |
 | US-013 | As the founder/developer, I want every push/PR automatically linted, typechecked, and tested, and every merge to `staging` automatically deployed, so that I can iterate quickly without manually re-verifying and re-deploying by hand. | P1 (founder, acting as maintainer) |
+| US-014 | As any user, I want to switch the app's visual theme (Simple or Dark Neon) and have my choice follow me across devices, so that I can use the interface style I prefer wherever I log in. | P1 (post-MVP, added 2026-07-14) |
 
 ---
 
@@ -74,6 +75,7 @@ Chefs and kitchen teams currently juggle recipes on paper, prep lists on whitebo
 | FR-022 | System must record an audit trail (who/when/what) for Recipe edits and Stock adjustments. | NFR-driven, supports US-001, US-005 |
 | FR-023 | System must support CSV export for Inventory and Recipes. | Doc §5 |
 | FR-024 | A CI pipeline must run lint, typecheck, and the full test suite for `/apps/web` and `/apps/api` on every push and pull request; a separate CD pipeline must deploy to a Railway staging environment automatically on merge to the `staging` branch only (never `main`). | US-013 |
+| FR-025 | System must support a user-selectable UI theme ("Simple" default, "Dark Neon" alternate), persisted per-user account so it follows the user across devices, with an architecture extensible to future themes without per-component code changes. | US-014 (post-MVP, added 2026-07-14) |
 
 ---
 

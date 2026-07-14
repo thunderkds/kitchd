@@ -166,10 +166,10 @@ export function TasksPage() {
         </div>
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      {error && <p className="text-danger text-sm mb-3">{error}</p>}
 
       {filteredTasks.length === 0 ? (
-        <p className="text-gray-500 text-sm">
+        <p className="text-muted text-sm">
           No tasks yet. Assigned tasks will show up here.
         </p>
       ) : view === 'kanban' ? (
