@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from './App';
@@ -36,12 +36,13 @@ describe('App routing', () => {
     expect(screen.getByPlaceholderText('Kitchen name')).toBeInTheDocument();
   });
 
-  // /tasks, /notes, /dashboard, and /settings render real feature pages
-  // (T008/T012/T018/T026) instead of the SectionPage placeholder — each has
-  // its own dedicated test suite (TasksPage.test.tsx, NotesPage.test.tsx,
-  // Dashboard.test.tsx, this suite's "real Settings page" test below).
+  // /tasks, /notes, /dashboard, /settings, and /team render real feature
+  // pages (T008/T012/T018/T026/T028) instead of the SectionPage placeholder
+  // — each has its own dedicated test suite (TasksPage.test.tsx,
+  // NotesPage.test.tsx, Dashboard.test.tsx, TeamPage.test.tsx, this suite's
+  // "real Settings page" test below).
   const placeholderItems = NAV_ITEMS.filter(
-    (item) => !['/tasks', '/notes', '/dashboard', '/settings'].includes(item.path),
+    (item) => !['/tasks', '/notes', '/dashboard', '/settings', '/team'].includes(item.path),
   );
 
   it.each(placeholderItems)('renders a distinct empty-state page for $label when authenticated', (item) => {
@@ -63,6 +64,17 @@ describe('App routing', () => {
     renderAt('/settings');
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+  });
+
+  it('T028: renders the real Team page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+    );
+    renderAt('/team');
+    expect(screen.getByRole('heading', { name: 'Team & Roles' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 
   it('shows the sidebar nav for an authenticated user', () => {

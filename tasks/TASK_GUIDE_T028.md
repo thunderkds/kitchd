@@ -95,15 +95,21 @@ cd apps/web && npm test -- team && grep -rEn "bg-(slate|gray|indigo|zinc|neutral
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/web/src/features/team/TeamPage.test.tsx` (10 tests: Owner sees roster+controls, role-change PATCHes /users/:id/role, remove DELETEs /users/:id and drops the row, invite POSTs /users/invite + shows success + appears in pending list, revoke DELETEs /users/invites/:id and drops it, non-Owner/Admin sees restricted view with zero fetches, caller's own row never shows controls, empty states, failed role-change reverts + shows error); `apps/web/src/App.test.tsx` updated (T028 case: `/team` renders real TeamPage, not the SectionPage placeholder). `npm test` → `Test Files 18 passed (18)  Tests 82 passed (82)`. |
+| Verification command run | ☑ pass | `cd apps/web && npm test -- team && grep -rEn ... src/features/team` → `Test Files 1 passed (1) Tests 9 passed (9)`; grep exited 1 (zero matches, as expected). |
+| Negative cases hold | ☑ pass | Live-verified: non-Owner/Admin sees restricted message + zero management controls + zero fetch calls (see below — this required a mid-task fix, see Notes); failed role-change (mocked 500) reverts the row and shows the error text (`TeamPage.test.tsx` last case). |
+| verify | ☑ pass | Live Playwright run against real API+Postgres (seeded demo data), see Notes. pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Touched only `apps/web/src/features/team/**` (new) + `apps/web/src/App.tsx` (route wire) + `apps/web/src/App.test.tsx` (placeholder-exclusion list, matching the existing T026 pattern) — no other feature pages touched. |
+| Full smoke suite still green (no regression) | ☑ pass | `npm test` (apps/web) → 18 files / 82 tests, all passing, no regressions in Tasks/Notes/Dashboard/Settings suites. |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Playwright screenshots saved to `reports/evidence/T028/`: `owner-team-simple-desktop.png`, `owner-team-darkneon-desktop.png`, `owner-team-mobile.png`, `owner-team-tablet.png`, `staff-team-readonly.png`. Verdict: member list, invite form, pending invites all render correctly in both themes; restricted view renders correctly for non-manager. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | Zero raw-palette-class matches (`grep` above, exit 1). Visually confirmed `bg-surface-raised` cards, `text-danger` remove/revoke actions, `bg-accent` primary buttons render correctly in both Simple and Dark Neon themes (screenshots above). Layout/spacing matches the Notes/Tasks page pattern (`p-6`, card list, `border rounded p-4` form). |
+| **UI: Responsiveness at target viewports** | ☑ pass | Screenshots at 375px (mobile), 768px (tablet), 1280px (desktop) — no overflow at any viewport (`owner-team-mobile.png`, `owner-team-tablet.png`, `owner-team-simple-desktop.png`). |
+
+**Notes on live verify**: Ran the real NestJS API + Postgres (seeded via `apps/api/prisma/seed.ts`, demo Owner/Chef/Staff/Viewer accounts) and the Vite dev server, then drove the flow end-to-end with Playwright as owner and as staff. Confirmed: member roster with roles renders; role-change dropdown PATCHes `/users/:id/role` and updates the row; Remove DELETEs `/users/:id` and drops the row; invite form POSTs `/users/invite`, shows "Invite sent to..." and the new invite appears in Pending Invites; Revoke DELETEs `/users/invites/:id` and removes it; both themes render with tokens; 3 viewports show no overflow.
+
+**Mid-task fix (in scope, frontend-only):** Live verify surfaced that T027's `GET /users` and `GET /users/invites` are `@Roles(OWNER, ADMIN)`-gated server-side (403 for any other caller) — there is no roster endpoint a Chef/Staff/Viewer can call at all. The original implementation called `listMembers()` unconditionally and only gated *controls* client-side, which meant a non-Owner/Admin visiting `/team` would hit a 403 and see an empty roster with a stray error message. Fixed by skipping the fetch entirely for non-Owner/Admin and rendering a restricted-access message instead (`TeamPage.tsx`), matching the TASK_GUIDE's "read-only or redirect" out-of-scope note. Updated the corresponding test and re-verified live (staff-team-readonly.png, zero fetch calls asserted in `TeamPage.test.tsx`). No `apps/api/**` files were touched — this is a client-side data-fetching gate, not a backend change.
+
+**Also discovered (backend, out of scope, flagged for Supervisor):** T027's `revokeInvite` hits a Prisma unique-constraint 500 (`(email, kitchen_id, status)`) when an email already has a prior `REVOKED` invite for the same kitchen and a new `PENDING` invite for that email is revoked again — the `status` column is part of a unique index that doesn't account for multiple historical `REVOKED` rows. Reproduced via repeated invite/revoke of the same email during live verification; worked around in verification by using a fresh email. This is a backend (T027) bug, not something this frontend-only task can or should fix (`apps/api/**` is out of scope) — flagging for the Supervisor to file as a follow-up.
 
 > **Evidence-archiving rule (required):** copy any external-tool artifacts (screenshots/session reports) into `reports/evidence/T028/` and commit — reference the repo-local path in Notes, not an external path. Note: easy-ui-mcp has been confirmed absent from this environment (2026-07-14) — use Playwright directly as the substitute, per the established pattern from T026.
 
@@ -180,13 +186,13 @@ Component tests for `TeamPage` covering role-gating (Owner/Admin sees controls, 
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: not required directly (Medium Risk, no new backend surface) — but confirm no client-side-only enforcement gap (server already enforces via T027, this is defense-in-depth UI only)
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run — feature confirmed working in running app
-- [ ] All three UI Evidence rows filled with pasted evidence (Hard-Stop Gate 6)
-- [ ] Any external-tool evidence copied into `reports/evidence/T028/` and committed
-- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — implementer sub-agents cannot invoke Supervisor-only skills directly (per memory/learnings.md); Supervisor runs this at Stage 4.
+- [x] Security review: not required directly (Medium Risk, no new backend surface) — confirmed no client-side-only enforcement gap: live verify caught that a client-side-only gate was actually insufficient (T027's `GET /users` 403s server-side for non-Owner/Admin, not just the UI controls), fixed to skip the fetch entirely for non-managers — defense-in-depth is now correct in both directions.
+- [x] Lint passes — `npm run lint` (oxlint), zero errors/warnings in new files.
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `Skill({ skill: "verify" })` — implementer cannot invoke this Supervisor-only skill; substituted with live Playwright verification against the real API + Postgres (seeded demo data) per the established T026 pattern (memory/learnings.md). See Evidence table + Notes above.
+- [x] All three UI Evidence rows filled with pasted evidence (Hard-Stop Gate 6)
+- [x] Any external-tool evidence copied into `reports/evidence/T028/` and committed
+- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned) — Supervisor-only write; flagged 2 learnings below for the Supervisor to record.
+- [x] Supervisor notified: task ready for Stage 4 review
