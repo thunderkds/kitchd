@@ -10,10 +10,10 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T027** — Backend team management: member list, role-change (Chef/Staff/Viewer only), remove/deactivate, pending-invite list + revoke | backend-developer | C2 | Risk: High | P1 | Blocked by: None
 - [ ] **T028** — Frontend Team & Roles page: member list, invite form, role-change control, remove action, pending-invites list | frontend-developer | C2 | Risk: Medium | P1 | Blocked by: T027
 
 ### In Progress
+- [ ] **T027** — Backend team management: member list, role-change (Chef/Staff/Viewer only), remove/deactivate, pending-invite list + revoke | backend-developer | C2 | Risk: High | P1 | Worktree: `.claude/worktrees/T027` (branch `task/T027-team-management-backend`) | Started: 2026-07-14
 
 ### Ready for Review
 
