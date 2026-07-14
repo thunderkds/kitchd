@@ -12,9 +12,9 @@
 ### Todo
 
 ### In Progress
-- [ ] **T028** — Frontend Team & Roles page: member list, invite form, role-change control, remove action, pending-invites list | frontend-developer | C2 | Risk: Medium | P1 | Worktree: `.claude/worktrees/T028` (branch `task/T028-team-roles-frontend`) | Started: 2026-07-14
 
 ### Ready for Review
+- [ ] **T028** — Frontend Team & Roles page: member list, invite form, role-change control, remove action, pending-invites list | frontend-developer | C2 | Risk: Medium | P1 | code-review: 0 P0/P1, 1 P2 | Evidence filled | UI evidence archived
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
