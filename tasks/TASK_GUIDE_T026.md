@@ -132,6 +132,12 @@ User feedback on fix #2: (1) removing the border from `<input>`/`<select>`/`<tex
 
 **Verification**: computed-style check confirmed both input border colors resolve correctly (`rgb(209,213,219)` Simple, `rgb(74,63,92)` Dark Neon — not `transparent`). `npm test` (full suite) 73/73 passed. Live Playwright screenshots across Login (Simple, input borders visible), Settings/Dashboard/Notes (Dark Neon, glow gradient + input borders visible). Dev server started/stopped cleanly on 8766. Screenshots archived to `reports/evidence/T026-input-border-gradient-fix/` (`01`–`04`).
 
+### Follow-up fix #4 — 2026-07-14, same-day (extend gradient to Dashboard widgets + Notes list items)
+
+User asked to apply the gradient to the Dashboard widget components and the Notes list items in both themes. These had never had a `bg-surface-raised` class at all (only `border rounded-lg p-4`/`border rounded p-3`) — pre-T026 they had no fill either, just an outline; once borders went transparent (fix #2) they became fully invisible boxes. Added `bg-surface-raised` to: `TasksWidget.tsx`, `LowStockWidget.tsx`, `AnnouncementsWidget.tsx`, `PinnedNotesWidget.tsx` (all 4 Dashboard widgets), and `NotesPage.tsx`'s `<li>` note-list-item.
+
+**Verification**: `npm test` (full suite) 73/73 passed. Live Playwright check: signed up, seeded 2 real notes (to see populated list items, not just the empty state), captured Dashboard + Notes in both Simple and Dark Neon. All 4 widgets and both note items now show the diagonal gradient — subtle white-to-light-gray in Simple, visible plum-to-crimson-glow in Dark Neon. Dev server started/stopped cleanly on 8766. Screenshots archived to `reports/evidence/T026-dashboard-notes-gradient/` (`01`–`04`).
+
 ---
 
 ## UI / Design Acceptance Criteria

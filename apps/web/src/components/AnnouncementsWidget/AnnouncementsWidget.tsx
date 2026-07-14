@@ -30,7 +30,7 @@ export function AnnouncementsWidget() {
   const latest = announcements?.slice(0, MAX_ITEMS) ?? [];
 
   return (
-    <div className="border rounded-lg p-4 w-full" data-testid="announcements-widget">
+    <div className="border bg-surface-raised rounded-lg p-4 w-full" data-testid="announcements-widget">
       <h3 className="text-sm font-semibold text-primary mb-3">Announcements</h3>
 
       {error && (

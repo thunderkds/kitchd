@@ -27,7 +27,7 @@ export function LowStockWidget() {
   }, []);
 
   return (
-    <div className="border rounded-lg p-4 w-full" data-testid="low-stock-widget">
+    <div className="border bg-surface-raised rounded-lg p-4 w-full" data-testid="low-stock-widget">
       <h3 className="text-sm font-semibold text-primary mb-3">Low Stock</h3>
 
       {error && (

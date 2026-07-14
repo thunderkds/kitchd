@@ -33,7 +33,7 @@ export function PinnedNotesWidget() {
   const pinned = (notes ?? []).filter((note) => note.pinned).slice(0, MAX_ITEMS);
 
   return (
-    <div className="border rounded-lg p-4 w-full" data-testid="pinned-notes-widget">
+    <div className="border bg-surface-raised rounded-lg p-4 w-full" data-testid="pinned-notes-widget">
       <h3 className="text-sm font-semibold text-primary mb-3">Pinned Notes</h3>
 
       {error && (
