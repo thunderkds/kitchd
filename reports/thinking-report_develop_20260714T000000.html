@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thinking Report — Brainstorming — develop</title>
+<style>
+  :root {
+    --bg:        #0a0a12;
+    --surface:   #111128;
+    --surface2:  #16162e;
+    --border:    #1e1e42;
+    --border-glow: #2a2a6e;
+    --text:      #e2e2f0;
+    --muted:     #6b6b9a;
+    --cyan:      #00d4ff;
+    --green:     #00ff88;
+    --amber:     #ffb800;
+    --red:       #ff3b6b;
+    --purple:    #a855f7;
+    --cyan-dim:  rgba(0,212,255,.12);
+    --green-dim: rgba(0,255,136,.12);
+    --red-dim:   rgba(255,59,107,.12);
+    --amber-dim: rgba(255,184,0,.12);
+    --purple-dim: rgba(168,85,247,.12);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  h1 { margin: 0; font-size: 1.25rem; color: #fff; letter-spacing: .02em; }
+  h2 { font-size: .8rem; color: var(--muted); margin: 0 0 .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--purple);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 24px rgba(168,85,247,.08), 0 4px 24px rgba(0,0,0,.5);
+  }
+  .header-meta { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+  .header-meta code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .8rem; }
+
+  .badge { display: inline-block; padding: .3rem .9rem; border-radius: 999px; font-weight: 700; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; }
+  .badge-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,.3); box-shadow: 0 0 8px rgba(0,255,136,.2); }
+  .badge-yellow { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(255,184,0,.3); box-shadow: 0 0 8px rgba(255,184,0,.2); }
+  .badge-blue   { background: var(--cyan-dim);   color: var(--cyan);   border: 1px solid rgba(0,212,255,.3); box-shadow: 0 0 8px rgba(0,212,255,.2); }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+  .section-head {
+    padding: .7rem 1.25rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .decision-box { padding: 1.25rem 1.5rem; }
+  .decision-problem { font-size: .82rem; color: var(--muted); margin-bottom: .5rem; letter-spacing: .01em; }
+  .decision-statement { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: .85rem; }
+  .decision-statement::before { content: '→ '; color: var(--cyan); }
+  .decision-rationale {
+    font-size: .875rem;
+    color: #b0b0d0;
+    line-height: 1.75;
+    border-left: 3px solid var(--green);
+    padding-left: .85rem;
+    box-shadow: -6px 0 12px rgba(0,255,136,.08);
+  }
+
+  .matrix-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: .65rem 1.25rem;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    text-align: left;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  th.col-chosen { background: rgba(0,255,136,.07); color: var(--green); }
+  td { padding: .72rem 1.25rem; font-size: .875rem; border-top: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td.criteria-label { font-weight: 500; color: #9090b8; width: 200px; }
+  td.col-chosen { background: rgba(0,255,136,.04); }
+
+  .cell-yes     { color: var(--green);  font-weight: 700; }
+  .cell-partial { color: var(--amber);  font-weight: 700; }
+  .cell-no      { color: var(--red);    font-weight: 700; }
+
+  .item-list { padding: 1rem 1.5rem; }
+  .item-list ul { margin: 0; padding-left: 1.25rem; }
+  .item-list li { font-size: .875rem; line-height: 1.75; color: #b0b0d0; }
+  .item-list li + li { margin-top: .3rem; }
+  .tag { display: inline-block; font-size: .7rem; font-weight: 700; padding: .1rem .5rem; border-radius: 4px; margin-right: .4rem; vertical-align: middle; letter-spacing: .04em; text-transform: uppercase; }
+  .tag-assumption { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(255,184,0,.25); }
+  .tag-deferred   { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(168,85,247,.25); }
+  .tag-resolved   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,.25); }
+
+  .footer {
+    font-size: .72rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 1rem 0 2rem;
+    border-top: 1px solid var(--border);
+    margin-top: .5rem;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; background: var(--cyan-dim); color: var(--cyan); padding: .1rem .4rem; border-radius: 3px; font-size: .78rem; }
+  .footer code { background: var(--purple-dim); color: var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Thinking Report — Brainstorming</h1>
+    <div class="header-meta">
+      Branch: <code>develop</code> &nbsp;·&nbsp; 2026-07-14
+    </div>
+  </div>
+  <span class="badge badge-green">Direction Locked</span>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Decision</h2></div>
+  <div class="decision-box">
+    <div class="decision-problem">Problem: How should a multi-theme system ("Simple" + new "Dark Neon", switchable per-user, extensible to future themes) be architected in `apps/web`, which today has zero theming infrastructure — no CSS variables, no theme context, all color hardcoded as raw Tailwind palette classes across 17 files?</div>
+    <div class="decision-statement">Option B — Semantic CSS-variable tokens + <code>data-theme</code> attribute, account-synced via a new Prisma enum <code>User.themePreference</code>.</div>
+    <div class="decision-rationale">This is the only option that satisfies "future themes can be added easily" without a rewrite, and it happens to also be the industry-standard pattern for Tailwind v4 theming (<code>@theme inline</code> + CSS custom properties + <code>data-theme</code>). It centralizes color definitions that today don't exist at all, which is a genuine simplification of the current ad-hoc state, not just new complexity for its own sake. Adding theme #3 later becomes a pure CSS diff plus one enum-value migration — zero component code changes, because components only ever reference semantic tokens (<code>bg-surface</code>, <code>text-primary</code>) rather than raw palette classes.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Trade-Off Matrix</h2></div>
+  <div class="matrix-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="criteria-label"></th>
+          <th>Option A — Tailwind <code>dark:</code> variant</th>
+          <th class="col-chosen">Option B — Semantic tokens + data-theme ✅</th>
+          <th>Option C — Per-component theme prop</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="criteria-label">Supports N future themes</td>
+          <td class="cell-no">❌ No — binary only</td>
+          <td class="col-chosen cell-yes">✅ Yes — pure CSS diff per theme</td>
+          <td class="cell-no">❌ No — every component edited again</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Code volume</td>
+          <td class="cell-yes">✅ Low (~150 lines)</td>
+          <td class="col-chosen cell-partial">⚠️ Medium (~400 lines)</td>
+          <td class="cell-no">❌ High (~700+ lines)</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Regression risk</td>
+          <td class="cell-yes">✅ Low</td>
+          <td class="col-chosen cell-partial">⚠️ Medium</td>
+          <td class="cell-no">❌ High</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Centralizes color (single source of truth)</td>
+          <td class="cell-no">❌ No — still scattered Tailwind classes</td>
+          <td class="col-chosen cell-yes">✅ Yes — all color in one token layer</td>
+          <td class="cell-no">❌ No — duplicated per component</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Matches existing schema conventions (Prisma enum)</td>
+          <td class="cell-partial">⚠️ N/A — no DB dimension</td>
+          <td class="col-chosen cell-yes">✅ Yes — mirrors <code>Role</code> enum pattern</td>
+          <td class="cell-partial">⚠️ N/A — no DB dimension</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Assumptions &amp; Open Questions</h2></div>
+  <div class="item-list">
+    <ul>
+      <li><span class="tag tag-resolved">Resolved</span> Persistence is account-synced (DB-backed <code>User.themePreference</code>), not browser-only localStorage — user explicitly requested cross-device sync.</li>
+      <li><span class="tag tag-resolved">Resolved</span> Full migration of all 17 raw-color files happens in this task, not incrementally — avoids a half-themed UI where Dark Neon looks broken on unmigrated screens.</li>
+      <li><span class="tag tag-resolved">Resolved</span> Theme switcher control lives on the settings/profile page, not a topbar quick-toggle.</li>
+      <li><span class="tag tag-resolved">Resolved</span> Accent token stays a single <code>--color-accent</code> (not split primary/secondary) — no current component uses two distinct accent roles.</li>
+      <li><span class="tag tag-resolved">Resolved</span> Theme identifiers are kebab-case strings <code>"simple"</code> / <code>"dark-neon"</code>, matching CSS attribute-selector syntax directly.</li>
+      <li><span class="tag tag-resolved">Resolved</span> <code>themePreference</code> is a Prisma <strong>enum</strong> column (<code>Theme { simple, dark_neon }</code>), not a plain String — matches the existing <code>Role</code> enum convention; adding a future theme requires a migration by design.</li>
+      <li><span class="tag tag-assumption">Assumption</span> No cross-tab live-sync requirement — if a user changes theme in one open tab, other open tabs are not expected to update in real time for MVP.</li>
+      <li><span class="tag tag-deferred">Deferred</span> Pre-auth / logged-out flash-of-wrong-theme handling and the exact fallback default (existing users with unset <code>themePreference</code>) are flagged as Edge Cases for the TASK_GUIDE, not fully solved during brainstorming.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  Source: <code>BRAINSTORMING_LOG_theme-system.md</code> &nbsp;·&nbsp; Task: theme-system &nbsp;·&nbsp; Generated: 2026-07-14T00:00:00
+</div>
+
+</body>
+</html>
