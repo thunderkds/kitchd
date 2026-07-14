@@ -52,14 +52,14 @@ export function NotificationBell() {
       <button
         type="button"
         aria-label="Notifications"
-        className="relative rounded p-1.5 text-gray-600 hover:text-gray-900"
+        className="relative rounded p-1.5 text-muted hover:text-primary"
         onClick={handleOpen}
         data-testid="notification-bell-button"
       >
         🔔
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white"
+            className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white"
             data-testid="notification-unread-badge"
           >
             {unreadCount}
@@ -69,26 +69,26 @@ export function NotificationBell() {
 
       {open && (
         <div
-          className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border bg-white shadow-lg z-10"
+          className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border bg-surface-raised shadow-lg z-10"
           data-testid="notification-dropdown"
         >
-          <div className="border-b px-3 py-2 text-sm font-semibold text-gray-900">
+          <div className="border-b px-3 py-2 text-sm font-semibold text-primary">
             Notifications
           </div>
 
           {error && (
-            <p className="px-3 py-2 text-sm text-red-700" role="alert">
+            <p className="px-3 py-2 text-sm text-danger" role="alert">
               {error}
             </p>
           )}
 
           {!error && notifications === null && (
-            <p className="px-3 py-2 text-sm text-gray-500">Loading…</p>
+            <p className="px-3 py-2 text-sm text-muted">Loading…</p>
           )}
 
           {!error && notifications !== null && notifications.length === 0 && (
             <p
-              className="px-3 py-2 text-sm text-gray-500"
+              className="px-3 py-2 text-sm text-muted"
               data-testid="notification-empty"
             >
               No notifications yet.
@@ -100,7 +100,7 @@ export function NotificationBell() {
               {notifications.map((n) => (
                 <li
                   key={n.id}
-                  className="px-3 py-2 text-sm text-gray-700"
+                  className="px-3 py-2 text-sm text-primary"
                   data-testid={`notification-${n.id}`}
                 >
                   {n.body}

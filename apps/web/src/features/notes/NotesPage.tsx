@@ -103,14 +103,14 @@ export function NotesPage() {
           <div role="group" aria-label="Notes scope">
             <button
               type="button"
-              className={`px-3 py-2 text-sm rounded-l border ${scope === 'mine' ? 'bg-gray-800 text-white' : 'bg-white'}`}
+              className={`px-3 py-2 text-sm rounded-l border ${scope === 'mine' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
               onClick={() => setScope('mine')}
             >
               My Notes
             </button>
             <button
               type="button"
-              className={`px-3 py-2 text-sm rounded-r border ${scope === 'team' ? 'bg-gray-800 text-white' : 'bg-white'}`}
+              className={`px-3 py-2 text-sm rounded-r border ${scope === 'team' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
               onClick={() => setScope('team')}
             >
               Team Notes
@@ -119,7 +119,7 @@ export function NotesPage() {
         </div>
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      {error && <p className="text-danger text-sm mb-3">{error}</p>}
 
       <div className="border rounded p-4 mb-6 flex flex-col gap-2 max-w-xl">
         <input
@@ -145,7 +145,7 @@ export function NotesPage() {
         />
         <button
           type="button"
-          className="self-start px-3 py-2 text-sm rounded bg-gray-800 text-white"
+          className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
           onClick={handleCreate}
         >
           Add Note
@@ -153,17 +153,17 @@ export function NotesPage() {
       </div>
 
       {notes.length === 0 ? (
-        <p className="text-gray-500 text-sm">No notes yet.</p>
+        <p className="text-muted text-sm">No notes yet.</p>
       ) : (
         <ul className="flex flex-col gap-3" data-testid="notes-list">
           {notes.map((note) => (
-            <li key={note.id} className="border rounded p-3" data-testid={`note-${note.id}`}>
+            <li key={note.id} className="border bg-surface-raised rounded p-3" data-testid={`note-${note.id}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   {note.title && <p className="font-medium break-words">{note.title}</p>}
                   <p className="text-sm whitespace-pre-wrap break-words">{note.body}</p>
                   {note.tags.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-1">{note.tags.join(' ')}</p>
+                    <p className="text-xs text-muted mt-1">{note.tags.join(' ')}</p>
                   )}
                   {note.linkedEntityType && note.linkedEntityId && (
                     <div className="mt-1">

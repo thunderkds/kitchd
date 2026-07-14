@@ -53,14 +53,14 @@ export function LinkedEntityBadge({
 
   if (state === 'missing') {
     return (
-      <span className="text-xs italic text-gray-400" data-testid="linked-entity-missing">
+      <span className="text-xs italic text-muted" data-testid="linked-entity-missing">
         Linked item no longer exists
       </span>
     );
   }
 
   return (
-    <span className="text-xs text-gray-500" data-testid="linked-entity-badge">
+    <span className="text-xs text-muted" data-testid="linked-entity-badge">
       Linked to {type}
       {title ? `: ${title}` : ` #${id.slice(0, 8)}`}
     </span>

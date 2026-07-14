@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thinking Report — Planning — develop</title>
+<style>
+  :root {
+    --bg:        #0a0a12;
+    --surface:   #111128;
+    --surface2:  #16162e;
+    --border:    #1e1e42;
+    --border-glow: #2a2a6e;
+    --text:      #e2e2f0;
+    --muted:     #6b6b9a;
+    --cyan:      #00d4ff;
+    --green:     #00ff88;
+    --amber:     #ffb800;
+    --red:       #ff3b6b;
+    --purple:    #a855f7;
+    --cyan-dim:  rgba(0,212,255,.12);
+    --green-dim: rgba(0,255,136,.12);
+    --red-dim:   rgba(255,59,107,.12);
+    --amber-dim: rgba(255,184,0,.12);
+    --purple-dim: rgba(168,85,247,.12);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  h1 { margin: 0; font-size: 1.25rem; color: #fff; letter-spacing: .02em; }
+  h2 { font-size: .8rem; color: var(--muted); margin: 0 0 .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--purple);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 24px rgba(168,85,247,.08), 0 4px 24px rgba(0,0,0,.5);
+  }
+  .header-meta { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+  .header-meta code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .8rem; }
+
+  .badge { display: inline-block; padding: .3rem .9rem; border-radius: 999px; font-weight: 700; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; }
+  .badge-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,.3); box-shadow: 0 0 8px rgba(0,255,136,.2); }
+  .badge-yellow { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(255,184,0,.3); box-shadow: 0 0 8px rgba(255,184,0,.2); }
+  .badge-blue   { background: var(--cyan-dim);   color: var(--cyan);   border: 1px solid rgba(0,212,255,.3); box-shadow: 0 0 8px rgba(0,212,255,.2); }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+  .section-head {
+    padding: .7rem 1.25rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .decision-box { padding: 1.25rem 1.5rem; }
+  .decision-problem { font-size: .82rem; color: var(--muted); margin-bottom: .5rem; letter-spacing: .01em; }
+  .decision-statement { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: .85rem; }
+  .decision-statement::before { content: '→ '; color: var(--cyan); }
+  .decision-rationale {
+    font-size: .875rem;
+    color: #b0b0d0;
+    line-height: 1.75;
+    border-left: 3px solid var(--green);
+    padding-left: .85rem;
+    box-shadow: -6px 0 12px rgba(0,255,136,.08);
+  }
+
+  .matrix-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: .65rem 1.25rem;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    text-align: left;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  th.col-chosen { background: rgba(0,255,136,.07); color: var(--green); }
+  td { padding: .72rem 1.25rem; font-size: .875rem; border-top: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td.criteria-label { font-weight: 500; color: #9090b8; width: 220px; }
+  td.col-chosen { background: rgba(0,255,136,.04); }
+
+  .cell-yes     { color: var(--green);  font-weight: 700; }
+  .cell-partial { color: var(--amber);  font-weight: 700; }
+  .cell-no      { color: var(--red);    font-weight: 700; }
+
+  .item-list { padding: 1rem 1.5rem; }
+  .item-list ul { margin: 0; padding-left: 1.25rem; }
+  .item-list li { font-size: .875rem; line-height: 1.75; color: #b0b0d0; }
+  .item-list li + li { margin-top: .3rem; }
+  .tag { display: inline-block; font-size: .7rem; font-weight: 700; padding: .1rem .5rem; border-radius: 4px; margin-right: .4rem; vertical-align: middle; letter-spacing: .04em; text-transform: uppercase; }
+  .tag-assumption { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(255,184,0,.25); }
+  .tag-deferred   { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(168,85,247,.25); }
+  .tag-resolved   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,.25); }
+
+  .footer {
+    font-size: .72rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 1rem 0 2rem;
+    border-top: 1px solid var(--border);
+    margin-top: .5rem;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; background: var(--cyan-dim); color: var(--cyan); padding: .1rem .4rem; border-radius: 3px; font-size: .78rem; }
+  .footer code { background: var(--purple-dim); color: var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Thinking Report — Planning</h1>
+    <div class="header-meta">
+      Branch: <code>develop</code> &nbsp;·&nbsp; 2026-07-14
+    </div>
+  </div>
+  <span class="badge badge-green">Direction Locked</span>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Decision</h2></div>
+  <div class="decision-box">
+    <div class="decision-problem">Problem: How should the theme-system work (ADR-0001, Option B) be decomposed into independently-gradable vertical-slice tasks for Stage 2?</div>
+    <div class="decision-statement">Two tracer-bullet slices: T025 (backend theme-preference, C1/Low/P1, unblocked) → T026 (frontend token system + full migration + switcher UI, C2/Low/P1, blocked by T025).</div>
+    <div class="decision-rationale">The locked brainstorming constraints — account-synced persistence and full 17-file migration in one shot (no half-themed UI) — naturally produce exactly two end-to-end-verifiable slices rather than more. T025 is independently demoable via API calls alone (curl/Postman) with no UI needed. T026 cannot be split further (e.g. "tokens" vs "migration" vs "switcher UI") without violating the locked decision that the migration must land atomically, so a finer split was considered and explicitly rejected by the user during the granularity quiz.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Trade-Off Matrix</h2></div>
+  <div class="matrix-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="criteria-label"></th>
+          <th class="col-chosen">Chosen — 2-task split (T025 backend / T026 frontend) ✅</th>
+          <th>Alternative not taken — finer 4+-task split (tokens / migration / switcher UI as separate tasks)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="criteria-label">Each task independently demoable end-to-end</td>
+          <td class="col-chosen cell-yes">✅ Yes — T025 via API, T026 via full UI</td>
+          <td class="cell-no">❌ No — a "tokens only" task has nothing to demo without component migration</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Consistent with "full migration, no half-themed UI" decision</td>
+          <td class="col-chosen cell-yes">✅ Yes</td>
+          <td class="cell-no">❌ No — splitting migration from tokens reintroduces a half-themed intermediate state</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Dependency complexity</td>
+          <td class="col-chosen cell-yes">✅ Low — single linear dependency (T026 blocked by T025)</td>
+          <td class="cell-partial">⚠️ Medium — 3-4 tasks with more inter-task sequencing to track</td>
+        </tr>
+        <tr>
+          <td class="criteria-label">Matches AFK/HITL preference (prefer AFK)</td>
+          <td class="col-chosen cell-yes">✅ Yes — both slices are AFK, implementable and mergeable without human interaction</td>
+          <td class="cell-yes">✅ Yes — would also be AFK, not a differentiator</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Assumptions &amp; Open Questions</h2></div>
+  <div class="item-list">
+    <ul>
+      <li><span class="tag tag-resolved">Resolved</span> User confirmed the 2-task granularity was correct ("looks right, generate the task guides") after being shown the breakdown and asked whether a finer split was wanted.</li>
+      <li><span class="tag tag-resolved">Resolved</span> Both tasks are Low Risk — no `security-review` gate required; T025 still requires the mandatory `migration-safety` gate since it adds a DB enum column.</li>
+      <li><span class="tag tag-resolved">Resolved</span> This is a post-MVP feature not in the original `PRD.md` — added as FR-025 / US-014 for Requirement Refs traceability before generating the TASK_GUIDEs (Hard-Stop Gate 1 requires a traceable requirement basis).</li>
+      <li><span class="tag tag-assumption">Assumption</span> The exact route path for the existing auth/profile payload and settings/profile page are not yet confirmed in code — both TASK_GUIDEs instruct the implementing agent to verify the actual route/page path first rather than assuming one.</li>
+      <li><span class="tag tag-deferred">Deferred</span> A third theme, cross-tab live sync, and a topbar quick-toggle are all explicitly out of scope for T025/T026 and would need their own future task if requested.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  Source: <code>tasks/TASK_GUIDE_T025.md, tasks/TASK_GUIDE_T026.md</code> &nbsp;·&nbsp; Task: T025-T026 &nbsp;·&nbsp; Generated: 2026-07-14T01:00:00
+</div>
+
+</body>
+</html>

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { Invite } from '@prisma/client';
+import { Invite, Theme, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService, AuthResult } from '../auth/auth.service';
 import { InviteUserDto } from './dto/invite-user.dto';
@@ -116,6 +116,21 @@ export class UsersService {
     return this.authService.login({
       email: user.email,
       password: dto.password,
+    });
+  }
+
+  // Self-service only: acts on the authenticated caller's own id, never a
+  // caller-supplied target user id (mirrors the kitchen-scoped-controller
+  // pattern of deriving scope server-side). Selects a safe field set so the
+  // response never leaks passwordHash.
+  updateTheme(
+    userId: string,
+    theme: Theme,
+  ): Promise<Pick<User, 'id' | 'email' | 'themePreference'>> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { themePreference: theme },
+      select: { id: true, email: true, themePreference: true },
     });
   }
 }

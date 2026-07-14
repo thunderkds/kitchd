@@ -1,0 +1,12 @@
+[
+  { "check": "login page default theme (logged out, no account)", "dataTheme": "simple" },
+  { "check": "settings default selection for a fresh account", "simpleChecked": "true" },
+  { "check": "switch to dark-neon (optimistic, immediate)", "dataTheme": "dark-neon" },
+  { "check": "persists dark-neon after nav/reload (read from account, not just cache)", "dataTheme": "dark-neon" },
+  { "check": "no horizontal overflow at mobile-375 (dark-neon)", "overflow": false },
+  { "check": "no horizontal overflow at mobile-375 (simple)", "overflow": false },
+  { "check": "no horizontal overflow at tablet-768 (dark-neon)", "overflow": false },
+  { "check": "no horizontal overflow at tablet-768 (simple)", "overflow": false },
+  { "check": "no horizontal overflow at desktop-1280 (dark-neon)", "overflow": false },
+  { "check": "no horizontal overflow at desktop-1280 (simple)", "overflow": false }
+]

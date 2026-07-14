@@ -42,21 +42,21 @@ export function TasksWidget() {
   const visible = (scoped ?? []).slice(0, MAX_ITEMS);
 
   return (
-    <div className="border rounded-lg p-4 w-full" data-testid="tasks-widget">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">
+    <div className="border bg-surface-raised rounded-lg p-4 w-full" data-testid="tasks-widget">
+      <h3 className="text-sm font-semibold text-primary mb-3">
         {showAll ? 'Kitchen Tasks' : 'My Tasks'}
       </h3>
 
       {error && (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {error}
         </p>
       )}
 
-      {!error && scoped === null && <p className="text-sm text-gray-500">Loading…</p>}
+      {!error && scoped === null && <p className="text-sm text-muted">Loading…</p>}
 
       {!error && scoped !== null && visible.length === 0 && (
-        <p className="text-sm text-gray-500" data-testid="tasks-widget-empty">
+        <p className="text-sm text-muted" data-testid="tasks-widget-empty">
           No tasks yet. Assigned tasks will show up here.
         </p>
       )}
@@ -70,7 +70,7 @@ export function TasksWidget() {
               className="flex items-center justify-between gap-2 px-1 py-2 text-sm"
             >
               <span className="truncate min-w-0">{task.title}</span>
-              <span className="text-gray-500 shrink-0">{task.status}</span>
+              <span className="text-muted shrink-0">{task.status}</span>
             </li>
           ))}
         </ul>
