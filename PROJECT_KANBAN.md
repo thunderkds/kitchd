@@ -14,7 +14,6 @@
 ### In Progress
 
 ### Ready for Review
-- [ ] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 18-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | code-review: 0 findings | Evidence filled | UI evidence archived
 
 ### Done
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
@@ -42,6 +41,7 @@
 - [x] **T022** — QA pass + seed demo data + onboarding walkthrough (all 8 PRD MVP acceptance criteria verified live; 1 bug found+fixed: mention notification body UUID) | qa-expert | C2 | Risk: Med | P0 | Started: 2026-07-06 | Done: 2026-07-06
 - [x] **T024** — RBAC enforcement audit — Notes, Announcements, ShiftLog, Comments (no gap found, all 4 already correct; surfaced product finding: ADMIN role has no creation path anywhere) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-06 | Done: 2026-07-06
 - [x] **T025** — Backend theme-preference: `User.themePreference` enum (`Theme { simple, dark_neon }`) + self-service `PATCH /users/me/theme` endpoint | backend-developer | C1 | Risk: Low | P1 | migration-safety: GO | code-review: 0 findings | 186/186 tests green post-merge | Started: 2026-07-14 | Done: 2026-07-14
+- [x] **T026** — Frontend theme system: semantic CSS-variable tokens, Dark Neon palette, full 18-file migration, settings-page switcher | frontend-developer | C2 | Risk: Low | P1 | code-review: 0 findings | 73/73 frontend tests green post-merge | UI evidence archived | Started: 2026-07-14 | Done: 2026-07-14
 
 ---
 
