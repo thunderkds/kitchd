@@ -15,6 +15,11 @@ enum Role {
   VIEWER
 }
 
+enum Theme {
+  simple
+  dark_neon
+}
+
 enum InviteStatus {
   PENDING
   ACCEPTED
@@ -85,6 +90,7 @@ model User {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   role           Role     @default(OWNER)
+  themePreference Theme   @default(simple) @map("theme_preference")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
