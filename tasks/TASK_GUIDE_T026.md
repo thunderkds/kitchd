@@ -106,6 +106,14 @@ cd apps/web && npm test -- theme && grep -rEn "bg-(slate|gray|indigo|zinc|neutra
 >
 > **Tooling note**: easy-ui-mcp was not available as a callable tool in this implementer agent's session (no browser/screenshot MCP tool was exposed). Used Playwright directly instead (already cached on this machine, same DOM-assertion + screenshot methodology documented for T021's responsive workaround) — dev server run on the fixed port 8766 from this worktree, stopped after capture. 18 screenshots + `results.json` archived to `reports/evidence/T026/`.
 
+### Follow-up fix — 2026-07-14, same-day (commit `273c7a1`, post-merge)
+
+User reported the shipped Dark Neon palette "does not look good at all" and pointed to `github.com/Carlos007007/DarkNeon` as a reference. `apps/web/src/index.css`'s `[data-theme='dark-neon']` block was rebased on that reference's actual `css/style.css` `:root` hex values (near-black `#14111A` background, `#D51944` crimson accent, `#2F2A3D` muted-plum border, `#EEEEEE` text, brightened `#948fa0` muted text for contrast) rather than the original invented saturated purple/magenta/lime combination. Token names/architecture unchanged — hex values only.
+
+**Verification**: easy-ui-mcp again unavailable in this session (confirmed via `ToolSearch` — no matching MCP tools registered at all, not just unused). Used Playwright directly, same substitute methodology as the original T026 note above: signed up a fresh account, switched to Dark Neon via the Settings page, screenshotted Settings/Dashboard/Tasks. Verdict: coherent near-black/crimson palette, no clashing hues, matches the reference's visual register. `npm test -- theme` (12/12 passed) confirms no functional regression from the value-only change. Screenshots archived to `reports/evidence/T026-palette-fix/` (`01-settings-simple.png`, `02-settings-dark-neon.png`, `03-dashboard-dark-neon.png`, `04-tasks-dark-neon.png`).
+
+**Gap acknowledged**: this fix was initially committed (`273c7a1`) without going through this Evidence-table update or a Stage 4 HTML report — a same-day CSS tweak was treated as too small for the pipeline's UI-evidence requirement, which was wrong; any UI-visible change carries the same visual-regression risk regardless of diff size. Evidence backfilled here after the gap was pointed out.
+
 ---
 
 ## UI / Design Acceptance Criteria
