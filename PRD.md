@@ -44,6 +44,7 @@ Chefs and kitchen teams currently juggle recipes on paper, prep lists on whitebo
 | US-012 | As a Head Chef, I want a home dashboard showing today's tasks, low-stock alerts, latest announcements, and pinned notes so that I get a full picture at a glance. | P1 |
 | US-013 | As the founder/developer, I want every push/PR automatically linted, typechecked, and tested, and every merge to `staging` automatically deployed, so that I can iterate quickly without manually re-verifying and re-deploying by hand. | P1 (founder, acting as maintainer) |
 | US-014 | As any user, I want to switch the app's visual theme (Simple or Dark Neon) and have my choice follow me across devices, so that I can use the interface style I prefer wherever I log in. | P1 (post-MVP, added 2026-07-14) |
+| US-015 | As an Owner/Admin, I want to see my kitchen's team members, change a member's role, remove a member, and manage pending invites, so that I can actually administer who has access without going around the API directly. | P1 (post-MVP, added 2026-07-14) |
 
 ---
 
@@ -76,6 +77,7 @@ Chefs and kitchen teams currently juggle recipes on paper, prep lists on whitebo
 | FR-023 | System must support CSV export for Inventory and Recipes. | Doc §5 |
 | FR-024 | A CI pipeline must run lint, typecheck, and the full test suite for `/apps/web` and `/apps/api` on every push and pull request; a separate CD pipeline must deploy to a Railway staging environment automatically on merge to the `staging` branch only (never `main`). | US-013 |
 | FR-025 | System must support a user-selectable UI theme ("Simple" default, "Dark Neon" alternate), persisted per-user account so it follows the user across devices, with an architecture extensible to future themes without per-component code changes. | US-014 (post-MVP, added 2026-07-14) |
+| FR-026 | System must let Owner/Admin view the kitchen's member roster, change a member's role (Chef/Staff/Viewer only — not Owner/Admin), remove/deactivate a Chef/Staff/Viewer member (not another Owner/Admin, not self), and view/revoke pending invites. | US-015 (post-MVP, added 2026-07-14) |
 
 ---
 

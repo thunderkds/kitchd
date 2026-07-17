@@ -23,6 +23,7 @@ enum Theme {
 enum InviteStatus {
   PENDING
   ACCEPTED
+  REVOKED
 }
 
 enum StockMovementType {
@@ -91,6 +92,7 @@ model User {
 
   role           Role     @default(OWNER)
   themePreference Theme   @default(simple) @map("theme_preference")
+  isActive       Boolean  @default(true) @map("is_active")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   kitchen      Kitchen      @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
