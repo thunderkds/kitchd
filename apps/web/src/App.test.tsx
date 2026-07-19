@@ -36,13 +36,25 @@ describe('App routing', () => {
     expect(screen.getByPlaceholderText('Kitchen name')).toBeInTheDocument();
   });
 
-  // /tasks, /notes, /dashboard, /settings, and /team render real feature
-  // pages (T008/T012/T018/T026/T028) instead of the SectionPage placeholder
-  // — each has its own dedicated test suite (TasksPage.test.tsx,
-  // NotesPage.test.tsx, Dashboard.test.tsx, TeamPage.test.tsx, this suite's
+  // /tasks, /notes, /dashboard, /settings, /team, /inventory, /guidelines,
+  // and /announcements render real feature pages (T008/T012/T018/T026/
+  // T028/T031/T032/T033) instead of the SectionPage placeholder — each has
+  // its own dedicated test suite (TasksPage.test.tsx, NotesPage.test.tsx,
+  // Dashboard.test.tsx, TeamPage.test.tsx, InventoryPage.test.tsx,
+  // GuidelinesPage.test.tsx, AnnouncementsPage.test.tsx, this suite's
   // "real Settings page" test below).
   const placeholderItems = NAV_ITEMS.filter(
-    (item) => !['/tasks', '/notes', '/dashboard', '/settings', '/team'].includes(item.path),
+    (item) =>
+      ![
+        '/tasks',
+        '/notes',
+        '/dashboard',
+        '/settings',
+        '/team',
+        '/inventory',
+        '/guidelines',
+        '/announcements',
+      ].includes(item.path),
   );
 
   it.each(placeholderItems)('renders a distinct empty-state page for $label when authenticated', (item) => {
@@ -74,6 +86,39 @@ describe('App routing', () => {
     );
     renderAt('/team');
     expect(screen.getByRole('heading', { name: 'Team & Roles' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('T031: renders the real Inventory page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+    );
+    renderAt('/inventory');
+    expect(screen.getByRole('heading', { name: 'Inventory' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('T032: renders the real Guidelines page (not the placeholder) when authenticated', async () => {
+    setToken('fake-jwt');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+    );
+    renderAt('/guidelines');
+    expect(screen.getByRole('heading', { name: 'Guidelines' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('T033: renders the real Announcements page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+    );
+    renderAt('/announcements');
+    expect(screen.getByRole('heading', { name: 'Announcements' })).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 

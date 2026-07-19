@@ -8,14 +8,20 @@ import { SectionPage } from './routes/pages/SectionPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { NotesPage } from './features/notes/NotesPage';
 import { TeamPage } from './features/team/TeamPage';
+import { InventoryPage } from './features/inventory/InventoryPage';
+import { GuidelinesPage } from './features/guidelines/GuidelinesPage';
+import { AnnouncementsPage } from './features/announcements/AnnouncementsPage';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { ThemeProvider } from './theme/ThemeProvider';
+import { ErrorDialogProvider } from './errorDialog/ErrorDialogProvider';
 
 function App() {
   return (
     <ThemeProvider>
-      <AppRoutes />
+      <ErrorDialogProvider>
+        <AppRoutes />
+      </ErrorDialogProvider>
     </ThemeProvider>
   );
 }
@@ -41,6 +47,15 @@ function AppRoutes() {
             }
             if (item.path === '/team') {
               return <Route key={item.path} path={item.path} element={<TeamPage />} />;
+            }
+            if (item.path === '/inventory') {
+              return <Route key={item.path} path={item.path} element={<InventoryPage />} />;
+            }
+            if (item.path === '/guidelines') {
+              return <Route key={item.path} path={item.path} element={<GuidelinesPage />} />;
+            }
+            if (item.path === '/announcements') {
+              return <Route key={item.path} path={item.path} element={<AnnouncementsPage />} />;
             }
             return <Route key={item.path} path={item.path} element={<SectionPage item={item} />} />;
           })}
