@@ -8,6 +8,7 @@ import { SectionPage } from './routes/pages/SectionPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { NotesPage } from './features/notes/NotesPage';
 import { TeamPage } from './features/team/TeamPage';
+import { GuidelinesPage } from './features/guidelines/GuidelinesPage';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -44,6 +45,9 @@ function AppRoutes() {
             }
             if (item.path === '/team') {
               return <Route key={item.path} path={item.path} element={<TeamPage />} />;
+            }
+            if (item.path === '/guidelines') {
+              return <Route key={item.path} path={item.path} element={<GuidelinesPage />} />;
             }
             return <Route key={item.path} path={item.path} element={<SectionPage item={item} />} />;
           })}
