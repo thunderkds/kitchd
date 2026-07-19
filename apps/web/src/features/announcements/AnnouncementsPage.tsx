@@ -89,7 +89,7 @@ export function AnnouncementsPage() {
           />
           <button
             type="submit"
-            className="self-start bg-primary text-on-primary rounded px-3 py-1.5 text-sm font-medium"
+            className="self-start bg-accent text-white rounded px-3 py-1.5 text-sm font-medium"
           >
             Broadcast
           </button>
