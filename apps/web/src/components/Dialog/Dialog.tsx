@@ -27,7 +27,7 @@ export function Dialog({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 cursor-pointer"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
