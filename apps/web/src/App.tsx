@@ -11,11 +11,14 @@ import { TeamPage } from './features/team/TeamPage';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { ThemeProvider } from './theme/ThemeProvider';
+import { ErrorDialogProvider } from './errorDialog/ErrorDialogProvider';
 
 function App() {
   return (
     <ThemeProvider>
-      <AppRoutes />
+      <ErrorDialogProvider>
+        <AppRoutes />
+      </ErrorDialogProvider>
     </ThemeProvider>
   );
 }
