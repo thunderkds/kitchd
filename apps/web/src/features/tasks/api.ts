@@ -1,4 +1,5 @@
 import { getToken } from '../../routes/auth';
+import { notifyApiError } from '../../errorDialog/ErrorDialogProvider';
 import type {
   ChecklistItem,
   CompletionPreview,
@@ -10,17 +11,29 @@ import type {
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken() ?? ''}`,
-      ...(init?.headers ?? {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken() ?? ''}`,
+        ...(init?.headers ?? {}),
+      },
+    });
+  } catch {
+    // T029 — fetch rejected outright (network failure), not a non-2xx
+    // response. Surface the same shared dialog rather than an unhandled
+    // rejection (Acceptance Criterion 2).
+    const message = 'Network error — unable to reach the server. Please check your connection and try again.';
+    notifyApiError(message);
+    throw new Error(message);
+  }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error(data?.message ?? `Request failed (${res.status})`);
+    const message = data?.message ?? `Request failed (${res.status})`;
+    notifyApiError(message);
+    throw new Error(message);
   }
   return data as T;
 }
