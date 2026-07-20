@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-19
+**Last updated**: 2026-07-20
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -16,6 +16,7 @@
 ### Ready for Review
 
 ### Done
+- [x] **T034** — Global pointer-cursor rule for all clickable elements (buttons, role=button, summary) — bugfix follow-up to T030, closes native-`<button>`-has-no-default-pointer-cursor gap | frontend-developer | C0 | Risk: Low | P2 | code-review 0 P0, 1 P1 fixed (test coverage gap) | 137/137 frontend tests green post-fix | Started: 2026-07-20 | Done: 2026-07-20
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
 - [x] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-03 | Done: 2026-07-03
