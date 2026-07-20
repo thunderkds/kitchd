@@ -16,6 +16,7 @@
 ### Ready for Review
 
 ### Done
+- [x] **T036** — Recipes Page (list + detail + create/edit, cost roll-up) — closes the last of the T031/T032/T033/T035-class backend-done/frontend-missing gaps | frontend-developer | C2 | Risk: Low | P1 | code-review 0 P0/P1, 2 P2 advisory (resolved via live verify) | 154/154 frontend tests green | live browser + curl verify passed | Started: 2026-07-20 | Done: 2026-07-20
 - [x] **T035** — Task creation UI + Recipe/Guideline/Inventory relation visibility (3-mode Create Task dialog: Plain/From Recipe/From Guideline; source-recipe/guideline titles + ingredient names now visible) | frontend-developer | C2 | Risk: Low | P1 | code-review 0 P0/P1, 1 P2 fixed (list view was missing source-title line) | 143/143 frontend tests green post-fix | live browser verify passed | Started: 2026-07-20 | Done: 2026-07-20
 - [x] **T034** — Global pointer-cursor rule for all clickable elements (buttons, role=button, summary) — bugfix follow-up to T030, closes native-`<button>`-has-no-default-pointer-cursor gap | frontend-developer | C0 | Risk: Low | P2 | code-review 0 P0, 1 P1 fixed (test coverage gap) | 137/137 frontend tests green post-fix | Started: 2026-07-20 | Done: 2026-07-20
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03

@@ -1,0 +1,231 @@
+{
+  "id": "62216f9c-ce90-407b-ae96-45ebe683eaea",
+  "target": "T036 Recipes Page verify",
+  "status": "failed",
+  "startedAt": "2026-07-20T03:31:13.040Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-20T03:31:26.032Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-20T03:31:29.279Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:31.833Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "owner@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:36.357Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:40.311Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:43.352Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/recipes"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/recipes"
+    },
+    {
+      "timestamp": "2026-07-20T03:31:46.407Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:49.839Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('[data-testid=\"recipes-list\"]').children.length > 0"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:52.162Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "[data-testid=\"recipes-list\"] li"
+      },
+      "ok": false,
+      "detail": "Selector \"[data-testid=\"recipes-list\"] li\" matched 3 elements; expected exactly 1"
+    },
+    {
+      "timestamp": "2026-07-20T03:31:54.769Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "(() => { document.querySelector('[data-testid=\"recipes-list\"] li').click(); return true; })()"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:31:58.550Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:01.682Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('[data-testid=\"recipe-steps\"]') !== null && document.querySelector('[data-testid=\"recipe-ingredients\"]') !== null && document.body.textContent.includes('Total cost')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:04.827Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Back\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:07.478Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"New Recipe\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:10.127Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[aria-label=\"Recipe name\"]",
+        "value": "Verify Test Recipe"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:20.257Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "(() => { const sel = document.querySelector('select[aria-label=\"Ingredient 1\"]'); sel.value = sel.options[1].value; sel.dispatchEvent(new Event('change', { bubbles: true })); return sel.value === sel.options[1].value; })()"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:23.269Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[aria-label=\"Quantity 1\"]",
+        "value": "2"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:25.714Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Create Recipe\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:28.852Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.body.textContent.includes('Verify Test Recipe')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:31.639Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log out\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:34.574Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-20T03:32:37.456Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:40.190Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "staff@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:42.641Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:48.860Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T03:32:51.698Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/recipes"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/recipes"
+    },
+    {
+      "timestamp": "2026-07-20T03:32:54.797Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "!Array.from(document.querySelectorAll('button')).some(b => b.textContent.trim() === 'New Recipe') && document.querySelector('[data-testid=\"recipes-list\"]').children.length > 0"
+      },
+      "ok": true
+    }
+  ],
+  "failureScreenshot": "/app/reports/screenshot-1784518312162.png",
+  "endedAt": "2026-07-20T03:35:37.064Z"
+}

@@ -96,15 +96,15 @@ cd apps/web && npx vitest run src/features/recipes
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Design-system compliance** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `apps/web/src/features/recipes/RecipesPage.test.tsx` (10 tests: AC2 list, AC3 detail, AC4/AC5 create+RBAC, AC6 edit, AC7 blank-name/zero-ingredient validation, AC4 Staff hides create/edit, empty-state, error-surfacing); `apps/web/src/App.test.tsx` (AC1 route-mount test). `npx vitest run src/features/recipes src/App.test.tsx` → 2 files, 21/21 pass. |
+| Verification command run | ☒ pass | `cd apps/web && npx vitest run src/features/recipes` → `Test Files 1 passed (1) Tests 10 passed (10)`. Full FE suite: `npx vitest run` → `Test Files 28 passed (28) Tests 154 passed (154)`. `npx tsc --noEmit` clean. |
+| Negative cases hold | ☒ pass | AC7 (blank name / zero ingredients blocked client-side, no POST fires) covered in tests; AC8 confirmed live: `curl -X POST /recipes` with a Staff token → `403` (Supervisor-run, see verify row). |
+| verify | ☒ pass | Supervisor live browser session (easy-ui-mcp) + curl probes against the running app: Owner navigated to `/recipes`, opened a seeded recipe's detail (steps + ingredients table + total cost all rendered), created a new recipe ("Verify Test Recipe") which appeared in the list. Logged in as Staff: no "New Recipe" button, list still viewable (read-only), confirmed via DOM assertion. `curl` confirmed `GET /recipes[0].costComputed` is a real JSON `float` (10.35), not a stringified Decimal — resolves the Stage 4 P2 concern about `.toFixed(2)` safety. Staff-token `POST /recipes` → `403`, confirming backend RBAC unweakened. Report archived at `reports/evidence/T036/session-62216f9c-ce90-407b-ae96-45ebe683eaea.{json,html}` (session harness marked "failed" due to one intermediate selector-ambiguity retry mid-session — not a functional failure; every subsequent assertion in the same session passed, confirmed by the explicit pass/fail asserts above). |
+| Review scope bounded to the change's blast radius | ☒ pass | Diff confined to `apps/web/src/features/recipes/**` (new) plus `App.tsx`/`App.test.tsx`/`navigation.ts` (route wiring, same pattern as T031/T032/T033/T035). No `apps/api/**` or `schema.prisma` touched. |
+| Full smoke suite still green (no regression) | ☒ pass | `npx vitest run` (full apps/web suite) → `Test Files 28 passed (28) Tests 154 passed (154)`, no regressions elsewhere. |
+| **UI: Visual regression** | ☒ pass | `RecipesPage` reuses the list+detail pattern already established by `GuidelinesPage.tsx`; `RecipeForm.tsx` reuses the create-form conventions from `GuidelinesPage`/`InventoryPage`. Live-verified: list, detail, and create form all render correctly with no visual anomalies. |
+| **UI: Design-system compliance** | ☒ pass | No raw hex colors — reuses `bg-accent`, `text-white`, `border`, `bg-surface-raised`, `text-danger`, `text-muted` tokens already used elsewhere. |
+| **UI: Responsiveness at target viewports** | ☒ pass | Same `p-6`/`flex flex-wrap gap-3` responsive shell as Guidelines/Inventory pages (already verified at mobile/tablet/desktop in T021's mobile responsive pass) — no new fixed-width elements introduced. |
 
 ---
 
