@@ -9,6 +9,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', emptyMessage: 'Your dashboard widgets will appear here once configured.' },
   { label: 'Tasks', path: '/tasks', emptyMessage: 'No tasks yet. Assigned tasks will show up here.' },
   { label: 'Guidelines', path: '/guidelines', emptyMessage: 'No guidelines have been added yet.' },
+  { label: 'Recipes', path: '/recipes', emptyMessage: 'No recipes yet.' },
   { label: 'Inventory', path: '/inventory', emptyMessage: 'No stock items tracked yet.' },
   { label: 'Notes', path: '/notes', emptyMessage: 'No notes yet.' },
   { label: 'Announcements', path: '/announcements', emptyMessage: 'No announcements yet.' },

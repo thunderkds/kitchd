@@ -1,11 +1,11 @@
 import { TASK_STATUSES, type Task, type TaskStatus } from './types';
 import { TaskCard } from './TaskCard';
 
-// Semantic mapping: TODO is neutral (border), IN_PROGRESS is in-flight
+// Semantic mapping: TODO uses the accent color, IN_PROGRESS is in-flight
 // (warning), DONE is complete (success) — reuses the same 9-token set,
 // no status-specific tokens invented.
 const COLUMN_COLORS: Record<TaskStatus, string> = {
-  TODO: 'border-t-border',
+  TODO: 'border-t-accent',
   IN_PROGRESS: 'border-t-warning',
   DONE: 'border-t-success',
 };
@@ -13,9 +13,13 @@ const COLUMN_COLORS: Record<TaskStatus, string> = {
 export function KanbanBoard({
   tasks,
   onMove,
+  sourceTitleForTask,
 }: {
   tasks: Task[];
   onMove: (taskId: string, status: TaskStatus) => void;
+  // T035 — resolves a task's "From: <title>" line; optional so existing
+  // callers/tests are unaffected.
+  sourceTitleForTask?: (task: Task) => string | null | undefined;
 }) {
   return (
     <div
@@ -41,7 +45,12 @@ export function KanbanBoard({
               {column.label} ({columnTasks.length})
             </h3>
             {columnTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onMove={onMove} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                onMove={onMove}
+                sourceTitle={sourceTitleForTask?.(task)}
+              />
             ))}
           </div>
         );

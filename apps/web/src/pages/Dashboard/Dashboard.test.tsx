@@ -16,6 +16,8 @@ const task = (overrides: Partial<Task> = {}): Task => ({
   assigneeId: null,
   dueAt: null,
   checklistItems: [],
+  sourceRecipeId: null,
+  sourceGuidelineId: null,
   createdAt: '2026-07-01T00:00:00.000Z',
   updatedAt: '2026-07-01T00:00:00.000Z',
   ...overrides,

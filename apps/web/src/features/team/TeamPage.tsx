@@ -9,13 +9,15 @@ import {
 } from './api';
 import { getUser } from '../../routes/auth';
 import type { UserRole } from '../../routes/auth';
+import { Dialog } from '../../components/Dialog/Dialog';
 import { ASSIGNABLE_ROLES } from './types';
 import type { Invite, Member } from './types';
 
 const PROTECTED_ROLES: UserRole[] = ['OWNER', 'ADMIN'];
 
 /**
- * Team & Roles page (T028). Consumes T027's member/invite endpoints.
+ * Team & Roles page (T028, modal-converted in T037). Consumes T027's
+ * member/invite endpoints.
  *
  * T027's `GET /users` (listMembers) and `GET /users/invites` are
  * Owner/Admin-only server-side (403 for any other caller) — there is no
@@ -23,6 +25,8 @@ const PROTECTED_ROLES: UserRole[] = ['OWNER', 'ADMIN'];
  * caller never fetches team data; the page renders a restricted-access
  * message instead of an empty roster (locked scope decision: "read-only or
  * redirect for non-Owner/Admin", confirmed against the actual T027 RBAC).
+ * The invite form now opens via an Owner/Admin-only "Invite Member" button +
+ * shared `Dialog` modal instead of rendering always-inline.
  */
 export function TeamPage() {
   const caller = getUser();
@@ -32,6 +36,7 @@ export function TeamPage() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('STAFF');
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
@@ -75,15 +80,29 @@ export function TeamPage() {
     }
   };
 
+  const openInvite = () => {
+    if (!canManage) return;
+    setInviteEmail('');
+    setInviteRole('STAFF');
+    setInviteSuccess(null);
+    setInviteOpen(true);
+  };
+
+  const closeInvite = () => {
+    setInviteOpen(false);
+    setInviteEmail('');
+    setInviteRole('STAFF');
+  };
+
   const handleInvite = async () => {
+    if (!canManage) return;
     if (!inviteEmail.trim()) return;
     setInviteSuccess(null);
     try {
       const created = await inviteMember(inviteEmail.trim(), inviteRole);
       setInvites((prev) => [created, ...prev]);
       setInviteSuccess(`Invite sent to ${created.email}`);
-      setInviteEmail('');
-      setInviteRole('STAFF');
+      closeInvite();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send invite');
     }
@@ -120,42 +139,64 @@ export function TeamPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h1 className="text-xl font-semibold">Team &amp; Roles</h1>
-      </div>
-
-      {error && <p className="text-danger text-sm mb-3">{error}</p>}
-
-      {canManage && (
-        <div className="border rounded p-4 mb-6 flex flex-col gap-2 max-w-xl">
-          <h2 className="text-sm font-medium">Invite a member</h2>
-          <input
-            className="border rounded px-2 py-2 text-sm"
-            type="email"
-            placeholder="Email address"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            aria-label="Invite email"
-          />
-          <select
-            className="border rounded px-2 py-2 text-sm"
-            value={inviteRole}
-            onChange={(e) => setInviteRole(e.target.value as UserRole)}
-            aria-label="Invite role"
-          >
-            {ASSIGNABLE_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
+        {canManage && (
           <button
             type="button"
             className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
-            onClick={handleInvite}
+            onClick={openInvite}
           >
-            Send Invite
+            Invite Member
           </button>
-          {inviteSuccess && <p className="text-sm text-primary">{inviteSuccess}</p>}
-        </div>
+        )}
+      </div>
+
+      {error && <p className="text-danger text-sm mb-3">{error}</p>}
+      {inviteSuccess && <p className="text-sm text-primary mb-3">{inviteSuccess}</p>}
+
+      {canManage && inviteOpen && (
+        <Dialog titleId="invite-member-dialog-title" onClose={closeInvite}>
+          <h2 id="invite-member-dialog-title" className="text-lg font-semibold mb-4">
+            Invite a member
+          </h2>
+          <div className="flex flex-col gap-2">
+            <input
+              className="border rounded px-2 py-2 text-sm"
+              type="email"
+              placeholder="Email address"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              aria-label="Invite email"
+            />
+            <select
+              className="border rounded px-2 py-2 text-sm"
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as UserRole)}
+              aria-label="Invite role"
+            >
+              {ASSIGNABLE_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 mt-5">
+            <button
+              type="button"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded border bg-surface hover:opacity-80"
+              onClick={closeInvite}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90"
+              onClick={handleInvite}
+            >
+              Send Invite
+            </button>
+          </div>
+        </Dialog>
       )}
 
       <h2 className="text-sm font-medium mb-2">Members</h2>

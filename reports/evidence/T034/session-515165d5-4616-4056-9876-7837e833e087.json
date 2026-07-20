@@ -1,0 +1,39 @@
+{
+  "id": "515165d5-4616-4056-9876-7837e833e087",
+  "target": "T034 cursor-pointer verify — http://localhost:8766",
+  "status": "passed",
+  "startedAt": "2026-07-20T01:59:03.146Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-20T01:59:09.673Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/"
+    },
+    {
+      "timestamp": "2026-07-20T01:59:11.262Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T01:59:13.748Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "Array.from(document.querySelectorAll('button')).every(b => getComputedStyle(b).cursor === 'pointer')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T01:59:17.527Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelectorAll('button').length > 0 && document.querySelectorAll('button:disabled').length === 0"
+      },
+      "ok": true
+    }
+  ],
+  "endedAt": "2026-07-20T01:59:21.373Z"
+}

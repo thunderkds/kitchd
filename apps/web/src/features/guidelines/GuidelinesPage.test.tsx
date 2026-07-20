@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { GuidelinesPage } from './GuidelinesPage';
 import type { Guideline } from './types';
@@ -122,9 +122,12 @@ describe('GuidelinesPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'New Guideline' })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'New Guideline' }));
 
-    await user.type(screen.getByLabelText('Guideline title'), 'Closing Checklist');
-    await user.type(screen.getByLabelText('Guideline steps'), 'Lock the doors');
-    await user.click(screen.getByRole('button', { name: 'Create Guideline' }));
+    // Clicking "New Guideline" opens a modal (shared Dialog primitive), not a
+    // full-page-replace form.
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Guideline title'), 'Closing Checklist');
+    await user.type(within(dialog).getByLabelText('Guideline steps'), 'Lock the doors');
+    await user.click(within(dialog).getByRole('button', { name: 'Create Guideline' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -132,6 +135,8 @@ describe('GuidelinesPage', () => {
         expect.objectContaining({ method: 'POST' }),
       ),
     );
+    // Modal closes on success and the new guideline appears in the list.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Closing Checklist')).toBeInTheDocument();
   });
 
@@ -160,10 +165,13 @@ describe('GuidelinesPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
-    const titleInput = screen.getByLabelText('Guideline title') as HTMLInputElement;
+    // Edit opens a pre-filled modal rather than replacing the page.
+    const dialog = await screen.findByRole('dialog');
+    const titleInput = within(dialog).getByLabelText('Guideline title') as HTMLInputElement;
+    expect(titleInput.value).toBe('Opening Checklist');
     await user.clear(titleInput);
     await user.type(titleInput, 'Opening Checklist v2');
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -171,6 +179,7 @@ describe('GuidelinesPage', () => {
         expect.objectContaining({ method: 'PATCH' }),
       ),
     );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Opening Checklist v2')).toBeInTheDocument();
   });
 

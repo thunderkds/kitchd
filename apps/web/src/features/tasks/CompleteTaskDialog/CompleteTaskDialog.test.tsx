@@ -73,6 +73,37 @@ describe('CompleteTaskDialog', () => {
     expect(screen.getByRole('button', { name: 'Confirm' })).not.toBeDisabled();
   });
 
+  // T035 — FR-008: the confirmation must be human-reviewable by ingredient
+  // name, not a raw UUID prefix.
+  it('T035: shows the ingredient name instead of a raw id when a lookup is provided', () => {
+    render(
+      <CompleteTaskDialog
+        preview={makePreview()}
+        loading={false}
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+        ingredientNameById={{ 'ingredient-1': 'Basil' }}
+      />,
+    );
+
+    expect(screen.getByText('Basil')).toBeInTheDocument();
+    expect(screen.queryByText('ingredie')).not.toBeInTheDocument();
+  });
+
+  it('T035: falls back to the raw id prefix when no name lookup matches (deleted ingredient)', () => {
+    render(
+      <CompleteTaskDialog
+        preview={makePreview()}
+        loading={false}
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+        ingredientNameById={{}}
+      />,
+    );
+
+    expect(screen.getByText('ingredie')).toBeInTheDocument();
+  });
+
   it('disables both buttons while loading', () => {
     render(
       <CompleteTaskDialog

@@ -37,11 +37,12 @@ describe('App routing', () => {
   });
 
   // /tasks, /notes, /dashboard, /settings, /team, /inventory, /guidelines,
-  // and /announcements render real feature pages (T008/T012/T018/T026/
-  // T028/T031/T032/T033) instead of the SectionPage placeholder — each has
-  // its own dedicated test suite (TasksPage.test.tsx, NotesPage.test.tsx,
-  // Dashboard.test.tsx, TeamPage.test.tsx, InventoryPage.test.tsx,
-  // GuidelinesPage.test.tsx, AnnouncementsPage.test.tsx, this suite's
+  // /announcements, and /recipes render real feature pages (T008/T012/T018/
+  // T026/T028/T031/T032/T033/T036) instead of the SectionPage placeholder —
+  // each has its own dedicated test suite (TasksPage.test.tsx,
+  // NotesPage.test.tsx, Dashboard.test.tsx, TeamPage.test.tsx,
+  // InventoryPage.test.tsx, GuidelinesPage.test.tsx,
+  // AnnouncementsPage.test.tsx, RecipesPage.test.tsx, this suite's
   // "real Settings page" test below).
   const placeholderItems = NAV_ITEMS.filter(
     (item) =>
@@ -54,6 +55,7 @@ describe('App routing', () => {
         '/inventory',
         '/guidelines',
         '/announcements',
+        '/recipes',
       ].includes(item.path),
   );
 
@@ -119,6 +121,17 @@ describe('App routing', () => {
     );
     renderAt('/announcements');
     expect(screen.getByRole('heading', { name: 'Announcements' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('T036: renders the real Recipes page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+    );
+    renderAt('/recipes');
+    expect(screen.getByRole('heading', { name: 'Recipes' })).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 

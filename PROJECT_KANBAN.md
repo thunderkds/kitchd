@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-19
+**Last updated**: 2026-07-20
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,12 +10,18 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
+- [ ] **T038** — untitled | Supervisor | C0 | Risk: Low | P1
 
 ### In Progress
 
 ### Ready for Review
 
 ### Done
+- [x] **T038** — Fix `npm run build` (`tsc -b`) CI failure — 3 independent test-fixture typing gaps (Task.sourceRecipeId/sourceGuidelineId missing from 2 test helpers since T035, querySelector generic, tuple-filter predicate), root cause diagnosed during T037 review | Supervisor | C0 | Risk: Low | P1 | `npm run build` clean | 156/156 tests green | Started: 2026-07-20 | Done: 2026-07-20
+- [x] **T037** — Convert all create/edit forms (Recipes, Guidelines, Inventory, Announcements, Notes, Team) to the shared Dialog modal pattern, matching Tasks' CreateTaskDialog | frontend-developer | C3 | Risk: Medium | P1 | code-review 0 P0/P1, 2 P2 informational (pre-existing tsc -b gap flagged, not introduced) | 156/156 frontend tests green | live browser verify passed | Started: 2026-07-20 | Done: 2026-07-20
+- [x] **T036** — Recipes Page (list + detail + create/edit, cost roll-up) — closes the last of the T031/T032/T033/T035-class backend-done/frontend-missing gaps | frontend-developer | C2 | Risk: Low | P1 | code-review 0 P0/P1, 2 P2 advisory (resolved via live verify) | 154/154 frontend tests green | live browser + curl verify passed | Started: 2026-07-20 | Done: 2026-07-20
+- [x] **T035** — Task creation UI + Recipe/Guideline/Inventory relation visibility (3-mode Create Task dialog: Plain/From Recipe/From Guideline; source-recipe/guideline titles + ingredient names now visible) | frontend-developer | C2 | Risk: Low | P1 | code-review 0 P0/P1, 1 P2 fixed (list view was missing source-title line) | 143/143 frontend tests green post-fix | live browser verify passed | Started: 2026-07-20 | Done: 2026-07-20
+- [x] **T034** — Global pointer-cursor rule for all clickable elements (buttons, role=button, summary) — bugfix follow-up to T030, closes native-`<button>`-has-no-default-pointer-cursor gap | frontend-developer | C0 | Risk: Low | P2 | code-review 0 P0, 1 P1 fixed (test coverage gap) | 137/137 frontend tests green post-fix | Started: 2026-07-20 | Done: 2026-07-20
 - [x] **T001** — Monorepo scaffold + auth skeleton (JWT signup/login, org creation) | common-infrastructure | C2 | Risk: Med | P0 | Started: 2026-07-02 | Done: 2026-07-03
 - [x] **T002** — Org/Kitchen/User invite flow + RBAC guard (RolesGuard + @Roles) | backend-developer | C2 | Risk: High | P0 | Started: 2026-07-03 | Done: 2026-07-03
 - [x] **T003** — Base layout: sidebar/topbar, empty-state pages | frontend-developer | C1 | Risk: Low | P0 | Started: 2026-07-03 | Done: 2026-07-03
