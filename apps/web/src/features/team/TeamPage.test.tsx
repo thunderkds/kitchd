@@ -168,9 +168,14 @@ describe('TeamPage', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByLabelText('Invite email')).toBeInTheDocument());
-    await user.type(screen.getByLabelText('Invite email'), 'new@example.com');
-    await user.click(screen.getByRole('button', { name: 'Send Invite' }));
+    // Invite form is not inline — it opens in a modal via "Invite Member".
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Invite Member' })).toBeInTheDocument());
+    expect(screen.queryByLabelText('Invite email')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Invite Member' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Invite email'), 'new@example.com');
+    await user.click(within(dialog).getByRole('button', { name: 'Send Invite' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -178,6 +183,8 @@ describe('TeamPage', () => {
         expect.objectContaining({ method: 'POST' }),
       ),
     );
+    // Modal closes; success message and the new pending invite render on the page.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Invite sent to new@example.com')).toBeInTheDocument();
     expect(screen.getByTestId('invite-i2')).toBeInTheDocument();
   });

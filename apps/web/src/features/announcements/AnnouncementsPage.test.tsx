@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { AnnouncementsPage } from './AnnouncementsPage';
 import type { Announcement } from './types';
 import { setUser } from '../../routes/auth';
@@ -77,27 +77,35 @@ describe('AnnouncementsPage', () => {
     expect(screen.getByText('Second')).toBeInTheDocument();
   });
 
-  it('shows the New Announcement form for an Owner', async () => {
+  it('shows a New Announcement button for an Owner that opens the broadcast modal', async () => {
     setOwner();
     vi.spyOn(api, 'listAnnouncements').mockResolvedValue([]);
 
     render(<AnnouncementsPage />);
 
     await waitFor(() => expect(screen.getByTestId('announcements-empty')).toBeInTheDocument());
-    expect(screen.getByTestId('announcement-broadcast-form')).toBeInTheDocument();
+    // Form is not inline — it only appears in a modal after clicking the button.
+    expect(screen.queryByTestId('announcement-broadcast-form')).not.toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'New Announcement' });
+    expect(button).toBeInTheDocument();
+
+    const user = (await import('@testing-library/user-event')).default.setup();
+    await user.click(button);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByTestId('announcement-broadcast-form')).toBeInTheDocument();
   });
 
-  it('shows the New Announcement form for a Chef', async () => {
+  it('shows a New Announcement button for a Chef', async () => {
     setChef();
     vi.spyOn(api, 'listAnnouncements').mockResolvedValue([]);
 
     render(<AnnouncementsPage />);
 
     await waitFor(() => expect(screen.getByTestId('announcements-empty')).toBeInTheDocument());
-    expect(screen.getByTestId('announcement-broadcast-form')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New Announcement' })).toBeInTheDocument();
   });
 
-  it('does NOT show the New Announcement form for an Admin and never calls createAnnouncement', async () => {
+  it('does NOT show the New Announcement button for an Admin and never calls createAnnouncement', async () => {
     setAdmin();
     const listSpy = vi.spyOn(api, 'listAnnouncements').mockResolvedValue([makeAnnouncement()]);
     const createSpy = vi.spyOn(api, 'createAnnouncement');
@@ -106,21 +114,23 @@ describe('AnnouncementsPage', () => {
 
     await waitFor(() => expect(listSpy).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByText('Deep clean Friday')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'New Announcement' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('announcement-broadcast-form')).not.toBeInTheDocument();
     expect(createSpy).not.toHaveBeenCalled();
   });
 
-  it('does NOT show the New Announcement form for Staff', async () => {
+  it('does NOT show the New Announcement button for Staff', async () => {
     setStaff();
     vi.spyOn(api, 'listAnnouncements').mockResolvedValue([]);
 
     render(<AnnouncementsPage />);
 
     await waitFor(() => expect(screen.getByTestId('announcements-empty')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'New Announcement' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('announcement-broadcast-form')).not.toBeInTheDocument();
   });
 
-  it('broadcasts a new announcement and updates the list without a full reload', async () => {
+  it('broadcasts a new announcement from the modal and updates the list without a full reload', async () => {
     setOwner();
     vi.spyOn(api, 'listAnnouncements').mockResolvedValue([]);
     const created = makeAnnouncement({ id: 'ann-new', title: 'New one', body: 'Body text' });
@@ -130,13 +140,17 @@ describe('AnnouncementsPage', () => {
 
     await waitFor(() => expect(screen.getByTestId('announcements-empty')).toBeInTheDocument());
 
-    await screen.getByLabelText(/title/i).focus();
     const user = (await import('@testing-library/user-event')).default.setup();
-    await user.type(screen.getByLabelText(/title/i), 'New one');
-    await user.type(screen.getByLabelText(/message/i), 'Body text');
-    await user.click(screen.getByRole('button', { name: /broadcast/i }));
+    await user.click(screen.getByRole('button', { name: 'New Announcement' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText(/title/i), 'New one');
+    await user.type(within(dialog).getByLabelText(/message/i), 'Body text');
+    await user.click(within(dialog).getByRole('button', { name: /broadcast/i }));
 
     await waitFor(() => expect(createSpy).toHaveBeenCalledWith({ title: 'New one', body: 'Body text' }));
+    // Modal closes on success and the new announcement appears in the feed.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await waitFor(() => expect(screen.getByText('New one')).toBeInTheDocument());
   });
 

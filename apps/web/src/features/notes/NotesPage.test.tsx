@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { NotesPage } from './NotesPage';
 import type { Note } from './types';
@@ -80,6 +80,56 @@ describe('NotesPage', () => {
         expect.anything(),
       ),
     );
+  });
+
+  it('New Note button opens a modal; creating a note POSTs /notes and prepends it', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeNote({ id: 'n-new', body: 'Fresh idea' }),
+      });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <NotesPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    // Create form is not inline — it only appears in a modal after clicking.
+    expect(screen.queryByLabelText('Note body')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'New Note' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Note body'), 'Fresh idea');
+    await user.click(within(dialog).getByRole('button', { name: 'Add Note' }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        expect.stringContaining('/notes'),
+        expect.objectContaining({ method: 'POST' }),
+      ),
+    );
+    // Modal closes on success and the new note appears in the list.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(await screen.findByText('Fresh idea')).toBeInTheDocument();
+  });
+
+  it('the New Note button is unconditionally visible (Notes has no client-side RBAC gate)', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [] });
+
+    render(
+      <MemoryRouter>
+        <NotesPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument();
   });
 
   it('clicking Pin PATCHes the note to pinned=true', async () => {

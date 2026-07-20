@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { RecipesPage } from './RecipesPage';
 import type { Recipe } from './types';
@@ -140,11 +140,13 @@ describe('RecipesPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'New Recipe' })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'New Recipe' }));
 
-    await user.type(screen.getByLabelText('Recipe name'), 'Pasta');
-    await user.type(screen.getByLabelText('Recipe steps'), 'Boil water');
-    await user.selectOptions(screen.getByLabelText('Ingredient 1'), 'i1');
-    await user.type(screen.getByLabelText('Quantity 1'), '1');
-    await user.click(screen.getByRole('button', { name: 'Create Recipe' }));
+    // "New Recipe" opens a modal (shared Dialog), not a full-page-replace form.
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Recipe name'), 'Pasta');
+    await user.type(within(dialog).getByLabelText('Recipe steps'), 'Boil water');
+    await user.selectOptions(within(dialog).getByLabelText('Ingredient 1'), 'i1');
+    await user.type(within(dialog).getByLabelText('Quantity 1'), '1');
+    await user.click(within(dialog).getByRole('button', { name: 'Create Recipe' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -152,6 +154,7 @@ describe('RecipesPage', () => {
         expect.objectContaining({ method: 'POST' }),
       ),
     );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Pasta')).toBeInTheDocument();
   });
 
@@ -181,10 +184,13 @@ describe('RecipesPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
-    const servingsInput = screen.getByLabelText('Recipe servings') as HTMLInputElement;
+    // Edit opens a pre-filled modal rather than replacing the page.
+    const dialog = await screen.findByRole('dialog');
+    const servingsInput = within(dialog).getByLabelText('Recipe servings') as HTMLInputElement;
+    expect(servingsInput.value).toBe('4');
     await user.clear(servingsInput);
     await user.type(servingsInput, '8');
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -192,6 +198,7 @@ describe('RecipesPage', () => {
         expect.objectContaining({ method: 'PATCH' }),
       ),
     );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText(/8 servings/)).toBeInTheDocument();
   });
 
