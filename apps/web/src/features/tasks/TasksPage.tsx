@@ -1,19 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { getUser } from '../../routes/auth';
+import type { UserRole } from '../../routes/auth';
+// T035 — reused to resolve ingredient names for CompleteTaskDialog (FR-008
+// human-reviewable deduction confirmation); no new backend endpoint needed.
+import { listIngredients } from '../inventory/api';
 import {
   confirmTaskCompletion,
+  listGuidelinesLite,
+  listRecipesLite,
   listTasks,
   previewTaskCompletion,
   updateTaskChecklist,
   updateTaskStatus,
 } from './api';
 import { CompleteTaskDialog } from './CompleteTaskDialog/CompleteTaskDialog';
+import { CreateTaskDialog } from './CreateTaskDialog';
 import { KanbanBoard } from './KanbanBoard';
 import { ListView } from './ListView';
 import { ViewToggle } from './ViewToggle';
-import type { CompletionPreview, Task, TaskStatus } from './types';
+import type { CompletionPreview, GuidelineLite, RecipeLite, Task, TaskStatus } from './types';
 
 const UNASSIGNED = 'unassigned';
+
+// T035 — same RBAC shape as Task PATCH mutations (`WRITE_ROLES` in
+// tasks.service.ts) and identical to Inventory/Guidelines' create gate.
+const WRITE_ROLES: UserRole[] = ['OWNER', 'ADMIN', 'CHEF'];
 
 /**
  * Kanban and list views render the same fetched Task[] (AC3) — only the
@@ -22,9 +34,20 @@ const UNASSIGNED = 'unassigned';
  * sync across views.
  */
 export function TasksPage() {
+  const caller = getUser();
+  const canCreate = !!caller && WRITE_ROLES.includes(caller.role);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // T035 — id+title lookups to resolve a task's "From: <title>" line.
+  // Only WRITE_ROLES callers can create tasks, but any caller may view an
+  // already-generated task's source, so these are fetched unconditionally.
+  const [recipes, setRecipes] = useState<RecipeLite[]>([]);
+  const [guidelines, setGuidelines] = useState<GuidelineLite[]>([]);
+  const [ingredientNameById, setIngredientNameById] = useState<Record<string, string>>({});
 
   // T011 — pending recipe-linked completion awaiting user confirm/cancel.
   const [pendingCompletion, setPendingCompletion] = useState<{
@@ -47,7 +70,31 @@ export function TasksPage() {
 
   useEffect(() => {
     refresh();
+    // Best-effort source-title lookups — a failure here must not block the
+    // task list itself, so failures are swallowed (falls back to no "From:"
+    // line rather than an error banner over unrelated data).
+    listRecipesLite()
+      .then(setRecipes)
+      .catch(() => {});
+    listGuidelinesLite()
+      .then(setGuidelines)
+      .catch(() => {});
+    listIngredients()
+      .then((data) =>
+        setIngredientNameById(Object.fromEntries(data.map((i) => [i.id, i.name]))),
+      )
+      .catch(() => {});
   }, []);
+
+  const sourceTitleForTask = (task: Task): string | null => {
+    if (task.sourceRecipeId) {
+      return recipes.find((r) => r.id === task.sourceRecipeId)?.name ?? null;
+    }
+    if (task.sourceGuidelineId) {
+      return guidelines.find((g) => g.id === task.sourceGuidelineId)?.title ?? null;
+    }
+    return null;
+  };
 
   const setView = (next: 'kanban' | 'list') => {
     const params = new URLSearchParams(searchParams);
@@ -148,6 +195,15 @@ export function TasksPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h1 className="text-xl font-semibold">Tasks</h1>
         <div className="flex items-center gap-3">
+          {canCreate && (
+            <button
+              type="button"
+              className="px-3 py-2 text-sm rounded bg-accent text-white"
+              onClick={() => setShowCreateDialog(true)}
+            >
+              New Task
+            </button>
+          )}
           <select
             className="border rounded px-2 py-2 text-sm"
             value={assigneeFilter}
@@ -173,9 +229,24 @@ export function TasksPage() {
           No tasks yet. Assigned tasks will show up here.
         </p>
       ) : view === 'kanban' ? (
-        <KanbanBoard tasks={filteredTasks} onMove={handleMove} />
+        <KanbanBoard
+          tasks={filteredTasks}
+          onMove={handleMove}
+          sourceTitleForTask={sourceTitleForTask}
+        />
       ) : (
-        <ListView tasks={filteredTasks} onToggleChecklistItem={handleToggleChecklistItem} />
+        <ListView
+          tasks={filteredTasks}
+          onToggleChecklistItem={handleToggleChecklistItem}
+          sourceTitleForTask={sourceTitleForTask}
+        />
+      )}
+
+      {showCreateDialog && canCreate && (
+        <CreateTaskDialog
+          onCreated={(created) => setTasks((prev) => [created, ...prev])}
+          onClose={() => setShowCreateDialog(false)}
+        />
       )}
 
       {pendingCompletion && (
@@ -184,6 +255,7 @@ export function TasksPage() {
           loading={confirmLoading}
           onConfirm={handleConfirmCompletion}
           onCancel={handleCancelCompletion}
+          ingredientNameById={ingredientNameById}
         />
       )}
     </div>

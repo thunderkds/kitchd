@@ -7,17 +7,24 @@ import type { CompletionPreview } from '../types';
  * handlers (this component performs no network I/O itself). Negative
  * stock is never blocked here — it is flagged with a warning per the
  * Edge Case Checklist ("allow but flag, don't silently block").
+ *
+ * T035 — `ingredientNameById` resolves each deduction's ingredientId to a
+ * human name (fetched via GET /ingredients by the caller). Falls back to
+ * the raw id if a name can't be resolved (e.g. deleted ingredient), per
+ * the Edge Case Checklist — never crash on a lookup miss.
  */
 export function CompleteTaskDialog({
   preview,
   loading,
   onConfirm,
   onCancel,
+  ingredientNameById = {},
 }: {
   preview: CompletionPreview;
   loading: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  ingredientNameById?: Record<string, string>;
 }) {
   return (
     <div
@@ -48,7 +55,7 @@ export function CompleteTaskDialog({
               className="flex items-center justify-between px-3 py-2 text-sm"
               data-testid={`deduction-row-${d.ingredientId}`}
             >
-              <span>{d.ingredientId.slice(0, 8)}</span>
+              <span>{ingredientNameById[d.ingredientId] ?? d.ingredientId.slice(0, 8)}</span>
               <span className={d.wouldGoNegative ? 'text-warning font-medium' : ''}>
                 -{d.deductQty} (→ {d.resultingStock})
               </span>

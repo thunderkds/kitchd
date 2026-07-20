@@ -9,9 +9,14 @@ import { TASK_STATUSES, type Task, type TaskStatus } from './types';
 export function TaskCard({
   task,
   onMove,
+  sourceTitle,
 }: {
   task: Task;
   onMove: (taskId: string, status: TaskStatus) => void;
+  // T035 — resolved client-side by the caller (TasksPage) from the
+  // fetched recipes/guidelines lite lists; undefined/null when the task
+  // has no source or the source title couldn't be resolved.
+  sourceTitle?: string | null;
 }) {
   const otherStatuses = TASK_STATUSES.filter((s) => s.value !== task.status);
 
@@ -26,6 +31,9 @@ export function TaskCard({
       <p className="text-xs text-muted mt-1">
         {task.assigneeId ? `Assigned: ${task.assigneeId.slice(0, 8)}` : 'Unassigned'}
       </p>
+      {sourceTitle && (
+        <p className="text-xs text-muted mt-1 break-words">From: {sourceTitle}</p>
+      )}
       <div className="flex flex-wrap gap-1 mt-2">
         {otherStatuses.map((s) => (
           <button

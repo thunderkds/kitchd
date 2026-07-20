@@ -14,8 +14,32 @@ export interface Task {
   assigneeId: string | null;
   dueAt: string | null;
   checklistItems: ChecklistItem[];
+  // T035 — surfaced so the UI can show "From: <Recipe/Guideline title>";
+  // both already existed on the backend model (T009) but were dropped by
+  // the frontend type. Mutually exclusive, both null for a plain task.
+  sourceRecipeId: string | null;
+  sourceGuidelineId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// T035 — lightweight id+title shapes for the Recipe/Guideline pickers in
+// CreateTaskDialog. Intentionally not the full Recipe/Guideline types
+// (no dedicated Recipes page exists yet — out of scope, see TASK_GUIDE).
+export interface RecipeLite {
+  id: string;
+  name: string;
+}
+
+export interface GuidelineLite {
+  id: string;
+  title: string;
+}
+
+export interface CreateTaskInput {
+  title: string;
+  assigneeId?: string;
+  dueAt?: string;
 }
 
 export const TASK_STATUSES: { value: TaskStatus; label: string }[] = [

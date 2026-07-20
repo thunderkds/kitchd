@@ -4,6 +4,9 @@ import type {
   ChecklistItem,
   CompletionPreview,
   CompletionResult,
+  CreateTaskInput,
+  GuidelineLite,
+  RecipeLite,
   Task,
   TaskStatus,
 } from './types';
@@ -40,6 +43,38 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function listTasks(): Promise<Task[]> {
   return request<Task[]>('/tasks');
+}
+
+// T035 — plain create (AC2) and the two generate-from-source modes (AC3/AC4).
+// All three endpoints already existed server-side (T008/T009); this is the
+// first frontend consumer.
+export function createTask(input: CreateTaskInput): Promise<Task> {
+  return request<Task>('/tasks', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function generateTaskFromRecipe(recipeId: string): Promise<Task> {
+  return request<Task>(`/tasks/generate-from-recipe/recipe/${recipeId}`, {
+    method: 'POST',
+  });
+}
+
+export function generateTaskFromGuideline(guidelineId: string): Promise<Task> {
+  return request<Task>(`/tasks/generate-from-recipe/guideline/${guidelineId}`, {
+    method: 'POST',
+  });
+}
+
+// Lightweight id+title lists for the Create Task pickers — reuses the
+// existing /recipes and /guidelines list endpoints (no new backend routes).
+export function listRecipesLite(): Promise<RecipeLite[]> {
+  return request<RecipeLite[]>('/recipes');
+}
+
+export function listGuidelinesLite(): Promise<GuidelineLite[]> {
+  return request<GuidelineLite[]>('/guidelines');
 }
 
 export function updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {

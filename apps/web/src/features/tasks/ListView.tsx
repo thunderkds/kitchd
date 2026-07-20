@@ -12,9 +12,13 @@ const STATUS_LABEL = Object.fromEntries(
 export function ListView({
   tasks,
   onToggleChecklistItem,
+  sourceTitleForTask,
 }: {
   tasks: Task[];
   onToggleChecklistItem: (taskId: string, itemId: string, done: boolean) => void;
+  // T035 — same "From: <title>" resolution as TaskCard, so kanban and list
+  // views show identical provenance, not just identical task fields.
+  sourceTitleForTask?: (task: Task) => string | null | undefined;
 }) {
   return (
     <ul className="flex flex-col gap-2" data-testid="task-list-view">
@@ -29,6 +33,11 @@ export function ListView({
           <p className="text-xs text-muted mt-1">
             {task.assigneeId ? `Assigned: ${task.assigneeId.slice(0, 8)}` : 'Unassigned'}
           </p>
+          {sourceTitleForTask?.(task) && (
+            <p className="text-xs text-muted mt-1 break-words">
+              From: {sourceTitleForTask(task)}
+            </p>
+          )}
           {task.checklistItems.length > 0 && (
             <ul className="mt-2 flex flex-col gap-1">
               {task.checklistItems.map((item) => (
