@@ -47,25 +47,22 @@ export function CreateTaskDialog({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch pickers lazily, only when their mode is first selected — avoids
-  // an unnecessary network call for the (default) Plain mode.
+  // Fetch both pickers once on mount, in the background, regardless of
+  // which mode is active — not lazily per-tab-click. A lazy per-click fetch
+  // briefly rendered a short "Loading…" line before swapping to the taller
+  // select dropdown; since the Dialog overlay is `flex items-center
+  // justify-center`, that height change re-centered the whole modal on the
+  // *first* click of "From Recipe"/"From Guideline", reading as a flicker.
+  // Prefetching both up front means the swap never happens on first click.
   useEffect(() => {
-    if (mode === 'recipe' && recipes.length === 0 && !pickerLoading) {
-      setPickerLoading(true);
-      listRecipesLite()
-        .then(setRecipes)
-        .catch((err) => setPickerError(err instanceof Error ? err.message : 'Failed to load recipes'))
-        .finally(() => setPickerLoading(false));
-    }
-    if (mode === 'guideline' && guidelines.length === 0 && !pickerLoading) {
-      setPickerLoading(true);
-      listGuidelinesLite()
-        .then(setGuidelines)
-        .catch((err) => setPickerError(err instanceof Error ? err.message : 'Failed to load guidelines'))
-        .finally(() => setPickerLoading(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+    setPickerLoading(true);
+    Promise.all([
+      listRecipesLite().then(setRecipes),
+      listGuidelinesLite().then(setGuidelines),
+    ])
+      .catch((err) => setPickerError(err instanceof Error ? err.message : 'Failed to load recipes/guidelines'))
+      .finally(() => setPickerLoading(false));
+  }, []);
 
   const handleSubmit = async () => {
     setSubmitError(null);
