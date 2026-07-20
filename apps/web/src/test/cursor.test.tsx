@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 
 // T034 — cursor pointer regression test for all clickable elements.
@@ -6,13 +6,38 @@ import { render } from '@testing-library/react';
 // cursor: pointer to indicate interactivity. Disabled buttons/buttons with
 // aria-disabled="true" must show cursor: not-allowed.
 //
-// Note: jsdom's getComputedStyle() has limited CSS support and may not
-// reflect computed cursor values from a global stylesheet rule reliably.
-// This test uses assertions on element presence and class inspection as a
-// proxy — the true verification happens in the browser via easy-ui-mcp
-// visual regression checks in the Evidence table.
+// Vitest's default `css: false` test config mocks CSS imports rather than
+// injecting them into jsdom, so importing index.css directly would not
+// apply real styles here. Instead, the exact rule under test (mirrored from
+// index.css) is injected as a <style> tag per test — this verifies the
+// selector/declaration pair actually produces the intended computed cursor
+// value in jsdom, independent of the Tailwind build pipeline.
+
+const CURSOR_RULE = `
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+`;
 
 describe('Cursor pointer for interactive elements (T034)', () => {
+  let styleEl: HTMLStyleElement;
+
+  beforeEach(() => {
+    styleEl = document.createElement('style');
+    styleEl.textContent = CURSOR_RULE;
+    document.head.appendChild(styleEl);
+  });
+
+  afterEach(() => {
+    styleEl.remove();
+  });
+
   it('should render a button element (smoke test for cursor rule targeting)', () => {
     const { container } = render(
       <div>
@@ -73,24 +98,35 @@ describe('Cursor pointer for interactive elements (T034)', () => {
     expect(summary?.textContent).toBe('Expand me');
   });
 
-  // Note on getComputedStyle verification:
-  // jsdom's CSS engine (jsdom v23+) has improved support for complex selectors
-  // like :not() and :disabled, but computed cursor styles from global stylesheets
-  // may not reflect accurately in all jsdom versions. The entries below are
-  // commented out to avoid false failures, but the CSS rule itself is correct
-  // and verified visually via browser testing (easy-ui-mcp visual regression
-  // and manual browser inspection). If jsdom ever fully supports computed
-  // styles for cursor, uncomment these.
-  //
-  // it('button element should have cursor: pointer computed', () => {
-  //   const { container } = render(<button>Click</button>);
-  //   const btn = container.querySelector('button') as HTMLButtonElement;
-  //   expect(getComputedStyle(btn).cursor).toBe('pointer');
-  // });
-  //
-  // it('disabled button should have cursor: not-allowed computed', () => {
-  //   const { container } = render(<button disabled>Disabled</button>);
-  //   const btn = container.querySelector('button[disabled]') as HTMLButtonElement;
-  //   expect(getComputedStyle(btn).cursor).toBe('not-allowed');
-  // });
+  it('button element has cursor: pointer computed', () => {
+    const { container } = render(<button>Click</button>);
+    const btn = container.querySelector('button') as HTMLButtonElement;
+    expect(getComputedStyle(btn).cursor).toBe('pointer');
+  });
+
+  it('disabled button has cursor: not-allowed computed', () => {
+    const { container } = render(<button disabled>Disabled</button>);
+    const btn = container.querySelector('button[disabled]') as HTMLButtonElement;
+    expect(getComputedStyle(btn).cursor).toBe('not-allowed');
+  });
+
+  it('role="button" element has cursor: pointer computed', () => {
+    const { container } = render(
+      <div role="button" tabIndex={0}>
+        Button-like div
+      </div>,
+    );
+    const div = container.querySelector('[role="button"]') as HTMLElement;
+    expect(getComputedStyle(div).cursor).toBe('pointer');
+  });
+
+  it('role="button" with aria-disabled="true" has cursor: not-allowed computed', () => {
+    const { container } = render(
+      <div role="button" aria-disabled="true" tabIndex={-1}>
+        Disabled button-like div
+      </div>,
+    );
+    const div = container.querySelector('[role="button"]') as HTMLElement;
+    expect(getComputedStyle(div).cursor).toBe('not-allowed');
+  });
 });
