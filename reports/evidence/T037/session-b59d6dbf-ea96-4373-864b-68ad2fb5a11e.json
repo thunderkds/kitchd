@@ -1,0 +1,232 @@
+{
+  "id": "b59d6dbf-ea96-4373-864b-68ad2fb5a11e",
+  "target": "T037 modal consistency verify",
+  "status": "passed",
+  "startedAt": "2026-07-20T04:15:17.193Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-20T04:15:22.273Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-20T04:15:25.659Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:31.196Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "owner@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:33.962Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:37.271Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:40.252Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/inventory"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/inventory"
+    },
+    {
+      "timestamp": "2026-07-20T04:15:43.206Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Add Ingredient\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:46.384Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('[role=\"dialog\"]') !== null && document.body.textContent.includes('New Ingredient')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:49.289Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Cancel\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:51.922Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:56.000Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "(() => { document.querySelectorAll('button')[document.body.textContent.indexOf('Edit') >= 0 ? 0 : -1]; const btns = Array.from(document.querySelectorAll('button')).filter(b => b.textContent.trim() === 'Edit'); btns[0].click(); return true; })()"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:15:59.175Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "(() => { const dlg = document.querySelector('[role=\"dialog\"]'); if (!dlg) return false; const nameInput = document.querySelector('input[aria-label=\"Ingredient name\"]'); return dlg.textContent.includes('Edit Ingredient') && nameInput && nameInput.value.length > 0; })()"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:02.671Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Cancel\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:06.611Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/guidelines"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/guidelines"
+    },
+    {
+      "timestamp": "2026-07-20T04:16:10.104Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"New Guideline\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:13.008Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "(() => { const dlg = document.querySelector('[role=\"dialog\"]'); return dlg !== null && dlg.textContent.includes('New Guideline') && document.querySelector('nav') !== null; })()"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:18.601Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Cancel\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:22.533Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log out\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:25.026Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-20T04:16:27.684Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:38.442Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "staff@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:42.308Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:45.668Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:48.418Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/inventory"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/inventory"
+    },
+    {
+      "timestamp": "2026-07-20T04:16:51.125Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "!Array.from(document.querySelectorAll('button')).some(b => b.textContent.trim() === 'Add Ingredient' || b.textContent.trim() === 'Edit')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T04:16:57.229Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/notes"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/notes"
+    },
+    {
+      "timestamp": "2026-07-20T04:17:01.618Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "Array.from(document.querySelectorAll('button')).some(b => b.textContent.trim() === 'New Note')"
+      },
+      "ok": true
+    }
+  ],
+  "endedAt": "2026-07-20T04:17:04.641Z"
+}
