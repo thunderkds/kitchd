@@ -158,3 +158,28 @@ select.border,
 textarea.border {
   border-color: var(--knos-border-input);
 }
+
+/*
+ * Cursor pointer for all clickable/interactive elements (T034).
+ *
+ * Native <button>, <a>, and any element with role="button" should show
+ * cursor: pointer to indicate interactivity. Disabled buttons show
+ * cursor: not-allowed. This rule corrects a browser default where native
+ * <button> elements default to cursor: default (not pointer) — Tailwind v4's
+ * preflight has no override for this, leaving ~35 onClick handlers across
+ * the app invisible to users as clickable.
+ *
+ * Scoping: targets button/role=button elements and <summary> (a disclosure
+ * widget), all kitchen-scoped. Dialog overlay (T030) already has explicit
+ * cursor-pointer; this global rule covers the gap for all others.
+ */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
