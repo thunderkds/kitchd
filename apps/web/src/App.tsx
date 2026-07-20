@@ -10,6 +10,7 @@ import { NotesPage } from './features/notes/NotesPage';
 import { TeamPage } from './features/team/TeamPage';
 import { InventoryPage } from './features/inventory/InventoryPage';
 import { GuidelinesPage } from './features/guidelines/GuidelinesPage';
+import { RecipesPage } from './features/recipes/RecipesPage';
 import { AnnouncementsPage } from './features/announcements/AnnouncementsPage';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { SettingsPage } from './pages/Settings/SettingsPage';
@@ -53,6 +54,9 @@ function AppRoutes() {
             }
             if (item.path === '/guidelines') {
               return <Route key={item.path} path={item.path} element={<GuidelinesPage />} />;
+            }
+            if (item.path === '/recipes') {
+              return <Route key={item.path} path={item.path} element={<RecipesPage />} />;
             }
             if (item.path === '/announcements') {
               return <Route key={item.path} path={item.path} element={<AnnouncementsPage />} />;
