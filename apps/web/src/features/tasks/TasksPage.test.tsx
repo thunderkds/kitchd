@@ -402,12 +402,12 @@ describe('TasksPage', () => {
 
     // Negative case: blank title blocked, no POST /tasks call.
     const postCallsBefore = fetchMock.mock.calls.filter(
-      ([, init]: [string, RequestInit | undefined]) => init?.method === 'POST',
+      (call) => (call[1] as RequestInit | undefined)?.method === 'POST',
     ).length;
     await user.click(screen.getByRole('button', { name: 'Create Task' }));
     expect(screen.getByText('Title is required')).toBeInTheDocument();
     const postCallsAfter = fetchMock.mock.calls.filter(
-      ([, init]: [string, RequestInit | undefined]) => init?.method === 'POST',
+      (call) => (call[1] as RequestInit | undefined)?.method === 'POST',
     ).length;
     expect(postCallsAfter).toBe(postCallsBefore);
 

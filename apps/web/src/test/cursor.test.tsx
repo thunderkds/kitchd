@@ -55,7 +55,7 @@ describe('Cursor pointer for interactive elements (T034)', () => {
         <button disabled>Disabled</button>
       </div>,
     );
-    const btn = container.querySelector('button[disabled]');
+    const btn = container.querySelector<HTMLButtonElement>('button[disabled]');
     expect(btn).toBeInTheDocument();
     expect(btn?.disabled).toBe(true);
   });

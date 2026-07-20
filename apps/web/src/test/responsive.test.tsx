@@ -31,6 +31,8 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     assigneeId: null,
     dueAt: null,
     checklistItems: [],
+    sourceRecipeId: null,
+    sourceGuidelineId: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ...overrides,
