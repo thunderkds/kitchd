@@ -126,10 +126,13 @@ describe('InventoryPage', () => {
 
     await waitFor(() => expect(screen.getByText('No ingredients yet.')).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Add Ingredient' }));
-    await user.type(screen.getByLabelText('Ingredient name'), 'Sugar');
-    await user.type(screen.getByLabelText('Ingredient unit'), 'kg');
-    await user.type(screen.getByLabelText('Cost per unit'), '3');
-    await user.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+
+    // "Add Ingredient" opens a modal (shared Dialog), not an inline toggled form.
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Ingredient name'), 'Sugar');
+    await user.type(within(dialog).getByLabelText('Ingredient unit'), 'kg');
+    await user.type(within(dialog).getByLabelText('Cost per unit'), '3');
+    await user.click(within(dialog).getByRole('button', { name: 'Create Ingredient' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -137,10 +140,11 @@ describe('InventoryPage', () => {
         expect.objectContaining({ method: 'POST' }),
       ),
     );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByTestId('ingredient-ing-2')).toBeInTheDocument();
   });
 
-  it('AC4: editing an ingredient calls PATCH /ingredients/:id', async () => {
+  it('AC4: editing an ingredient opens a pre-filled modal and calls PATCH /ingredients/:id', async () => {
     setOwner();
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] })
@@ -161,7 +165,12 @@ describe('InventoryPage', () => {
 
     await waitFor(() => expect(screen.getByTestId('ingredient-ing-1')).toBeInTheDocument());
     await user.click(within(screen.getByTestId('ingredient-ing-1')).getByRole('button', { name: 'Edit' }));
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    // Row "Edit" opens a modal pre-filled with that row's values, not an inline
+    // row-edit.
+    const dialog = await screen.findByRole('dialog');
+    expect((within(dialog).getByLabelText('Ingredient name') as HTMLInputElement).value).toBe('Flour');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenLastCalledWith(
@@ -169,6 +178,7 @@ describe('InventoryPage', () => {
         expect.objectContaining({ method: 'PATCH' }),
       ),
     );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('AC5: recording a stock receipt calls POST /ingredients/:id/stock/receive', async () => {

@@ -13,6 +13,12 @@ interface RecipeFormProps {
   ingredients: Ingredient[];
   onSubmit: (input: RecipeInput) => Promise<void>;
   onCancel: () => void;
+  /**
+   * T037 — when rendered inside the shared `Dialog` modal, drop the form's
+   * own card chrome (border/padding/max-width) since the Dialog already
+   * provides the surface. Defaults to the standalone card look.
+   */
+  bare?: boolean;
 }
 
 function toSteps(stepsText: string): string[] {
@@ -35,7 +41,7 @@ function initialRows(recipe?: Recipe | null): IngredientRow[] {
  * `MinLength(1)` on name, `ArrayMinSize(1)` on ingredients — a submit that
  * fails either check makes no network call (Acceptance Criterion 7).
  */
-export function RecipeForm({ mode, initial, ingredients, onSubmit, onCancel }: RecipeFormProps) {
+export function RecipeForm({ mode, initial, ingredients, onSubmit, onCancel, bare = false }: RecipeFormProps) {
   const [name, setName] = useState(initial?.name ?? '');
   const [servingsText, setServingsText] = useState(initial?.servings != null ? String(initial.servings) : '');
   const [stepsText, setStepsText] = useState(initial?.steps.join('\n') ?? '');
@@ -82,7 +88,7 @@ export function RecipeForm({ mode, initial, ingredients, onSubmit, onCancel }: R
   };
 
   return (
-    <div className="border rounded p-4 flex flex-col gap-3 max-w-xl">
+    <div className={bare ? 'flex flex-col gap-3' : 'border rounded p-4 flex flex-col gap-3 max-w-xl'}>
       {error && (
         <p className="text-danger text-sm" role="alert">
           {error}

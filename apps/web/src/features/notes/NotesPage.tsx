@@ -1,20 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createNote, deleteNote, listNotes, updateNote } from './api';
+import { Dialog } from '../../components/Dialog/Dialog';
 import { LinkedEntityBadge } from './LinkedEntityBadge';
 import type { Note, NoteScope } from './types';
 
 /**
- * Notes list + inline editor. My Notes (author-scoped) vs Team Notes
- * (all Notes in the Kitchen) is a server-side `scope` query param, not
- * a client-side filter — the same fetched-once pattern used by
+ * Notes list + create modal (T037 modal conversion). My Notes (author-scoped)
+ * vs Team Notes (all Notes in the Kitchen) is a server-side `scope` query
+ * param, not a client-side filter — the same fetched-once pattern used by
  * Tasks' view/assignee toggle (see features/tasks/TasksPage.tsx).
+ *
+ * Notes intentionally has NO client-side RBAC gate on note creation — every
+ * role (including Viewer) may author a note; the backend is the sole authority
+ * (it does not 403 note POSTs). So the "New Note" button is unconditionally
+ * visible, matching the prior always-inline create form's visibility exactly.
  */
 export function NotesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [notes, setNotes] = useState<Note[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [tagQuery, setTagQuery] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
   const [newTags, setNewTags] = useState('');
@@ -41,6 +48,20 @@ export function NotesPage() {
     setSearchParams(params);
   };
 
+  const openForm = () => {
+    setNewTitle('');
+    setNewBody('');
+    setNewTags('');
+    setFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setFormOpen(false);
+    setNewTitle('');
+    setNewBody('');
+    setNewTags('');
+  };
+
   const handleCreate = async () => {
     if (!newBody.trim()) return;
     const tags = newTags
@@ -54,9 +75,7 @@ export function NotesPage() {
         tags,
       });
       setNotes((prev) => [created, ...prev]);
-      setNewTitle('');
-      setNewBody('');
-      setNewTags('');
+      closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create note');
     }
@@ -116,41 +135,64 @@ export function NotesPage() {
               Team Notes
             </button>
           </div>
+          <button
+            type="button"
+            className="px-3 py-2 text-sm rounded bg-accent text-white"
+            onClick={openForm}
+          >
+            New Note
+          </button>
         </div>
       </div>
 
       {error && <p className="text-danger text-sm mb-3">{error}</p>}
 
-      <div className="border rounded p-4 mb-6 flex flex-col gap-2 max-w-xl">
-        <input
-          className="border rounded px-2 py-2 text-sm"
-          placeholder="Title (optional)"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          aria-label="Note title"
-        />
-        <textarea
-          className="border rounded px-2 py-2 text-sm"
-          placeholder="Write a note..."
-          value={newBody}
-          onChange={(e) => setNewBody(e.target.value)}
-          aria-label="Note body"
-        />
-        <input
-          className="border rounded px-2 py-2 text-sm"
-          placeholder="Tags, comma separated (e.g. #recipe-idea)"
-          value={newTags}
-          onChange={(e) => setNewTags(e.target.value)}
-          aria-label="Note tags"
-        />
-        <button
-          type="button"
-          className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
-          onClick={handleCreate}
-        >
-          Add Note
-        </button>
-      </div>
+      {formOpen && (
+        <Dialog titleId="note-form-dialog-title" onClose={closeForm}>
+          <h2 id="note-form-dialog-title" className="text-lg font-semibold mb-4">
+            New Note
+          </h2>
+          <div className="flex flex-col gap-2">
+            <input
+              className="border rounded px-2 py-2 text-sm"
+              placeholder="Title (optional)"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              aria-label="Note title"
+            />
+            <textarea
+              className="border rounded px-2 py-2 text-sm"
+              placeholder="Write a note..."
+              value={newBody}
+              onChange={(e) => setNewBody(e.target.value)}
+              aria-label="Note body"
+            />
+            <input
+              className="border rounded px-2 py-2 text-sm"
+              placeholder="Tags, comma separated (e.g. #recipe-idea)"
+              value={newTags}
+              onChange={(e) => setNewTags(e.target.value)}
+              aria-label="Note tags"
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-5">
+            <button
+              type="button"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded border bg-surface hover:opacity-80"
+              onClick={closeForm}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90"
+              onClick={handleCreate}
+            >
+              Add Note
+            </button>
+          </div>
+        </Dialog>
+      )}
 
       {notes.length === 0 ? (
         <p className="text-muted text-sm">No notes yet.</p>

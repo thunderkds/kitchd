@@ -2,22 +2,27 @@ import { useEffect, useState } from 'react';
 import { createRecipe, getRecipe, listRecipes, updateRecipe } from './api';
 import { listIngredients } from '../inventory/api';
 import { getUser } from '../../routes/auth';
+import { Dialog } from '../../components/Dialog/Dialog';
 import { RecipeForm } from './RecipeForm';
 import type { Ingredient } from '../inventory/types';
 import type { Recipe, RecipeInput } from './types';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'];
 
-type ViewMode = 'list' | 'detail' | 'create' | 'edit';
+type ViewMode = 'list' | 'detail';
+type FormMode = 'create' | 'edit';
 
 /**
- * Recipes page (T036). Consumes T005's `/recipes` endpoints.
+ * Recipes page (T036, modal-converted in T037). Consumes T005's `/recipes`
+ * endpoints.
  *
  * GET /recipes and GET /recipes/:id are open to any authenticated role
  * (view-only for Staff/Viewer). POST/PATCH are Owner/Admin/Chef-only
  * server-side (`WRITE_ROLES` in recipes.controller.ts) — this page mirrors
  * that by never attempting a write call for a non-writer caller, not just
  * hiding the controls (T028 pattern, same as GuidelinesPage/InventoryPage).
+ * Create/edit now open the shared `Dialog` modal (wrapping the existing
+ * RecipeForm) instead of replacing the page.
  */
 export function RecipesPage() {
   const caller = getUser();
@@ -27,6 +32,8 @@ export function RecipesPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<ViewMode>('list');
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
+  const [editing, setEditing] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,14 +75,19 @@ export function RecipesPage() {
 
   const openCreate = () => {
     if (!canWrite) return;
-    setSelected(null);
-    setMode('create');
+    setEditing(null);
+    setFormMode('create');
   };
 
   const openEdit = (recipe: Recipe) => {
     if (!canWrite) return;
-    setSelected(recipe);
-    setMode('edit');
+    setEditing(recipe);
+    setFormMode('edit');
+  };
+
+  const closeForm = () => {
+    setFormMode(null);
+    setEditing(null);
   };
 
   const backToList = () => {
@@ -87,15 +99,15 @@ export function RecipesPage() {
   const handleCreate = async (input: RecipeInput) => {
     const created = await createRecipe(input);
     setRecipes((prev) => [created, ...prev]);
-    backToList();
+    closeForm();
   };
 
   const handleEdit = async (input: RecipeInput) => {
-    if (!selected) return;
-    const updated = await updateRecipe(selected.id, input);
+    if (!editing) return;
+    const updated = await updateRecipe(editing.id, input);
     setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-    setSelected(updated);
-    setMode('detail');
+    setSelected((prev) => (prev && prev.id === updated.id ? updated : prev));
+    closeForm();
   };
 
   if (loading) {
@@ -107,22 +119,22 @@ export function RecipesPage() {
     );
   }
 
-  if ((mode === 'create' || mode === 'edit') && canWrite) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h1 className="text-xl font-semibold">{mode === 'edit' ? 'Edit Recipe' : 'New Recipe'}</h1>
-        </div>
+  const formDialog =
+    canWrite && formMode ? (
+      <Dialog titleId="recipe-form-dialog-title" onClose={closeForm}>
+        <h2 id="recipe-form-dialog-title" className="text-lg font-semibold mb-4">
+          {formMode === 'edit' ? 'Edit Recipe' : 'New Recipe'}
+        </h2>
         <RecipeForm
-          mode={mode}
-          initial={mode === 'edit' ? selected : null}
+          bare
+          mode={formMode}
+          initial={formMode === 'edit' ? editing : null}
           ingredients={ingredients}
-          onSubmit={mode === 'edit' ? handleEdit : handleCreate}
-          onCancel={backToList}
+          onSubmit={formMode === 'edit' ? handleEdit : handleCreate}
+          onCancel={closeForm}
         />
-      </div>
-    );
-  }
+      </Dialog>
+    ) : null;
 
   if (mode === 'detail' && selected) {
     return (
@@ -189,6 +201,7 @@ export function RecipesPage() {
           </table>
         )}
         <p className="text-sm font-medium mt-3">Total cost: ${selected.costComputed.toFixed(2)}</p>
+        {formDialog}
       </div>
     );
   }
@@ -232,6 +245,7 @@ export function RecipesPage() {
           ))}
         </ul>
       )}
+      {formDialog}
     </div>
   );
 }

@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
-  createIngredient,
   currentStockFromMovements,
   listIngredients,
   listMovements,
   receiveStock,
-  updateIngredient,
 } from './api';
+import { IngredientFormDialog } from './IngredientFormDialog';
 import { getUser } from '../../routes/auth';
 import type { UserRole } from '../../routes/auth';
 import type { Ingredient } from './types';
@@ -18,12 +17,17 @@ interface IngredientRow extends Ingredient {
 }
 
 /**
- * Inventory page (T031). Consumes T004's Ingredient/StockBatch/StockMovement
- * endpoints. GET /ingredients is open to every authenticated role (unlike
- * T028's Team page) — only writes (create/update/receive) are gated to
- * Owner/Admin/Chef, matching backend WRITE_ROLES. Write controls are only
- * rendered for those roles, so a Staff/Viewer caller never triggers a write
- * fetch at all (mirrors T028's "gate the fetch, not just the UI" pattern).
+ * Inventory page (T031, modal-converted in T037). Consumes T004's
+ * Ingredient/StockBatch/StockMovement endpoints. GET /ingredients is open to
+ * every authenticated role (unlike T028's Team page) — only writes
+ * (create/update/receive) are gated to Owner/Admin/Chef, matching backend
+ * WRITE_ROLES. Write controls are only rendered for those roles, so a
+ * Staff/Viewer caller never triggers a write fetch at all (mirrors T028's
+ * "gate the fetch, not just the UI" pattern).
+ *
+ * Create ("Add Ingredient") and per-row "Edit" now open the shared `Dialog`
+ * modal (IngredientFormDialog) instead of a toggled inline form / inline row
+ * fields. The separate per-row stock-receive flow is unchanged.
  */
 export function InventoryPage() {
   const caller = getUser();
@@ -33,16 +37,8 @@ export function InventoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [name, setName] = useState('');
-  const [unit, setUnit] = useState('');
-  const [costPerUnit, setCostPerUnit] = useState('');
-  const [category, setCategory] = useState('');
-
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editUnit, setEditUnit] = useState('');
-  const [editCost, setEditCost] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<IngredientRow | null>(null);
 
   const [receivingId, setReceivingId] = useState<string | null>(null);
   const [receiveQty, setReceiveQty] = useState('');
@@ -74,47 +70,29 @@ export function InventoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAdd = async () => {
-    if (!name.trim() || !unit.trim() || !costPerUnit.trim()) return;
-    try {
-      const created = await createIngredient({
-        name: name.trim(),
-        unit: unit.trim(),
-        costPerUnit: Number(costPerUnit),
-        category: category.trim() || undefined,
-      });
-      setIngredients((prev) => [...prev, { ...created, currentStock: 0 }]);
-      setName('');
-      setUnit('');
-      setCostPerUnit('');
-      setCategory('');
-      setShowAddForm(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create ingredient');
-    }
+  const openCreate = () => {
+    if (!canManage) return;
+    setEditing(null);
+    setFormOpen(true);
   };
 
-  const startEdit = (ingredient: IngredientRow) => {
-    setEditingId(ingredient.id);
-    setEditName(ingredient.name);
-    setEditUnit(ingredient.unit);
-    setEditCost(String(ingredient.costPerUnit));
+  const openEdit = (ingredient: IngredientRow) => {
+    if (!canManage) return;
+    setEditing(ingredient);
+    setFormOpen(true);
   };
 
-  const handleSaveEdit = async (id: string) => {
-    try {
-      const updated = await updateIngredient(id, {
-        name: editName.trim(),
-        unit: editUnit.trim(),
-        costPerUnit: Number(editCost),
-      });
-      setIngredients((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, ...updated } : i)),
-      );
-      setEditingId(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update ingredient');
-    }
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditing(null);
+  };
+
+  const handleCreated = (created: Ingredient) => {
+    setIngredients((prev) => [...prev, { ...created, currentStock: 0 }]);
+  };
+
+  const handleUpdated = (updated: Ingredient) => {
+    setIngredients((prev) => prev.map((i) => (i.id === updated.id ? { ...i, ...updated } : i)));
   };
 
   const startReceive = (id: string) => {
@@ -145,7 +123,7 @@ export function InventoryPage() {
           <button
             type="button"
             className="px-3 py-2 text-sm rounded bg-accent text-white"
-            onClick={() => setShowAddForm((prev) => !prev)}
+            onClick={openCreate}
           >
             Add Ingredient
           </button>
@@ -153,48 +131,6 @@ export function InventoryPage() {
       </div>
 
       {error && <p className="text-danger text-sm mb-3">{error}</p>}
-
-      {canManage && showAddForm && (
-        <div className="border rounded p-4 mb-6 flex flex-col gap-2 max-w-xl">
-          <h2 className="text-sm font-medium">New ingredient</h2>
-          <input
-            className="border rounded px-2 py-2 text-sm"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            aria-label="Ingredient name"
-          />
-          <input
-            className="border rounded px-2 py-2 text-sm"
-            placeholder="Unit (e.g. kg, L)"
-            value={unit}
-            onChange={(e) => setUnit(e.target.value)}
-            aria-label="Ingredient unit"
-          />
-          <input
-            className="border rounded px-2 py-2 text-sm"
-            placeholder="Cost per unit"
-            type="number"
-            value={costPerUnit}
-            onChange={(e) => setCostPerUnit(e.target.value)}
-            aria-label="Cost per unit"
-          />
-          <input
-            className="border rounded px-2 py-2 text-sm"
-            placeholder="Category (optional)"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            aria-label="Ingredient category"
-          />
-          <button
-            type="button"
-            className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
-            onClick={handleAdd}
-          >
-            Save Ingredient
-          </button>
-        </div>
-      )}
 
       {loading ? (
         <p className="text-muted text-sm">Loading ingredients…</p>
@@ -208,52 +144,14 @@ export function InventoryPage() {
               className="border bg-surface-raised rounded p-3 flex items-center justify-between gap-3 flex-wrap"
               data-testid={`ingredient-${ingredient.id}`}
             >
-              {editingId === ingredient.id ? (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    className="border rounded px-2 py-1 text-sm"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    aria-label={`Edit name for ${ingredient.name}`}
-                  />
-                  <input
-                    className="border rounded px-2 py-1 text-sm w-20"
-                    value={editUnit}
-                    onChange={(e) => setEditUnit(e.target.value)}
-                    aria-label={`Edit unit for ${ingredient.name}`}
-                  />
-                  <input
-                    className="border rounded px-2 py-1 text-sm w-24"
-                    type="number"
-                    value={editCost}
-                    onChange={(e) => setEditCost(e.target.value)}
-                    aria-label={`Edit cost for ${ingredient.name}`}
-                  />
-                  <button
-                    type="button"
-                    className="text-xs px-2 py-1 border rounded"
-                    onClick={() => handleSaveEdit(ingredient.id)}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="text-xs px-2 py-1 border rounded"
-                    onClick={() => setEditingId(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div className="min-w-0">
-                  <p className="font-medium break-words">{ingredient.name}</p>
-                  <p className="text-xs text-muted">
-                    Stock: {ingredient.currentStock ?? '—'} {ingredient.unit} · Cost: {ingredient.costPerUnit}/{ingredient.unit}
-                  </p>
-                </div>
-              )}
+              <div className="min-w-0">
+                <p className="font-medium break-words">{ingredient.name}</p>
+                <p className="text-xs text-muted">
+                  Stock: {ingredient.currentStock ?? '—'} {ingredient.unit} · Cost: {ingredient.costPerUnit}/{ingredient.unit}
+                </p>
+              </div>
 
-              {canManage && editingId !== ingredient.id && (
+              {canManage && (
                 <div className="flex items-center gap-2 shrink-0">
                   {receivingId === ingredient.id ? (
                     <>
@@ -285,7 +183,7 @@ export function InventoryPage() {
                       <button
                         type="button"
                         className="text-xs px-2 py-1 border rounded"
-                        onClick={() => startEdit(ingredient)}
+                        onClick={() => openEdit(ingredient)}
                       >
                         Edit
                       </button>
@@ -303,6 +201,15 @@ export function InventoryPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {canManage && formOpen && (
+        <IngredientFormDialog
+          ingredient={editing}
+          onCreated={handleCreated}
+          onUpdated={handleUpdated}
+          onClose={closeForm}
+        />
       )}
     </div>
   );
