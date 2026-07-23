@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-20
+**Last updated**: 2026-07-21
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,7 +10,7 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T038** — untitled | Supervisor | C0 | Risk: Low | P1
+- [ ] **T039** — Edit Task UI: change title/assignee/due-date/checklist on an existing task (backend `PATCH /tasks/:id` has existed since T008; only the frontend affordance is missing) | frontend-developer | C2 | Risk: Medium | P1
 
 ### In Progress
 
