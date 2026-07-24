@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-21
+**Last updated**: 2026-07-23
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,11 +10,11 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T039** — Edit Task UI: change title/assignee/due-date/checklist on an existing task (backend `PATCH /tasks/:id` has existed since T008; only the frontend affordance is missing) | frontend-developer | C2 | Risk: Medium | P1
 
 ### In Progress
 
 ### Ready for Review
+- [ ] **T039** — Edit Task UI: change title/assignee/due-date/checklist on an existing task (backend `PATCH /tasks/:id` has existed since T008; only the frontend affordance is missing) | frontend-developer | C2 | Risk: Medium | P1 | worktree `task/T039-edit-task-ui` @ `2b3ddf1` | code-review 0 P0/P1 (1 P2, 1 P3 — both need an out-of-scope backend change) | security-review 0 High/Med | 174/174 frontend tests green (18 new) | `npm run build` clean | Stage 5 verify: API 12/12 + live browser both views | Started: 2026-07-23
 
 ### Done
 - [x] **T038** — Fix `npm run build` (`tsc -b`) CI failure — 3 independent test-fixture typing gaps (Task.sourceRecipeId/sourceGuidelineId missing from 2 test helpers since T035, querySelector generic, tuple-filter predicate), root cause diagnosed during T037 review | Supervisor | C0 | Risk: Low | P1 | `npm run build` clean | 156/156 tests green | Started: 2026-07-20 | Done: 2026-07-20
