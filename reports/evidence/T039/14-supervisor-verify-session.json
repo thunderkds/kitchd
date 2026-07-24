@@ -1,0 +1,278 @@
+{
+  "id": "9845e335-e0d0-46c7-a8e2-63eb8a9b40aa",
+  "target": "T039 Edit Task UI — Stage 5 verify @ localhost:8766",
+  "status": "failed",
+  "startedAt": "2026-07-24T03:20:19.415Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-24T03:20:22.136Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/"
+    },
+    {
+      "timestamp": "2026-07-24T03:20:25.601Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:20:41.671Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "t039verify@example.com"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:20:43.887Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Passw0rd!23"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:20:46.561Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:20:49.483Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks"
+    },
+    {
+      "timestamp": "2026-07-24T03:20:51.657Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:20:56.547Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1784863256488.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:14.794Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "div.flex.mb-6 > button:nth-child(2)"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:18.763Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "t039verify@example.com"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:21.731Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Passw0rd!23"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:24.100Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:26.425Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:29.701Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks"
+    },
+    {
+      "timestamp": "2026-07-24T03:21:32.508Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:36.739Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[aria-label=\"Edit Prep onions\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:39.895Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:43.901Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[aria-label=\"Task title\"]",
+        "value": ""
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:46.914Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[aria-label=\"Save Changes\"], button:nth-last-child(1)"
+      },
+      "ok": false,
+      "detail": "Selector \"button[aria-label=\"Save Changes\"], button:nth-last-child(1)\" matched 8 elements; expected exactly 1"
+    },
+    {
+      "timestamp": "2026-07-24T03:21:49.346Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "div.flex.justify-end > button.bg-accent"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:51.965Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "The Edit Task dialog is still open and shows the validation message \"Title is required\"; the task was not saved."
+      },
+      "ok": false,
+      "detail": "page.evaluate: SyntaxError: Unexpected identifier 'Edit'\n    at eval (<anonymous>)\n    at UtilityScript.evaluate (<anonymous>:303:30)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+    },
+    {
+      "timestamp": "2026-07-24T03:21:55.617Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.body.innerText.includes('Title is required')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:21:58.748Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[aria-label=\"Task title\"]",
+        "value": "Prep mise en place"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:02.275Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[aria-label=\"Due date\"]",
+        "value": "2026-08-01"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:05.179Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[aria-label=\"Checklist item 1\"]",
+        "value": "Wash and peel veg"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:07.881Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1784863327785.png"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:11.464Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "div.flex.justify-end > button.bg-accent"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:14.589Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "!document.body.innerText.includes('Edit Task') && document.body.innerText.includes('Prep mise en place') && !document.body.innerText.includes('Prep onions')"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:19.293Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[aria-label=\"List\"], button[title=\"List\"]"
+      },
+      "ok": false,
+      "detail": "No element matched selector \"button[aria-label=\"List\"], button[title=\"List\"]\""
+    },
+    {
+      "timestamp": "2026-07-24T03:22:27.189Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "div.w-fit > button[aria-pressed=\"false\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:30.202Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:36.829Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[aria-label=\"Edit Prep mise en place\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:40.397Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.body.innerText.includes('Edit Task') && document.querySelector('input[aria-label=\"Task title\"]').value === 'Prep mise en place' && document.querySelector('input[aria-label=\"Due date\"]').value === '2026-08-01' && document.querySelector('input[aria-label=\"Checklist item 1\"]').value === 'Wash and peel veg'"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-24T03:22:48.319Z",
+      "action": "ui_take_screenshot",
+      "args": {
+        "path": "/app/reports/screenshot-1784863368218.png"
+      },
+      "ok": true
+    }
+  ],
+  "failureScreenshot": "/app/reports/screenshot-1784863339293.png",
+  "endedAt": "2026-07-24T03:23:08.233Z"
+}

@@ -42,6 +42,39 @@ export interface CreateTaskInput {
   dueAt?: string;
 }
 
+// T039 — a checklist item as *sent* to PATCH /tasks/:id. `id` is omitted
+// for a newly added item so the server mints the UUID (tasks.service.ts
+// `item.id ?? crypto.randomUUID()`); existing items keep their id and
+// `done` so editing the text here never resets completion state.
+export interface ChecklistItemInput {
+  id?: string;
+  text: string;
+  done?: boolean;
+}
+
+/**
+ * T039 — the editable subset of `UpdateTaskDto`. `status` is deliberately
+ * absent: moving a Task to DONE must go through the T011
+ * preview/confirm completion flow (FR-008), and a plain
+ * `PATCH { status: 'DONE' }` would bypass the stock deduction entirely.
+ * `assigneeId: null` unassigns (the DTO's `@IsOptional()` skips null, and
+ * the service writes it straight through).
+ */
+export interface UpdateTaskInput {
+  title?: string;
+  assigneeId?: string | null;
+  dueAt?: string;
+  checklistItems?: ChecklistItemInput[];
+}
+
+// T039 — one selectable assignee for the edit form. Resolved by TasksPage:
+// `email` from GET /users when the caller may read it (OWNER/ADMIN only),
+// otherwise a truncated id, matching the existing assignee-filter dropdown.
+export interface AssigneeOption {
+  id: string;
+  label: string;
+}
+
 export const TASK_STATUSES: { value: TaskStatus; label: string }[] = [
   { value: 'TODO', label: 'To Do' },
   { value: 'IN_PROGRESS', label: 'In Progress' },

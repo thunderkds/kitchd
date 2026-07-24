@@ -14,12 +14,18 @@ export function KanbanBoard({
   tasks,
   onMove,
   sourceTitleForTask,
+  onEditTask,
+  canEditTask,
 }: {
   tasks: Task[];
   onMove: (taskId: string, status: TaskStatus) => void;
   // T035 — resolves a task's "From: <title>" line; optional so existing
   // callers/tests are unaffected.
   sourceTitleForTask?: (task: Task) => string | null | undefined;
+  // T039 — role-gated edit affordance; the Edit control renders only when
+  // both an handler and a per-task permission check are supplied.
+  onEditTask?: (task: Task) => void;
+  canEditTask?: (task: Task) => boolean;
 }) {
   return (
     <div
@@ -50,6 +56,9 @@ export function KanbanBoard({
                 task={task}
                 onMove={onMove}
                 sourceTitle={sourceTitleForTask?.(task)}
+                onEdit={
+                  onEditTask && canEditTask?.(task) ? () => onEditTask(task) : undefined
+                }
               />
             ))}
           </div>
