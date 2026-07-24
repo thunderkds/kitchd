@@ -9,6 +9,7 @@ import type {
   RecipeLite,
   Task,
   TaskStatus,
+  UpdateTaskInput,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
@@ -91,6 +92,20 @@ export function updateTaskChecklist(
   return request<Task>(`/tasks/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ checklistItems }),
+  });
+}
+
+/**
+ * T039 — full-field task edit (title / assignee / due date / checklist).
+ * Same `PATCH /tasks/:id` endpoint as `updateTaskStatus` /
+ * `updateTaskChecklist`; the caller sends only the fields it actually
+ * changed, so an edit never clobbers a field another client changed
+ * meanwhile. RBAC is enforced server-side in `TasksService.update`.
+ */
+export function updateTask(id: string, input: UpdateTaskInput): Promise<Task> {
+  return request<Task>(`/tasks/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
   });
 }
 

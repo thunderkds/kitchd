@@ -44,8 +44,16 @@ function jsonResponse(body: unknown) {
   return { ok: true, json: async () => body };
 }
 
+/** T039 — bodies of every PATCH the page issued, newest last. */
+function patchBodies(mock: ReturnType<typeof vi.fn>): unknown[] {
+  return mock.mock.calls
+    .filter((call) => (call[1] as RequestInit | undefined)?.method === 'PATCH')
+    .map((call) => JSON.parse((call[1] as RequestInit).body as string));
+}
+
 function routedFetchMock(overrides: {
   tasks?: Task[];
+  members?: { id: string; email: string; role: string; isActive: boolean }[];
   onPatch?: (url: string, init: RequestInit) => unknown;
   onPost?: (url: string, init: RequestInit) => unknown;
 } = {}) {
@@ -55,6 +63,9 @@ function routedFetchMock(overrides: {
     if (url.includes('/recipes')) return Promise.resolve(jsonResponse([]));
     if (url.includes('/guidelines')) return Promise.resolve(jsonResponse([]));
     if (url.includes('/ingredients')) return Promise.resolve(jsonResponse([]));
+    if (url.includes('/users')) {
+      return Promise.resolve(jsonResponse(overrides.members ?? []));
+    }
     if (url.endsWith('/tasks') && method === 'GET') {
       return Promise.resolve(jsonResponse(tasks));
     }
@@ -474,5 +485,427 @@ describe('TasksPage', () => {
     );
 
     await waitFor(() => expect(screen.getByText('From: Tomato Soup')).toBeInTheDocument());
+  });
+
+  // ---------------------------------------------------------------------
+  // T039 — Edit Task UI (title / assignee / due date / checklist)
+  // ---------------------------------------------------------------------
+
+  it('T039 AC1: Chef edits a task title from the kanban view; PATCH carries only the changed field', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A' })],
+        onPatch: () => makeTask({ id: 't1', title: 'Prep mise en place' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    const titleInput = within(dialog).getByLabelText('Task title');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Prep mise en place');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/tasks/t1'),
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+    expect(patchBodies(fetchMock)).toEqual([{ title: 'Prep mise en place' }]);
+    expect(
+      within(screen.getByTestId('kanban-column-TODO')).getByText('Prep mise en place'),
+    ).toBeInTheDocument();
+  });
+
+  it('T039 AC2: the Edit control is reachable from the list view too, and the row updates', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A' })],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A renamed' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/tasks?view=list']}>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('task-list-view')).toBeInTheDocument());
+    await user.click(
+      within(screen.getByTestId('task-list-view')).getByRole('button', { name: 'Edit Task A' }),
+    );
+
+    const dialog = screen.getByRole('dialog');
+    const titleInput = within(dialog).getByLabelText('Task title');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Task A renamed');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([{ title: 'Task A renamed' }]);
+    expect(
+      within(screen.getByTestId('task-list-view')).getByText('Task A renamed'),
+    ).toBeInTheDocument();
+  });
+
+  it('T039 AC1: an Owner reassigns a task to another kitchen member listed by email', async () => {
+    setUser('OWNER');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-1' })],
+        members: [
+          { id: 'user-1', email: 'ana@example.com', role: 'STAFF', isActive: true },
+          { id: 'user-2', email: 'bo@example.com', role: 'STAFF', isActive: true },
+          { id: 'user-3', email: 'gone@example.com', role: 'STAFF', isActive: false },
+        ],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-2' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    const assigneeSelect = within(dialog).getByLabelText('Assignee');
+    // Deactivated members are not offered as assignees.
+    expect(within(assigneeSelect).queryByText('gone@example.com')).not.toBeInTheDocument();
+
+    await user.selectOptions(assigneeSelect, 'user-2');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([{ assigneeId: 'user-2' }]);
+    expect(screen.getByText('Assigned: user-2')).toBeInTheDocument();
+  });
+
+  it('T039: clearing the assignee sends assigneeId: null (explicit unassign, not undefined)', async () => {
+    setUser('OWNER');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-1' })],
+        members: [{ id: 'user-1', email: 'ana@example.com', role: 'STAFF', isActive: true }],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A', assigneeId: null }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    await user.selectOptions(within(screen.getByRole('dialog')).getByLabelText('Assignee'), '');
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Save Changes' }),
+    );
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([{ assigneeId: null }]);
+    expect(
+      within(screen.getByTestId('kanban-column-TODO')).getByText('Unassigned'),
+    ).toBeInTheDocument();
+  });
+
+  it('T039: the due date is sent as a full ISO instant, not the raw yyyy-mm-dd input value', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A', dueAt: null })],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Due date'), '2026-08-01');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([
+      { dueAt: new Date('2026-08-01T00:00:00').toISOString() },
+    ]);
+  });
+
+  it('T039: editing checklist text keeps each item id and done state; a new item is sent without an id', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [
+          makeTask({
+            id: 't1',
+            title: 'Task A',
+            checklistItems: [{ id: 'i1', text: 'Wash veg', done: true }],
+          }),
+        ],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    const itemInput = within(dialog).getByLabelText('Checklist item 1');
+    await user.clear(itemInput);
+    await user.type(itemInput, 'Wash and peel veg');
+    await user.click(within(dialog).getByRole('button', { name: 'Add checklist item' }));
+    await user.type(within(dialog).getByLabelText('Checklist item 2'), 'Dice onions');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([
+      {
+        checklistItems: [
+          { id: 'i1', text: 'Wash and peel veg', done: true },
+          { text: 'Dice onions', done: false },
+        ],
+      },
+    ]);
+  });
+
+  it('T039 AC3: Staff editing their own task sees checklist fields only — no title/assignee/due date', async () => {
+    setUser('STAFF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [
+          makeTask({
+            id: 't1',
+            title: 'Task A',
+            assigneeId: 'caller-1',
+            checklistItems: [{ id: 'i1', text: 'Wash veg', done: false }],
+          }),
+        ],
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByLabelText('Checklist item 1')).toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Task title')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Assignee')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Due date')).not.toBeInTheDocument();
+  });
+
+  it('T039 AC4: Staff sees no Edit control on a task assigned to someone else (both views)', async () => {
+    setUser('STAFF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'someone-else' })],
+      }),
+    );
+
+    const { unmount } = render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Edit Task A' })).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={['/tasks?view=list']}>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(screen.getByTestId('task-list-view')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Edit Task A' })).not.toBeInTheDocument();
+  });
+
+  it('T039 AC5: a Viewer never sees an Edit control, even on a task assigned to them (both views)', async () => {
+    setUser('VIEWER');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'caller-1' })],
+      }),
+    );
+
+    const { unmount } = render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Edit Task A' })).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={['/tasks?view=list']}>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(screen.getByTestId('task-list-view')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Edit Task A' })).not.toBeInTheDocument();
+  });
+
+  it('T039 AC6: an empty title is rejected client-side and issues no PATCH', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({ tasks: [makeTask({ id: 't1', title: 'Task A' })] }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    await user.clear(within(dialog).getByLabelText('Task title'));
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    expect(within(dialog).getByText('Title is required')).toBeInTheDocument();
+    expect(patchBodies(fetchMock)).toEqual([]);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('T039 AC7: a failed PATCH surfaces the global error dialog and leaves the task list unchanged', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      const method = init?.method ?? 'GET';
+      if (url.includes('/recipes')) return Promise.resolve(jsonResponse([]));
+      if (url.includes('/guidelines')) return Promise.resolve(jsonResponse([]));
+      if (url.includes('/ingredients')) return Promise.resolve(jsonResponse([]));
+      if (url.includes('/users')) return Promise.resolve(jsonResponse([]));
+      if (url.endsWith('/tasks') && method === 'GET') {
+        return Promise.resolve(jsonResponse([makeTask({ id: 't1', title: 'Task A' })]));
+      }
+      if (method === 'PATCH') {
+        return Promise.resolve({
+          ok: false,
+          status: 403,
+          json: async () => ({ message: 'Not your task' }),
+        });
+      }
+      return Promise.resolve(jsonResponse(null));
+    });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+    const { ErrorDialogProvider } = await import('../../errorDialog/ErrorDialogProvider');
+
+    render(
+      <MemoryRouter>
+        <ErrorDialogProvider>
+          <TasksPage />
+        </ErrorDialogProvider>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const titleInput = screen.getByLabelText('Task title');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Renamed');
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-dialog-message')).toHaveTextContent('Not your task'),
+    );
+    // List unchanged — the optimistic-free flow never applied the edit.
+    expect(
+      within(screen.getByTestId('kanban-column-TODO')).getByText('Task A'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Renamed')).not.toBeInTheDocument();
+  });
+
+  it('T039: a Chef (who cannot read GET /users) still gets an assignee picker and issues no /users call', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [
+          makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-11111111' }),
+          makeTask({ id: 't2', title: 'Task B', assigneeId: 'user-22222222' }),
+        ],
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    expect(
+      fetchMock.mock.calls.filter((call) => String(call[0]).includes('/users')),
+    ).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+    const assigneeSelect = within(screen.getByRole('dialog')).getByLabelText('Assignee');
+    expect(within(assigneeSelect).getByText('user-222')).toBeInTheDocument();
   });
 });
