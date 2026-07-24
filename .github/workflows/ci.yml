@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  web:
+    name: web (lint, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build workspace dependency (packages/shared)
+        run: npm --prefix packages/shared run build
+      - name: Lint
+        run: npm --prefix apps/web run lint
+      - name: Test
+        run: npm --prefix apps/web run test
+      - name: Build (includes typecheck via tsc -b)
+        run: npm --prefix apps/web run build
+
+  api:
+    name: api (lint, test, build)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kitchenos
+          POSTGRES_PASSWORD: kitchenos
+          POSTGRES_DB: kitchenos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kitchenos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql://kitchenos:kitchenos@localhost:5432/kitchenos?schema=public"
+      JWT_SECRET: "ci-test-secret"
+      JWT_EXPIRES_IN: "1d"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Prisma generate
+        run: npm --prefix apps/api run prisma:generate
+      - name: Prisma migrate deploy (against ephemeral CI DB)
+        run: npm --prefix apps/api run migrate
+      - name: Lint
+        run: npm --prefix apps/api run lint
+      - name: Test
+        run: npm --prefix apps/api run test
+      - name: Build
+        run: npm --prefix apps/api run build

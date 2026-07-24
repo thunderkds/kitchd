@@ -1,0 +1,12 @@
+T014 Stage 5 live verify session (Supervisor-driven)
+
+Owner posts MORNING entry -> 201
+Owner posts EVENING entry -> 201
+GET /shift-logs -> [EVENING, MORNING] (newest-first, confirms AC1)
+Viewer attempts POST /shift-logs -> 403 "Insufficient role for this action"
+  (confirms the Supervisor's pre-dispatch RBAC correction: Viewer excluded)
+Owner POSTs with a spoofed createdAt:"2020-01-01..." -> response createdAt
+  is the real server timestamp (2026-07-05), spoof ignored (edge case).
+
+Full backend suite: 131/131 tests green.
+Lint: clean.

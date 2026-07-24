@@ -1,0 +1,11 @@
+T013 Stage 5 live verify session (Supervisor-driven)
+
+Owner posts an Announcement -> 201, readBy: []
+Staff attempts POST /announcements -> 403 "Insufficient role for this action" (AC3)
+Staff GETs the announcement detail -> readBy now contains staff's own user id (AC2)
+
+Confirms AC1 (visible to all Kitchen members via GET), AC2 (read-by tracking
+on detail view), AC3 (Staff blocked from posting, Owner/Chef-only per FR-021).
+
+Full backend suite: 124/124 tests green.
+Lint: clean.

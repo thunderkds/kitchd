@@ -1,0 +1,254 @@
+{
+  "id": "d4fa25ee-1180-4153-aa4b-170bb9c94841",
+  "target": "T035 Create Task + relations verify",
+  "status": "passed",
+  "startedAt": "2026-07-20T02:37:15.157Z",
+  "actions": [
+    {
+      "timestamp": "2026-07-20T02:37:20.590Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-20T02:37:22.574Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "owner@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:24.627Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:27.193Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:29.062Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:32.113Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:46.106Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:48.192Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "owner@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:50.561Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:52.825Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:55.026Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:37:57.668Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks"
+    },
+    {
+      "timestamp": "2026-07-20T02:38:00.479Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:04.102Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"New Task\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:07.322Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:09.860Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[role=\"tab\"]:has-text(\"From Recipe\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:12.232Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:14.696Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('select[aria-label=\"Select recipe\"]').options.length > 1"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:22.026Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "(() => { const sel = document.querySelector('select[aria-label=\"Select recipe\"]'); sel.value = sel.options[1].value; sel.dispatchEvent(new Event('change', { bubbles: true })); return sel.value === sel.options[1].value; })()"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:24.205Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Create Task\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:26.586Z",
+      "action": "ui_get_page_state",
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:29.342Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "Array.from(document.querySelectorAll('p')).some(p => p.textContent.startsWith('From:'))"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:32.719Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"List\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:35.427Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "document.querySelector('[data-testid=\"task-list-view\"]') !== null && Array.from(document.querySelectorAll('[data-testid=\"task-list-view\"] p')).some(p => p.textContent.startsWith('From:'))"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:42.185Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log out\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:45.011Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/login"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/login"
+    },
+    {
+      "timestamp": "2026-07-20T02:38:47.201Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button:has-text(\"Log in\")"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:50.157Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"email\"]",
+        "value": "staff@demo.kitchenos.dev"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:52.258Z",
+      "action": "ui_fill",
+      "args": {
+        "selector": "input[type=\"password\"]",
+        "value": "Password123!"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:55.234Z",
+      "action": "ui_click",
+      "args": {
+        "selector": "button[type=\"submit\"]"
+      },
+      "ok": true
+    },
+    {
+      "timestamp": "2026-07-20T02:38:57.869Z",
+      "action": "ui_navigate",
+      "args": {
+        "url": "http://localhost:8766/tasks"
+      },
+      "ok": true,
+      "detail": "http://localhost:8766/tasks"
+    },
+    {
+      "timestamp": "2026-07-20T02:39:00.133Z",
+      "action": "ui_assert",
+      "args": {
+        "condition": "!Array.from(document.querySelectorAll('button')).some(b => b.textContent.trim() === 'New Task')"
+      },
+      "ok": true
+    }
+  ],
+  "endedAt": "2026-07-20T02:39:03.831Z"
+}

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Security Review Report — task/T001-monorepo-scaffold</title>
+<style>
+  :root {
+    --bg:        #0a0a12;
+    --surface:   #111128;
+    --surface2:  #16162e;
+    --border:    #1e1e42;
+    --border-glow: #2a2a6e;
+    --text:      #e2e2f0;
+    --muted:     #6b6b9a;
+    --cyan:      #00d4ff;
+    --green:     #00ff88;
+    --amber:     #ffb800;
+    --red:       #ff3b6b;
+    --purple:    #a855f7;
+    --cyan-dim:  rgba(0,212,255,.12);
+    --green-dim: rgba(0,255,136,.12);
+    --red-dim:   rgba(255,59,107,.12);
+    --amber-dim: rgba(255,184,0,.12);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  h1 { margin: 0; font-size: 1.25rem; color: #fff; letter-spacing: .02em; }
+  h2 { font-size: .85rem; color: var(--muted); margin: 0 0 .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--cyan);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 24px rgba(0,212,255,.08), 0 4px 24px rgba(0,0,0,.5);
+  }
+  .header-meta { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+  .header-meta code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .8rem; }
+
+  .badge { display: inline-block; padding: .3rem .9rem; border-radius: 999px; font-weight: 700; font-size: .8rem; letter-spacing: .05em; text-transform: uppercase; }
+  .badge-green  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,255,136,.3); box-shadow: 0 0 8px rgba(0,255,136,.2); }
+  .badge-yellow { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,184,0,.3); box-shadow: 0 0 8px rgba(255,184,0,.2); }
+  .badge-red    { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,59,107,.3); box-shadow: 0 0 8px rgba(255,59,107,.2); }
+
+  .sev { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-weight: 700; font-size: .75rem; white-space: nowrap; letter-spacing: .04em; }
+  .sev-high { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,59,107,.25); }
+  .sev-med  { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,184,0,.25); }
+  .sev-low  { background: var(--cyan-dim);  color: var(--cyan);  border: 1px solid rgba(0,212,255,.25); }
+  .sev-info { background: rgba(168,85,247,.1); color: var(--purple); border: 1px solid rgba(168,85,247,.25); }
+
+  .gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .gauge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: border-color .2s;
+  }
+  .gauge-card:hover { border-color: var(--border-glow); }
+  .gauge-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: .5rem; }
+  .gauge-value { font-size: 2rem; font-weight: 700; margin-bottom: .6rem; font-variant-numeric: tabular-nums; }
+  .gauge-value-risk    { color: var(--red); text-shadow: 0 0 12px rgba(255,59,107,.5); }
+  .gauge-value-quality { color: var(--green); text-shadow: 0 0 12px rgba(0,255,136,.5); }
+  .gauge-value-effort  { color: var(--amber); text-shadow: 0 0 12px rgba(255,184,0,.5); }
+  .bar-bg   { background: var(--border); border-radius: 999px; height: 6px; overflow: hidden; }
+  .bar-fill { height: 6px; border-radius: 999px; }
+  .bar-risk    { background: linear-gradient(90deg, #ff3b6b, #ff006e); box-shadow: 0 0 8px rgba(255,59,107,.6); }
+  .bar-quality { background: linear-gradient(90deg, #00c96e, #00ff88); box-shadow: 0 0 8px rgba(0,255,136,.6); }
+  .bar-effort  { background: linear-gradient(90deg, #e0a000, #ffb800); box-shadow: 0 0 8px rgba(255,184,0,.6); }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+  .section-head {
+    padding: .7rem 1.25rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: .6rem 1.25rem;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: .8rem 1.25rem;
+    font-size: .875rem;
+    border-top: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td pre {
+    margin: 0;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .78rem;
+    background: #0d0d1f;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    padding: .5rem .75rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #b0c4ff;
+    line-height: 1.6;
+  }
+  td code {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    padding: .1rem .4rem;
+    border-radius: 3px;
+    font-size: .78rem;
+  }
+
+  .prose {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    font-size: .9rem;
+    color: #c0c0e0;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+
+  .footer {
+    font-size: .72rem;
+    color: var(--muted);
+    text-align: center;
+    padding-bottom: 2rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    margin-top: .5rem;
+  }
+  .footer code { color: var(--purple); background: rgba(168,85,247,.1); padding: .1rem .4rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Security Review</h1>
+    <div class="header-meta">
+      Branch: <code>task/T001-monorepo-scaffold</code> &nbsp;·&nbsp; 2026-07-02
+    </div>
+  </div>
+  <span class="badge badge-green">Healthy (fixed)</span>
+</div>
+
+<div class="gauges">
+  <div class="gauge-card">
+    <div class="gauge-label">Risk</div>
+    <div class="gauge-value gauge-value-risk">7%</div>
+    <div class="bar-bg"><div class="bar-fill bar-risk" style="width:7%"></div></div>
+  </div>
+  <div class="gauge-card">
+    <div class="gauge-label">Code Quality</div>
+    <div class="gauge-value gauge-value-quality">84%</div>
+    <div class="bar-bg"><div class="bar-fill bar-quality" style="width:84%"></div></div>
+  </div>
+  <div class="gauge-card">
+    <div class="gauge-label">Adaptation Effort</div>
+    <div class="gauge-value gauge-value-effort">10%</div>
+    <div class="bar-bg"><div class="bar-fill bar-effort" style="width:10%"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Findings</h2></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:90px">Severity</th>
+        <th style="width:200px">File</th>
+        <th style="width:80px">Lines</th>
+        <th>Finding</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="sev sev-med">Medium</span></td>
+        <td><code>docker-compose.yml</code></td>
+        <td>9–10</td>
+        <td><pre>Insecure Configuration — Postgres exposed with default credentials on all interfaces.
+
+docker-compose.yml mapped "5432:5432" without binding to 127.0.0.1, so Postgres listened on 0.0.0.0:5432 on the host — reachable from any device on the same local network, not just the host machine. Combined with hardcoded default credentials (kitchenos/kitchenos), any host on the LAN could connect directly to the database.
+
+Exploit scenario: a device on the same network/subnet as the dev machine (shared office wifi, coworking space, compromised IoT device on the same subnet) connects via `psql -h &lt;ip&gt; -U kitchenos kitchenos` with password `kitchenos`, gaining full read/write access — including user emails and bcrypt password hashes.
+
+STATUS: FIXED — bound to 127.0.0.1:5432:5432 in commit f492ee9, verified via `docker port kitchenos-postgres` (now shows 127.0.0.1 only) and re-ran the auth test suite (10/10 passing) against the rebound container.</pre></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="prose">
+Security review of T001 (monorepo scaffold + auth skeleton, ~40 files) found no high-confidence exploitable vulnerabilities in the newly-added authentication logic itself: Prisma ORM is used for all DB access (no SQL injection surface), JWT secret is sourced from a trusted environment variable, ValidationPipe with whitelist+transform is applied globally, bcrypt with 10 salt rounds hashes passwords, and the React frontend renders no unescaped content (no XSS surface). The RBAC/authorization gap (JwtAuthGuard is "is authenticated" only, no role checks) is an explicitly documented and intentional deferral to T002 per the task guide — not a vulnerability newly introduced to hide.
+
+One concrete Medium-severity finding was identified and fixed during this review: docker-compose.yml bound Postgres to all network interfaces (0.0.0.0) rather than localhost, exposing the local-dev database — with default weak credentials — to the entire local network. This was corrected to bind 127.0.0.1 only, verified against the running container, and the full auth test suite was re-run successfully against the rebound database to confirm no regression.
+</div>
+
+<div class="footer">
+  Model: <code>claude-sonnet-5</code> &nbsp;·&nbsp; Task: T001 &nbsp;·&nbsp; Generated: 2026-07-02T17:20:00
+</div>
+
+</body>
+</html>

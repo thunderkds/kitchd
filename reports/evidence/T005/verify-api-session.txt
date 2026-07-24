@@ -1,0 +1,93 @@
+T005 — Stage 5 Supervisor-driven live verification session
+Date: 2026-07-03
+Target: apps/api running on localhost:3000 (already-running instance from the T005 worktree,
+matching committed HEAD e8733aa), real Postgres (kitchenos-postgres, docker compose)
+Branch verified: task/T005-recipe-cost-rollup @ commit e8733aa
+
+=== AC1: cost_computed = sum(qty * Ingredient.cost_per_unit) ===
+
+$ POST /auth/signup -> accessToken
+$ POST /ingredients {"name":"Flour","costPerUnit":2}    -> id=69070867...
+$ POST /ingredients {"name":"Sugar","costPerUnit":3}     -> id=61d5169b...
+$ POST /ingredients {"name":"Butter","costPerUnit":5}    -> id=348ea4e5...
+
+$ POST /recipes {"name":"Test Cake","steps":["mix","bake"],"servings":4,
+    "ingredients":[{"ingredientId":"69070867...","qty":2},
+                    {"ingredientId":"61d5169b...","qty":1},
+                    {"ingredientId":"348ea4e5...","qty":0.5}]}
+HTTP 201
+{"id":"dcf4b119-...","name":"Test Cake",...,
+ "ingredients":[
+   {"name":"Flour","qty":2,"costPerUnit":2,"lineCost":4},
+   {"name":"Sugar","qty":1,"costPerUnit":3,"lineCost":3},
+   {"name":"Butter","qty":0.5,"costPerUnit":5,"lineCost":2.5}],
+ "costComputed":9.5}
+→ PASS. Manual check: 2*2 + 1*3 + 0.5*5 = 4 + 3 + 2.5 = 9.5. Matches exactly.
+
+=== AC2: live recompute when Ingredient.cost_per_unit changes ===
+
+$ (new org) POST /ingredients {"name":"Flour","costPerUnit":2}
+$ POST /recipes {"name":"Bread","ingredients":[{"ingredientId":"<flour>","qty":1}]}
+$ GET /recipes/:id -> costComputed: 2
+
+$ PATCH /ingredients/:id {"costPerUnit":10}
+$ GET /recipes/:id -> costComputed: 10
+→ PASS. Recipe's cost reflects the NEW live ingredient price on next read, with no
+  code change or recipe edit needed — confirms cost is never cached/stored.
+
+=== AC3: editing a Recipe increments version, prior version data retrievable ===
+
+$ PATCH /recipes/:id {"name":"Bread v2"}
+$ PATCH /recipes/:id {"name":"Bread v3"}
+$ GET /recipes/:id -> version: 3, name: "Bread v3"
+$ GET /recipes/:id/versions ->
+  v3: Bread v3
+  v2: Bread v2
+  v1: Bread
+→ PASS. Version increments on each edit; full history retrievable via the append-only
+  RecipeVersion table, oldest name ("Bread") still intact at v1.
+
+=== AC4: Staff gets 403 on Recipe write ===
+Covered by automated e2e test (recipes.e2e.spec.ts) — not re-driven manually in this
+live session; confirmed passing in the full suite run below.
+
+=== Adversarial probes ===
+
+🔍 Probe 1 — cross-tenant read on another org's recipe
+$ GET /recipes/71d326b5-... with a token from an unrelated org
+{"message":"Recipe not found","error":"Not Found","statusCode":404}
+HTTP 404
+→ PASS. 404, not 403 — matches the established RolesGuard/kitchen-scoping convention
+  (no existence leak).
+
+🔍 Probe 2 — recipe referencing a nonexistent ingredient id
+$ POST /recipes {"ingredients":[{"ingredientId":"00000000-0000-0000-0000-000000000000","qty":1}]}
+{"message":"Ingredient 00000000-0000-0000-0000-000000000000 not found","error":"Bad Request","statusCode":400}
+HTTP 400
+→ PASS. Rejected before any DB write is attempted, with a clear message.
+
+🔍 Probe 3 — malformed recipe (missing name, empty ingredients)
+$ POST /recipes {"steps":["x"],"servings":1,"ingredients":[]}
+{"message":["name must be longer than or equal to 1 characters","name must be a string",
+ "ingredients must contain at least 1 elements"],"error":"Bad Request","statusCode":400}
+HTTP 400
+→ PASS. class-validator DTO rejects the malformed payload with specific field errors.
+
+=== Result ===
+Verdict: PASS. All 4 Acceptance Criteria confirmed live (AC4 via automated suite),
+plus 3 adversarial probes, all held as designed.
+Cleanup: dev server process killed after session; port 3000 confirmed free.
+
+=== Regression check ===
+$ npm --prefix apps/api run test
+PASS src/auth/guards/jwt-auth.guard.spec.ts
+PASS src/app.controller.spec.ts
+PASS src/auth/guards/roles-rbac.guard.spec.ts
+PASS src/auth/auth.e2e.spec.ts
+PASS src/users/users-invite.e2e.spec.ts
+PASS src/kitchens/kitchens-rbac.e2e.spec.ts
+PASS src/inventory/inventory.e2e.spec.ts
+PASS src/recipes/recipes.e2e.spec.ts
+
+Test Suites: 8 passed, 8 total
+Tests:       53 passed, 53 total

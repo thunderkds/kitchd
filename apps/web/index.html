@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KitchenOS</title>
+  </head>
+  <body>
+    <!--
+      T026 — set data-theme before first paint, from the paint-time cache
+      only (never a source of truth — the account's themePreference,
+      reconciled by ThemeProvider once auth resolves, always wins). Keeps
+      this in sync with theme/themeMapping.ts's ThemeId/DEFAULT_THEME by
+      hand since this runs before any module graph is available.
+    -->
+    <script>
+      (function () {
+        try {
+          var cached = window.localStorage.getItem('kitchenos-theme');
+          document.documentElement.setAttribute(
+            'data-theme',
+            cached === 'dark-neon' ? 'dark-neon' : 'simple',
+          );
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'simple');
+        }
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
