@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  buildInviteLink,
   inviteMember,
   listMembers,
   listPendingInvites,
@@ -14,6 +15,58 @@ import { ASSIGNABLE_ROLES } from './types';
 import type { Invite, Member } from './types';
 
 const PROTECTED_ROLES: UserRole[] = ['OWNER', 'ADMIN'];
+
+/**
+ * T043 — the invite link, shown with a copy control.
+ *
+ * There is no mailer in this project: `POST /users/invite` mints a token and
+ * hands it straight back to the Owner's browser, so the Owner is the delivery
+ * channel. The link is also rendered read-only in an input so it stays
+ * copyable when the Clipboard API is unavailable (older browsers, and any
+ * insecure origin) — a failed copy must never look like a successful one.
+ */
+function InviteLink({ token, label }: { token: string; label: string }) {
+  const link = buildInviteLink(token);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+
+  const handleCopy = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(link);
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
+  };
+
+  return (
+    <div className="w-full min-w-0 mt-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <input
+          className="border rounded px-2 py-1 text-xs flex-1 min-w-0"
+          type="text"
+          readOnly
+          value={link}
+          aria-label={label}
+          onFocus={(e) => e.currentTarget.select()}
+        />
+        <button
+          type="button"
+          className="text-xs px-2 py-1 border rounded shrink-0"
+          onClick={handleCopy}
+        >
+          Copy link
+        </button>
+      </div>
+      {copyState === 'copied' && <p className="text-xs text-success mt-1">Copied!</p>}
+      {copyState === 'failed' && (
+        <p className="text-xs text-danger mt-1">
+          Couldn&apos;t copy automatically — select the link above and copy it manually.
+        </p>
+      )}
+    </div>
+  );
+}
 
 /**
  * Team & Roles page (T028, modal-converted in T037). Consumes T027's
@@ -39,7 +92,9 @@ export function TeamPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('STAFF');
-  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  // T043 — the created invite itself, not a message: the Owner needs its
+  // token to build a shareable link, since nothing is emailed.
+  const [createdInvite, setCreatedInvite] = useState<Invite | null>(null);
 
   const refresh = async () => {
     if (!canManage) return;
@@ -84,7 +139,7 @@ export function TeamPage() {
     if (!canManage) return;
     setInviteEmail('');
     setInviteRole('STAFF');
-    setInviteSuccess(null);
+    setCreatedInvite(null);
     setInviteOpen(true);
   };
 
@@ -97,11 +152,11 @@ export function TeamPage() {
   const handleInvite = async () => {
     if (!canManage) return;
     if (!inviteEmail.trim()) return;
-    setInviteSuccess(null);
+    setCreatedInvite(null);
     try {
       const created = await inviteMember(inviteEmail.trim(), inviteRole);
       setInvites((prev) => [created, ...prev]);
-      setInviteSuccess(`Invite sent to ${created.email}`);
+      setCreatedInvite(created);
       closeInvite();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send invite');
@@ -151,7 +206,24 @@ export function TeamPage() {
       </div>
 
       {error && <p className="text-danger text-sm mb-3">{error}</p>}
-      {inviteSuccess && <p className="text-sm text-primary mb-3">{inviteSuccess}</p>}
+      {createdInvite && (
+        <div
+          className="bg-surface-raised rounded p-3 mb-4 min-w-0"
+          data-testid="created-invite-banner"
+        >
+          <p className="text-sm text-primary break-words">
+            Invite created for {createdInvite.email}. No email is sent — copy this link and send it
+            to them yourself.
+          </p>
+          {/* Distinct from the pending-row label below: the same invite is
+              rendered twice on this page, and two controls sharing one
+              accessible name is ambiguous for screen readers. */}
+          <InviteLink
+            token={createdInvite.token}
+            label={`New invite link for ${createdInvite.email}`}
+          />
+        </div>
+      )}
 
       {canManage && inviteOpen && (
         <Dialog titleId="invite-member-dialog-title" onClose={closeInvite}>
@@ -266,6 +338,15 @@ export function TeamPage() {
                   >
                     Revoke
                   </button>
+                  {/* T043 — AC2: the link must stay retrievable after a
+                      reload, otherwise a one-shot success message strands the
+                      Owner with an invite they cannot deliver. */}
+                  {invite.status === 'PENDING' && (
+                    <InviteLink
+                      token={invite.token}
+                      label={`Invite link for ${invite.email}`}
+                    />
+                  )}
                 </li>
               ))}
             </ul>

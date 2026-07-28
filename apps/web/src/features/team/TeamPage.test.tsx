@@ -183,10 +183,80 @@ describe('TeamPage', () => {
         expect.objectContaining({ method: 'POST' }),
       ),
     );
-    // Modal closes; success message and the new pending invite render on the page.
+    // Modal closes; the new pending invite renders on the page.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(await screen.findByText('Invite sent to new@example.com')).toBeInTheDocument();
     expect(screen.getByTestId('invite-i2')).toBeInTheDocument();
+
+    // T043/AC3 — nothing is emailed (there is no mailer), so the message must
+    // not claim an invite was "sent"; it must tell the Owner to share the link.
+    const banner = await screen.findByTestId('created-invite-banner');
+    expect(banner).toHaveTextContent('Invite created for new@example.com');
+    expect(banner).toHaveTextContent('No email is sent');
+    expect(screen.queryByText(/Invite sent to/i)).not.toBeInTheDocument();
+
+    // T043/AC1 — the link, carrying the token, is rendered and copyable.
+    const linkInput = within(banner).getByLabelText(
+      'New invite link for new@example.com',
+    ) as HTMLInputElement;
+    expect(linkInput.value).toBe(`${window.location.origin}/invite/accept?token=tok`);
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+    await user.click(within(banner).getByRole('button', { name: 'Copy link' }));
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/invite/accept?token=tok`);
+    expect(await within(banner).findByText('Copied!')).toBeInTheDocument();
+  });
+
+  it('T043/AC2 — each pending invite row exposes its link, so it survives a reload', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [makeInvite({ id: 'i1', email: 'pending@example.com', token: 'tok-1' })],
+      });
+
+    render(
+      <MemoryRouter>
+        <TeamPage />
+      </MemoryRouter>,
+    );
+
+    const row = await screen.findByTestId('invite-i1');
+    const linkInput = within(row).getByLabelText(
+      'Invite link for pending@example.com',
+    ) as HTMLInputElement;
+    expect(linkInput.value).toBe(`${window.location.origin}/invite/accept?token=tok-1`);
+    expect(linkInput).toHaveAttribute('readonly');
+  });
+
+  it('T043 — a blocked clipboard never reports a false success', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [makeInvite({ id: 'i1', token: 'tok-1' })],
+      });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TeamPage />
+      </MemoryRouter>,
+    );
+
+    const row = await screen.findByTestId('invite-i1');
+    // Insecure origin / unsupported browser: no clipboard object at all.
+    vi.stubGlobal('navigator', { ...navigator, clipboard: undefined });
+    await user.click(within(row).getByRole('button', { name: 'Copy link' }));
+
+    expect(
+      await within(row).findByText(/select the link above and copy it manually/i),
+    ).toBeInTheDocument();
+    expect(within(row).queryByText('Copied!')).not.toBeInTheDocument();
   });
 
   it('revoking a pending invite calls DELETE /users/invites/:id and removes it', async () => {
