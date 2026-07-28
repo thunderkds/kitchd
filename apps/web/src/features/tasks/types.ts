@@ -67,9 +67,18 @@ export interface UpdateTaskInput {
   checklistItems?: ChecklistItemInput[];
 }
 
+// T040 — the narrow `GET /users/assignable` payload: exactly `id` + `email`,
+// never `role` / `isActive` (that team-management surface stays Owner/Admin
+// only, T027). Readable by OWNER/ADMIN/CHEF — the Task write roles.
+export interface AssignableUser {
+  id: string;
+  email: string;
+}
+
 // T039 — one selectable assignee for the edit form. Resolved by TasksPage:
-// `email` from GET /users when the caller may read it (OWNER/ADMIN only),
-// otherwise a truncated id, matching the existing assignee-filter dropdown.
+// `email` from GET /users/assignable when the caller may read it
+// (OWNER/ADMIN/CHEF since T040), otherwise a truncated id, matching the
+// existing assignee-filter dropdown.
 export interface AssigneeOption {
   id: string;
   label: string;

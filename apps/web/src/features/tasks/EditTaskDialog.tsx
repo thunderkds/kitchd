@@ -103,6 +103,13 @@ export function EditTaskDialog({
     if (formError) setFormError(null);
   };
 
+  // T040 — toggling `done` rebuilds the item in place, so its `id` and `text`
+  // survive: PATCH replaces the checklist array wholesale (T008), and a lost
+  // id would re-mint the item server-side.
+  const toggleItemDone = (key: string, done: boolean) => {
+    setItems((prev) => prev.map((item) => (item.key === key ? { ...item, done } : item)));
+  };
+
   const removeItem = (key: string) => {
     setItems((prev) => prev.filter((item) => item.key !== key));
     if (formError) setFormError(null);
@@ -245,6 +252,15 @@ export function EditTaskDialog({
           )}
           {items.map((item, index) => (
             <div key={item.key} className="flex items-center gap-2">
+              <span className="flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 accent-[var(--color-accent)] cursor-pointer"
+                  checked={item.done}
+                  onChange={(e) => toggleItemDone(item.key, e.target.checked)}
+                  aria-label={`Mark checklist item ${index + 1} done`}
+                />
+              </span>
               <input
                 className="border rounded px-2 py-2 text-sm flex-1 min-w-0"
                 value={item.text}

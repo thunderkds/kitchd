@@ -51,6 +51,16 @@ export class UsersController {
     return this.usersService.listPendingInvites(req.user.sub);
   }
 
+  // Static segment — must stay above the bare @Get() / @Get(':id')-style
+  // routes so it is not shadowed. CHEF is included here and nowhere else in
+  // this controller: the payload is id/email only, not the member roster.
+  @Get('assignable')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.OWNER, Role.ADMIN, Role.CHEF)
+  listAssignableUsers(@Req() req: { user: { sub: string } }) {
+    return this.usersService.listAssignableUsers(req.user.sub);
+  }
+
   @Delete('invites/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.OWNER, Role.ADMIN)

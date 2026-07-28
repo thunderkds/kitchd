@@ -5,13 +5,9 @@ import type { UserRole } from '../../routes/auth';
 // T035 — reused to resolve ingredient names for CompleteTaskDialog (FR-008
 // human-reviewable deduction confirmation); no new backend endpoint needed.
 import { listIngredients } from '../inventory/api';
-// T039 — reused to label the assignee picker with real emails. Only
-// OWNER/ADMIN may call GET /users (`@Roles` on UsersController), so the
-// fetch itself is role-gated, not just the rendered control (T028 pattern).
-import { listMembers } from '../team/api';
-import type { Member } from '../team/types';
 import {
   confirmTaskCompletion,
+  fetchAssignableUsers,
   listGuidelinesLite,
   listRecipesLite,
   listTasks,
@@ -26,6 +22,7 @@ import { KanbanBoard } from './KanbanBoard';
 import { ListView } from './ListView';
 import { ViewToggle } from './ViewToggle';
 import type {
+  AssignableUser,
   AssigneeOption,
   CompletionPreview,
   GuidelineLite,
@@ -39,9 +36,6 @@ const UNASSIGNED = 'unassigned';
 // T035 — same RBAC shape as Task PATCH mutations (`WRITE_ROLES` in
 // tasks.service.ts) and identical to Inventory/Guidelines' create gate.
 const WRITE_ROLES: UserRole[] = ['OWNER', 'ADMIN', 'CHEF'];
-
-// T039 — the only roles `UsersController` lets read GET /users.
-const MEMBER_READ_ROLES: UserRole[] = ['OWNER', 'ADMIN'];
 
 /**
  * Kanban and list views render the same fetched Task[] (AC3) — only the
@@ -60,7 +54,8 @@ export function TasksPage() {
 
   // T039 — the task currently open in EditTaskDialog (null = closed).
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
+  // T040 — active kitchen members (id + email) for the assignee picker.
+  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
 
   // T035 — id+title lookups to resolve a task's "From: <title>" line.
   // Only WRITE_ROLES callers can create tasks, but any caller may view an
@@ -104,15 +99,16 @@ export function TasksPage() {
         setIngredientNameById(Object.fromEntries(data.map((i) => [i.id, i.name]))),
       )
       .catch(() => {});
-    // Gated on the role, not just on the rendered control: a CHEF may
-    // reassign tasks but would get a 403 (and the global error dialog)
-    // from GET /users, so they fall back to the ids already on the tasks.
+    // T040 — gated on the role, not just on the rendered control: only the
+    // Task write roles may reassign, and only they may read
+    // GET /users/assignable, so STAFF/VIEWER never make a call that 403s
+    // (and never trip the global error dialog).
     // Read inside the effect (not the outer `caller`) to keep this a
     // genuine mount-only effect with no dependency list churn.
     const current = getUser();
-    if (current && MEMBER_READ_ROLES.includes(current.role)) {
-      listMembers()
-        .then(setMembers)
+    if (current && WRITE_ROLES.includes(current.role)) {
+      fetchAssignableUsers()
+        .then(setAssignableUsers)
         .catch(() => {});
     }
   }, []);
@@ -155,13 +151,16 @@ export function TasksPage() {
     return caller.role === 'STAFF' && task.assigneeId === caller.id;
   };
 
-  // Assignable users, all kitchen-scoped: emails when GET /users is
-  // readable, otherwise the ids already present on this kitchen's tasks —
-  // never an id from an unscoped source.
+  // Assignable users, all kitchen-scoped: emails from GET /users/assignable
+  // (already filtered to active members of the caller's own kitchen), plus
+  // any id still present on this kitchen's tasks — the fallback is what keeps
+  // a since-deactivated assignee selectable instead of silently cleared.
+  // Never an id from an unscoped source.
   const assigneeOptions: AssigneeOption[] = (() => {
-    const options: AssigneeOption[] = members
-      .filter((member) => member.isActive)
-      .map((member) => ({ id: member.id, label: member.email }));
+    const options: AssigneeOption[] = assignableUsers.map((user) => ({
+      id: user.id,
+      label: user.email,
+    }));
     const known = new Set(options.map((option) => option.id));
     for (const id of assigneeIds) {
       if (!known.has(id)) {

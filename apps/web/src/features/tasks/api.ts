@@ -1,6 +1,7 @@
 import { getToken } from '../../routes/auth';
 import { notifyApiError } from '../../errorDialog/ErrorDialogProvider';
 import type {
+  AssignableUser,
   ChecklistItem,
   CompletionPreview,
   CompletionResult,
@@ -70,6 +71,16 @@ export function generateTaskFromGuideline(guidelineId: string): Promise<Task> {
 
 // Lightweight id+title lists for the Create Task pickers — reuses the
 // existing /recipes and /guidelines list endpoints (no new backend routes).
+/**
+ * T040 — active members of the caller's own kitchen, id + email only, for
+ * the assignee picker. A CHEF may reassign a task but is not an Owner/Admin,
+ * so `GET /users` (team management) 403s for them; this narrow route is
+ * `@Roles(OWNER, ADMIN, CHEF)` and returns no `role` / `isActive`.
+ */
+export function fetchAssignableUsers(): Promise<AssignableUser[]> {
+  return request<AssignableUser[]>('/users/assignable');
+}
+
 export function listRecipesLite(): Promise<RecipeLite[]> {
   return request<RecipeLite[]>('/recipes');
 }
