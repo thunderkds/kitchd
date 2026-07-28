@@ -121,6 +121,79 @@ describe('EditTaskDialog', () => {
     expect(onSaved).not.toHaveBeenCalled();
   });
 
+  // T040 — per-item `done` checkbox.
+  it('T040 AC5: each checklist row renders a done checkbox reflecting the stored state', () => {
+    render(
+      <EditTaskDialog
+        task={makeTask({
+          checklistItems: [
+            { id: 'i1', text: 'Wash veg', done: false },
+            { id: 'i2', text: 'Dice onions', done: true },
+          ],
+        })}
+        canEditDetails
+        assigneeOptions={[]}
+        onSaved={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Mark checklist item 1 done')).not.toBeChecked();
+    expect(screen.getByLabelText('Mark checklist item 2 done')).toBeChecked();
+  });
+
+  it('T040 AC5: un-ticking a done item sends done:false with its id and text intact', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <EditTaskDialog
+        task={makeTask({
+          checklistItems: [{ id: 'i1', text: 'Wash veg', done: true }],
+        })}
+        canEditDetails
+        assigneeOptions={[]}
+        onSaved={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByLabelText('Mark checklist item 1 done'));
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({
+      checklistItems: [{ id: 'i1', text: 'Wash veg', done: false }],
+    });
+  });
+
+  it('T040 AC5: a newly added item can be ticked done and is still sent without an id', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <EditTaskDialog
+        task={makeTask()}
+        canEditDetails
+        assigneeOptions={[]}
+        onSaved={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add checklist item' }));
+    await user.type(screen.getByLabelText('Checklist item 1'), 'Dice onions');
+    await user.click(screen.getByLabelText('Mark checklist item 1 done'));
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({
+      checklistItems: [{ text: 'Dice onions', done: true }],
+    });
+  });
+
   it('removing a checklist item sends the remaining items only', async () => {
     const onSaved = vi.fn();
     const { default: userEvent } = await import('@testing-library/user-event');

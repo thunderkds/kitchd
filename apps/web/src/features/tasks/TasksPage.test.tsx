@@ -53,7 +53,9 @@ function patchBodies(mock: ReturnType<typeof vi.fn>): unknown[] {
 
 function routedFetchMock(overrides: {
   tasks?: Task[];
-  members?: { id: string; email: string; role: string; isActive: boolean }[];
+  // T040 — `GET /users/assignable` returns id + email only (no role /
+  // isActive): deactivated and cross-kitchen users are filtered server-side.
+  assignableUsers?: { id: string; email: string }[];
   onPatch?: (url: string, init: RequestInit) => unknown;
   onPost?: (url: string, init: RequestInit) => unknown;
 } = {}) {
@@ -63,8 +65,8 @@ function routedFetchMock(overrides: {
     if (url.includes('/recipes')) return Promise.resolve(jsonResponse([]));
     if (url.includes('/guidelines')) return Promise.resolve(jsonResponse([]));
     if (url.includes('/ingredients')) return Promise.resolve(jsonResponse([]));
-    if (url.includes('/users')) {
-      return Promise.resolve(jsonResponse(overrides.members ?? []));
+    if (url.includes('/users/assignable')) {
+      return Promise.resolve(jsonResponse(overrides.assignableUsers ?? []));
     }
     if (url.endsWith('/tasks') && method === 'GET') {
       return Promise.resolve(jsonResponse(tasks));
@@ -570,10 +572,11 @@ describe('TasksPage', () => {
     fetchMock.mockImplementation(
       routedFetchMock({
         tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-1' })],
-        members: [
-          { id: 'user-1', email: 'ana@example.com', role: 'STAFF', isActive: true },
-          { id: 'user-2', email: 'bo@example.com', role: 'STAFF', isActive: true },
-          { id: 'user-3', email: 'gone@example.com', role: 'STAFF', isActive: false },
+        // The deactivated `gone@example.com` is absent from the endpoint's
+        // payload (server-side `isActive: true` filter, T040 AC4).
+        assignableUsers: [
+          { id: 'user-1', email: 'ana@example.com' },
+          { id: 'user-2', email: 'bo@example.com' },
         ],
         onPatch: () => makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-2' }),
       }),
@@ -609,7 +612,7 @@ describe('TasksPage', () => {
     fetchMock.mockImplementation(
       routedFetchMock({
         tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-1' })],
-        members: [{ id: 'user-1', email: 'ana@example.com', role: 'STAFF', isActive: true }],
+        assignableUsers: [{ id: 'user-1', email: 'ana@example.com' }],
         onPatch: () => makeTask({ id: 't1', title: 'Task A', assigneeId: null }),
       }),
     );
@@ -879,13 +882,20 @@ describe('TasksPage', () => {
     expect(screen.queryByText('Renamed')).not.toBeInTheDocument();
   });
 
-  it('T039: a Chef (who cannot read GET /users) still gets an assignee picker and issues no /users call', async () => {
+  // ---------------------------------------------------------------------
+  // T040 — assignable-users endpoint for CHEF + checklist `done` toggle
+  // ---------------------------------------------------------------------
+
+  it('T040 AC1: a Chef reads GET /users/assignable and sees every active member by email, including one with no task', async () => {
     setUser('CHEF');
     fetchMock.mockImplementation(
       routedFetchMock({
-        tasks: [
-          makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-11111111' }),
-          makeTask({ id: 't2', title: 'Task B', assigneeId: 'user-22222222' }),
+        tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'user-1' })],
+        assignableUsers: [
+          { id: 'user-1', email: 'ana@example.com' },
+          // Has zero tasks — unreachable before T040, the whole point of the
+          // new endpoint (the id-fallback picker could never surface them).
+          { id: 'user-9', email: 'taskless@example.com' },
         ],
       }),
     );
@@ -900,12 +910,169 @@ describe('TasksPage', () => {
     );
 
     await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.filter((call) => String(call[0]).includes('/users/assignable')),
+      ).toHaveLength(1),
+    );
+    // The wide team-management route stays untouched for a Chef.
+    expect(
+      fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/users')),
+    ).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+    const assigneeSelect = within(screen.getByRole('dialog')).getByLabelText('Assignee');
+    expect(within(assigneeSelect).getByText('ana@example.com')).toBeInTheDocument();
+    expect(within(assigneeSelect).getByText('taskless@example.com')).toBeInTheDocument();
+    // No truncated-UUID labels once real emails are available.
+    expect(within(assigneeSelect).queryByText('user-1')).not.toBeInTheDocument();
+  });
+
+  it('T040 AC7: a task assigned to a since-deactivated user keeps that assignee selected and does not clear it', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [makeTask({ id: 't1', title: 'Task A', assigneeId: 'gone-11111111' })],
+        // `gone-11111111` is deactivated, so absent from the endpoint.
+        assignableUsers: [{ id: 'user-1', email: 'ana@example.com' }],
+        onPatch: () =>
+          makeTask({ id: 't1', title: 'Renamed', assigneeId: 'gone-11111111' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    const assigneeSelect = within(dialog).getByLabelText('Assignee') as HTMLSelectElement;
+    expect(assigneeSelect.value).toBe('gone-11111111');
+    expect(within(assigneeSelect).getByText('gone-111')).toBeInTheDocument();
+
+    // Changing an unrelated field must not send an assignee change.
+    const titleInput = within(dialog).getByLabelText('Task title');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Renamed');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([{ title: 'Renamed' }]);
+  });
+
+  it('T040 AC5: ticking a checklist item done PATCHes it with its id and text preserved, other items untouched', async () => {
+    setUser('CHEF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [
+          makeTask({
+            id: 't1',
+            title: 'Task A',
+            checklistItems: [
+              { id: 'i1', text: 'Wash veg', done: false },
+              { id: 'i2', text: 'Dice onions', done: false },
+            ],
+          }),
+        ],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
+
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByLabelText('Mark checklist item 1 done'));
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([
+      {
+        checklistItems: [
+          { id: 'i1', text: 'Wash veg', done: true },
+          { id: 'i2', text: 'Dice onions', done: false },
+        ],
+      },
+    ]);
+  });
+
+  it('T040 AC6: Staff can tick done on their own task, sees no detail fields, and never calls /users/assignable', async () => {
+    setUser('STAFF');
+    fetchMock.mockImplementation(
+      routedFetchMock({
+        tasks: [
+          makeTask({
+            id: 't1',
+            title: 'Task A',
+            assigneeId: 'caller-1',
+            checklistItems: [{ id: 'i1', text: 'Wash veg', done: false }],
+          }),
+        ],
+        onPatch: () => makeTask({ id: 't1', title: 'Task A', assigneeId: 'caller-1' }),
+      }),
+    );
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    // A route Staff would get a 403 from is never called (no error-dialog noise).
     expect(
       fetchMock.mock.calls.filter((call) => String(call[0]).includes('/users')),
     ).toHaveLength(0);
 
     await user.click(screen.getByRole('button', { name: 'Edit Task A' }));
-    const assigneeSelect = within(screen.getByRole('dialog')).getByLabelText('Assignee');
-    expect(within(assigneeSelect).getByText('user-222')).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).queryByLabelText('Task title')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Assignee')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Due date')).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByLabelText('Mark checklist item 1 done'));
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(patchBodies(fetchMock)).toEqual([
+      { checklistItems: [{ id: 'i1', text: 'Wash veg', done: true }] },
+    ]);
+  });
+
+  it('T040: a Viewer never calls /users/assignable', async () => {
+    setUser('VIEWER');
+    fetchMock.mockImplementation(
+      routedFetchMock({ tasks: [makeTask({ id: 't1', title: 'Task A' })] }),
+    );
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Task A')).toBeInTheDocument());
+    expect(
+      fetchMock.mock.calls.filter((call) => String(call[0]).includes('/users')),
+    ).toHaveLength(0);
   });
 });
