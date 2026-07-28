@@ -148,6 +148,7 @@ export function InventoryPage() {
                 <p className="font-medium break-words">{ingredient.name}</p>
                 <p className="text-xs text-muted">
                   Stock: {ingredient.currentStock ?? '—'} {ingredient.unit} · Cost: {ingredient.costPerUnit}/{ingredient.unit}
+                  {ingredient.minThreshold != null && ` · Min: ${ingredient.minThreshold} ${ingredient.unit}`}
                 </p>
               </div>
 
