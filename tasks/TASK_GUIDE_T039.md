@@ -4,7 +4,7 @@
 **Risk Level**: Medium
 **Priority**: P1
 **Assigned agent**: frontend-developer
-**Agent guide**: `.codex/agents/frontend.md`
+**Agent guide**: `.claude/agents/frontend.md`
 
 ---
 
@@ -14,8 +14,8 @@ Before writing any code:
 1. Read `PROJECT_SPEC.md`
 2. Read `memory/MEMORY.md`
 3. Read this file completely
-4. Read `.codex/agents/frontend.md`
-5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in `.codex/agents/general-agent-template.md`
+4. Read `.claude/agents/frontend.md`
+5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in `.claude/agents/general-agent-template.md`
 6. **C2/C3 or multi-file tasks only**: read `memory/codebase-map.md` for directory layout, entry points, and blast-radius hotspots
 
 ---

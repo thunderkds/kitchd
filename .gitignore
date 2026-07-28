@@ -9,3 +9,8 @@ build/
 coverage/
 .turbo/
 apps/web/.vite/
+.claude/
+templates/
+.codex/
+.nodeterm/
+memory/event-trace/

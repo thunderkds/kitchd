@@ -55,7 +55,6 @@
   "hooks": {
     "PostToolUse": [
       {
-        "description": "Auto-register new TASK_GUIDE files in PROJECT_KANBAN.md",
         "matcher": "Write",
         "hooks": [
           {
@@ -65,7 +64,6 @@
         ]
       },
       {
-        "description": "Move task to Ready for Review after agent finishes",
         "matcher": "Agent",
         "hooks": [
           {
@@ -75,7 +73,6 @@
         ]
       },
       {
-        "description": "Prompt Supervisor to run diff-driven memory-update pass after git push/merge/pull",
         "matcher": "Bash",
         "hooks": [
           {
@@ -85,7 +82,6 @@
         ]
       },
       {
-        "description": "Record every tool call to memory/event-trace/<task>.jsonl for the Stage 4/5 verify gate",
         "matcher": "*",
         "hooks": [
           {
@@ -97,7 +93,6 @@
     ],
     "PreToolUse": [
       {
-        "description": "Block agent spawn if TASK_GUIDE is missing",
         "matcher": "Agent",
         "hooks": [
           {
@@ -107,7 +102,6 @@
         ]
       },
       {
-        "description": "Block git push/merge if pipeline gates are not satisfied",
         "matcher": "Bash",
         "hooks": [
           {
@@ -119,7 +113,6 @@
     ],
     "Stop": [
       {
-        "description": "Remind Supervisor to run Stage 4 review for pending tasks",
         "hooks": [
           {
             "type": "command",
@@ -128,5 +121,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "codex@openai-codex": true
   }
 }
