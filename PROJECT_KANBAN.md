@@ -12,6 +12,7 @@
 ### Todo
 
 ### In Progress
+- [ ] **T041** — Low-stock threshold is unreachable from the Ingredient form (bug, origin defect since T031: `IngredientFormDialog` never collects `minThreshold`, so every UI-created ingredient stays `null` and is permanently excluded by `AlertsService#lowStock`'s `minThreshold: { not: null, gt: 0 }` filter — T007 alerts + T016 notifications are inert for all non-seeded data; edit path also drops `category`) | frontend-developer | C1 | Risk: Low | P1 | Frontend-only — schema/DTOs/AlertsService/LowStockWidget all already correct, verified 2026-07-28 | Create pre-fills threshold `5` (user decision), client-side not in the DTO | guide: `tasks/TASK_GUIDE_T041.md` | Started: 2026-07-28
 
 ### Ready for Review
 
