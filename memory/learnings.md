@@ -250,3 +250,15 @@ A systematic sweep (all `*.controller.ts` routes vs. all non-test `apps/web/src`
 
 **Process fix applied**: `templates/TASK_GUIDE_template.md` now requires a `Consumer:` line on any task adding/changing a backend route or user-settable persisted field — naming the frontend surface, or `UI deferred to Txxx`, or `Intentionally headless: <reason>` — and a blank blocks Done. Same reasoning as the Evidence table catching missing tests: an absence is only noticed when a field explicitly asks for it.
 **Files**: `docs/audits/backend-frontend-coverage_2026-07-28.md`, `templates/TASK_GUIDE_template.md`, `apps/web/src/App.tsx`, `apps/web/src/routes/pages/LoginPage.tsx`, `apps/api/src/users/users.service.ts#acceptInvite`
+
+### 2026-07-28 — `POST /auth/signup` requires organizationName AND kitchenName (correcting an earlier note)
+An earlier memory entry recorded only that signup "also requires `kitchenName`". Verified live while building T043's contrast probe: omitting `organizationName` returns `400 organizationName must be longer than or equal to 1 characters`. The full required body is `{ email, password, organizationName, kitchenName }`. Signup mints a **new Organization + Kitchen** and makes the caller its OWNER — which is exactly why it is the wrong path for an invitee, and the root of T043's silent-tenant-mismatch failure.
+**Files**: `apps/api/src/auth/dto/signup.dto.ts`, `apps/api/src/auth/auth.service.ts`
+
+### 2026-07-28 — Mutation-test a guard/route assertion instead of trusting a green pass
+T043's implementer proved its "the invite route is public" test by **moving the route inside `AuthGuard`, confirming the test then failed, and restoring it**. This is the discipline that was missing on T041, where a typed-`0` case had no test at all and the P1 shipped to review. A test asserting an *absence* (no redirect, no network call, no guard) can pass for the wrong reason — because a selector never matched, a mock swallowed the call, or the assertion was vacuous. **General rule**: for any test whose value is that something does NOT happen, break the production code once and confirm the test goes red before trusting it. Cheap, and it converts a green tick into evidence.
+**Files**: `apps/web/src/routes/pages/AcceptInvitePage.test.tsx`, `apps/web/src/App.tsx`
+
+### 2026-07-28 — `memory/codebase-map.md` has never existed, so every C2/C3 spawn skips a mandatory startup step
+T043's agent reported that step 6 of its Mandatory Startup ("C2/C3: read `memory/codebase-map.md`") could not be completed — the file is absent from both the worktree and the main clone, meaning `/map-codebase` has never been run despite being a Stage 1 checklist item. Every C2/C3 sub-agent dispatched so far has silently skipped structural orientation. Fix is one `Skill({ skill: "map-codebase" })` run; worth doing before the next C2+ task rather than having each agent rediscover the gap.
+**Files**: `memory/codebase-map.md` (absent), `.claude/skills/map-codebase/SKILL.md`
