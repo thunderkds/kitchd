@@ -22,6 +22,14 @@ const MEMBER_SELECT = {
   isActive: true,
 } as const;
 
+/** Minimal identity fields for the assignee picker (T040). Deliberately
+ * narrower than MEMBER_SELECT: a CHEF may reach this list but must not gain
+ * the team-management surface (`role`, `isActive`) restricted to Owner/Admin. */
+const ASSIGNABLE_SELECT = {
+  id: true,
+  email: true,
+} as const;
+
 /** Roles that cannot be targeted by role-change or removal — protects
  * against a kitchen ever being left without an Owner/Admin by accident. */
 const PROTECTED_ROLES: Role[] = [Role.OWNER, Role.ADMIN];
@@ -156,6 +164,18 @@ export class UsersService {
     return this.prisma.user.findMany({
       where: { kitchenId: caller.kitchenId, isActive: true },
       select: MEMBER_SELECT,
+      orderBy: { email: 'asc' },
+    });
+  }
+
+  /** Kitchen-scoped assignee picker source (T040). Same query shape as
+   * listMembers, but returns only `id`/`email`. Scoping lives inside the
+   * Prisma `where`, never as a post-fetch filter. */
+  async listAssignableUsers(callerId: string) {
+    const caller = await this.getCallerOrThrow(callerId);
+    return this.prisma.user.findMany({
+      where: { kitchenId: caller.kitchenId, isActive: true },
+      select: ASSIGNABLE_SELECT,
       orderBy: { email: 'asc' },
     });
   }
