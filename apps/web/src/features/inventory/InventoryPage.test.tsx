@@ -381,6 +381,41 @@ describe('InventoryPage', () => {
     expect(fetchMock.mock.calls.length).toBe(callsBefore);
   });
 
+  // Stage 4 regression test. The first implementation guarded `parsed < 0`,
+  // which accepted an explicitly typed 0. A stored 0 is excluded by
+  // AlertsService#lowStock's `minThreshold: { not: null, gt: 0 }` filter just
+  // as a null is — so typing "0" silently re-created the exact bug T041 was
+  // opened to fix. Zero must be blocked, not stored.
+  it('T041 AC8: an explicitly typed 0 threshold is blocked — a stored 0 is as invisible to alerting as a null', async () => {
+    setOwner();
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [] });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <InventoryPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('No ingredients yet.')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Add Ingredient' }));
+    const dialog = await screen.findByRole('dialog');
+
+    await user.clear(within(dialog).getByLabelText('Low stock threshold'));
+    await user.type(within(dialog).getByLabelText('Low stock threshold'), '0');
+    await user.type(within(dialog).getByLabelText('Ingredient name'), 'Sugar');
+    await user.type(within(dialog).getByLabelText('Ingredient unit'), 'kg');
+    await user.type(within(dialog).getByLabelText('Cost per unit'), '3');
+
+    const callsBefore = fetchMock.mock.calls.length;
+    await user.click(within(dialog).getByRole('button', { name: 'Create Ingredient' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    expect(fetchMock.mock.calls.length).toBe(callsBefore);
+  });
+
   it('T041 AC2/AC3/AC6: edit pre-fills stored threshold and category, PATCHes both', async () => {
     setOwner();
     fetchMock

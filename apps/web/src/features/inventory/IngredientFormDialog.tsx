@@ -49,12 +49,17 @@ export function IngredientFormDialog({
 
   // Blank -> undefined (never 0 — Number('') is 0, and the alert service
   // filters `gt: 0`, so a naive conversion would re-create this bug).
-  // Negative/non-numeric -> null, a sentinel meaning "block the submit".
+  // Non-numeric, negative, and ZERO -> null, a sentinel meaning "block the
+  // submit". Zero must be blocked for the same reason blank must not become
+  // zero: `AlertsService#lowStock` filters `minThreshold: { not: null, gt: 0 }`,
+  // so a stored 0 is just as invisible to alerting as a null. Accepting it
+  // would let a user re-create this task's original bug by typing one
+  // character. Leave the field blank to mean "no threshold".
   const parseThreshold = (): number | undefined | null => {
     const trimmed = minThreshold.trim();
     if (trimmed === '') return undefined;
     const parsed = Number(trimmed);
-    if (Number.isNaN(parsed) || parsed < 0) return null;
+    if (Number.isNaN(parsed) || parsed <= 0) return null;
     return parsed;
   };
 
@@ -65,7 +70,7 @@ export function IngredientFormDialog({
     if (!isEdit && (!name.trim() || !unit.trim() || !costPerUnit.trim())) return;
     const parsedThreshold = parseThreshold();
     if (parsedThreshold === null) {
-      setError('Low stock threshold must be a non-negative number');
+      setError('Low stock threshold must be a number greater than 0 — leave it blank for no threshold');
       return;
     }
     setSubmitting(true);
