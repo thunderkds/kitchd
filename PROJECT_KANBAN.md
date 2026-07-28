@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-23
+**Last updated**: 2026-07-28
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,11 +10,13 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T040** — Assignee-picker completeness for CHEF + checklist `done` toggle in `EditTaskDialog` (T039 Stage 4 follow-up: a CHEF may reassign any task but cannot read `GET /users` — `@Roles(OWNER, ADMIN)` — so the picker falls back to ids already on loaded tasks and cannot reach a member with no task; separately the edit dialog renders checklist text inputs but no `done` checkbox) | backend-developer + frontend-developer | C2 | Risk: Medium | P2 | ⚠️ TASK_GUIDE not yet written — needs Stage 2 before pickup
 
 ### In Progress
 
 ### Ready for Review
+- [ ] **T040** — Assignee-picker completeness for CHEF + checklist `done` toggle in `EditTaskDialog` (T039 Stage 4 follow-up: a CHEF may reassign any task but cannot read `GET /users` — `@Roles(OWNER, ADMIN)` — so the picker falls back to ids already on loaded tasks and cannot reach a member with no task; separately the edit dialog renders checklist text inputs but no `done` checkbox) | backend-developer + frontend-developer | C2 | Risk: Medium | P2 | Approach: new narrow `GET /users/assignable` (`@Roles(OWNER, ADMIN, CHEF)`, returns `{id, email}` only) — NOT a widening of `GET /users` | Part A `308fb02` + Part B `2d67d0f` | code-review 0 P0/P1 (1 P2 pre-existing central-audit gap, 2 P3 comment hygiene) | security-review 0 High/Med | 213/213 backend + 181/181 frontend tests green, `npm run build` clean | Stage 5 verify: live API 9/9 `OVERALL: pass` + AC5 round-trip + screenshots reviewed | Evidence table filled | Started: 2026-07-28
+
+
 
 ### Done
 - [x] **T039** — Edit Task UI: change title/assignee/due-date/checklist on an existing task (backend `PATCH /tasks/:id` has existed since T008; only the frontend affordance was missing) | frontend-developer | C2 | Risk: Medium | P1 | code-review 0 P0/P1, 1 P2 + 1 P3 deferred (both need an out-of-scope backend change — see T040) | security-review 0 High/Med | 174/174 frontend tests green post-merge (18 new) | `npm run build` clean | Stage 5 verify: API contract 12/12 + live browser, both Kanban and List views | Started: 2026-07-23 | Done: 2026-07-24
