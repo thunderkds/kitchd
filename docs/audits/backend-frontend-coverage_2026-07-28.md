@@ -37,7 +37,9 @@ An Owner or Admin can send an invite from `TeamPage` (`POST /users/invite` works
 
 Consequence: the multi-user premise of the product is unreachable. Every role in FR-018 beyond the founding Owner (Chef, Staff, Viewer) is unreachable in practice, which also explains the long-standing "ADMIN role has no creation path" note in memory — same family of defect.
 
-Backend contract, already complete: `acceptInvite({ token, password })` → `AuthResult` (access token + user). It validates status, expiry (returning 404 for expired so it can't be used to probe which emails were invited), and rejects an email that already has an account. A single public route such as `/invite/accept?token=…` with a password field is the entire missing piece.
+Backend contract, already complete: `acceptInvite({ token, password })` → `AuthResult` (access token + user). It validates status, expiry (returning 404 for expired so it can't be used to probe which emails were invited), and rejects an email that already has an account.
+
+> **CORRECTION (2026-07-28, while scoping T043)**: this section originally said a public accept page "is the entire missing piece." That was wrong — the flow is broken at **both** ends. There is **no mailer anywhere in the project** (no nodemailer, no SendGrid, no SMTP config). `invite()` mints a 32-byte token and returns it to the Owner's browser, where `TeamPage` discards it and displays `Invite sent to {email}` — a message that asserts something the system cannot do. So the token never reaches the invitee at all, and an accept page alone would still leave onboarding impossible. T043 therefore covers both halves: surface a copyable invite link on the Owner's side (the token is already present in the `POST /users/invite` response and in `GET /users/invites`), and build the public accept page. Delivery stays out-of-band by decision — the Owner sends the link themselves; real email remains unbuilt.
 
 ### F2 — Shift Log: the whole module is unreachable. **(P1)**
 

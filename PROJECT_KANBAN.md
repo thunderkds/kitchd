@@ -11,7 +11,6 @@
 
 ### Todo
 > Registered by the T042 coverage audit — see `docs/audits/backend-frontend-coverage_2026-07-28.md`. TASK_GUIDEs not yet written; each needs Stage 2 before pickup.
-- [ ] **T043** — Invite acceptance page (`POST /users/invite/accept` has no UI and no public route; an invitee who clicks "sign up" instead lands in a brand-new org+kitchen via `/auth/signup`, silently joining the wrong tenant — team onboarding is impossible today) | frontend-developer | C2 | Risk: Medium | **P0** | ⚠️ guide not yet written
 - [ ] **T044** — Shift Log page + sidebar entry (T014's whole module unreachable: no page, no `features/shift-logs/`, not in nav) | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
 - [ ] **T045** — Expiring-soon widget (`GET /inventory/alerts/expiring` has no consumer; other half of T007, `LowStockWidget` is a working template) | frontend-developer | C1 | Risk: Low | P1 | ⚠️ guide not yet written
 - [ ] **T046** — CSV export controls (`/export/ingredients`, `/export/recipes` — all of T020 is unreachable) | frontend-developer | C1 | Risk: Low | P1 | ⚠️ guide not yet written
@@ -21,6 +20,7 @@
 - [ ] **T050** — Extend `rbac-matrix.e2e.spec.ts` to cover the `/users` routes (T040 P2: the audit built to catch role-omission gaps asserts nothing about any `/users` route) | backend-developer | C1 | Risk: Medium | P2 | ⚠️ guide not yet written
 
 ### In Progress
+- [ ] **T043** — Invite acceptance: team onboarding is impossible today (F1 from the T042 audit). Broken at BOTH ends — there is no mailer in the project at all, so `TeamPage`'s "Invite sent" message is false and the token never reaches the invitee; and `POST /users/invite/accept` has no UI or public route. An invitee who signs up via `/login` instead hits `/auth/signup`, which mints a NEW org+kitchen, so they silently join the wrong tenant | frontend-developer | C2 | Risk: Medium | **P0** | Copy-link delivery, no email (user decision 2026-07-28) | Frontend-only — backend complete since T002 | guide: `tasks/TASK_GUIDE_T043.md` | Started: 2026-07-28
 
 ### Ready for Review
 
