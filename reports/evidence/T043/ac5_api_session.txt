@@ -1,0 +1,31 @@
+=== AC5 PROOF: the invitee landed in the INVITING kitchen ===
+-- inviting Owner's kitchenId: 913ca19e-b1cd-42a7-aca2-a33b90dbeaed
+
+-- invitee logs in fresh (proves the account really exists):
+{
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZTg5ZDFiYi0xYjNkLTQxNjUtYjA3OS0xZDFkZWE5NDI5NzEiLCJlbWFpbCI6InQwNDMtY2hlZi0xNzg1MjE4OTEyQGV4YW1wbGUuY29tIiwib3JnYW5pemF0aW9uSWQiOiI5Y2ViMjhiNC0xNDdjLTRmNzQtYjRkYi0xMzkwMjVjZWQwMjQiLCJraXRjaGVuSWQiOiI5MTNjYTE5ZS1iMWNkLTQyYTctYWNhMi1hMzNiOTBkYmVhZWQiLCJpYXQiOjE3ODUyMTkwMjIsImV4cCI6MTc4NTMwNTQyMn0.mXLKs1ZWpcP6xxH86k9VjGh3hu26sszPrSH0H-HgjDc",
+    "user": {
+        "id": "7e89d1bb-1b3d-4165-b079-1d1dea942971",
+        "email": "t043-chef-1785218912@example.com",
+        "organizationId": "9ceb28b4-147c-4f74-b4db-139025ced024",
+        "kitchenId": "913ca19e-b1cd-42a7-aca2-a33b90dbeaed",
+        "role": "CHEF",
+        "themePreference": "simple"
+    }
+}
+
+-- GET /tasks with the session the accept page issued:
+task count: 10
+distinct kitchenIds in the response: ['913ca19e-b1cd-42a7-aca2-a33b90dbeaed']
+sample titles: ['Staff checklist task', 'Margherita Pizza', 'Playwright Test SOP']
+
+=== CONTRAST: the silent failure this task removes ===
+-- same person instead 'signs up' at /login:
+{
+  "id": "49b6809c-b9ce-44eb-b83a-e5a8c2a7510a",
+  "email": "t043-signup-1785218912@example.com",
+  "organizationId": "ea26eafe-b952-455e-96e7-4fdde6720e5b",
+  "kitchenId": "7f0228d0-9609-4960-b841-c0c41d4b5327",
+  "role": "OWNER",
+  "themePreference": "simple"
+}

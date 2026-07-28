@@ -1,5 +1,5 @@
 import { getToken } from '../../routes/auth';
-import type { UserRole } from '../../routes/auth';
+import type { StoredUser, UserRole } from '../../routes/auth';
 import { notifyApiError } from '../../errorDialog/ErrorDialogProvider';
 import type { Invite, Member } from './types';
 
@@ -61,4 +61,37 @@ export function inviteMember(email: string, role: UserRole): Promise<Invite> {
     method: 'POST',
     body: JSON.stringify({ email, role }),
   });
+}
+
+/**
+ * T043 — the accept endpoint's `AuthResult` payload. Same shape LoginPage
+ * consumes: `themePreference` here is the backend's raw snake_case `Theme`
+ * enum value and must go through `apiThemeToId()` before it is stored
+ * (theme/themeMapping.ts is the only casing-boundary translator).
+ */
+export interface AcceptInviteResult {
+  accessToken: string;
+  user: Omit<StoredUser, 'themePreference'> & { themePreference?: string | null };
+}
+
+/**
+ * T043 — `POST /users/invite/accept` is deliberately public (the invitee has
+ * no account yet), so the Authorization header `request()` attaches is simply
+ * ignored by the server. Creates the user inside the *inviting* kitchen with
+ * the invited role and returns a session.
+ *
+ * 404 covers unknown, already-used, revoked AND expired tokens — the backend
+ * collapses them on purpose so the endpoint can't be used to probe which
+ * emails were invited. Do not surface a distinct "expired" message.
+ */
+export function acceptInvite(token: string, password: string): Promise<AcceptInviteResult> {
+  return request<AcceptInviteResult>('/users/invite/accept', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
+/** Absolute link an Owner/Admin hands to an invitee out-of-band (no mailer exists). */
+export function buildInviteLink(token: string): string {
+  return `${window.location.origin}/invite/accept?token=${encodeURIComponent(token)}`;
 }

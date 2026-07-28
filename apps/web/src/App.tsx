@@ -4,6 +4,7 @@ import { NAV_ITEMS } from './layout/navigation';
 import { AuthGuard } from './routes/AuthGuard';
 import { isAuthenticated } from './routes/auth';
 import { LoginPage } from './routes/pages/LoginPage';
+import { AcceptInvitePage } from './routes/pages/AcceptInvitePage';
 import { SectionPage } from './routes/pages/SectionPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { NotesPage } from './features/notes/NotesPage';
@@ -31,6 +32,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* T043 — public: the invitee has no account yet, so this must stay
+          OUTSIDE the AuthGuard block below. */}
+      <Route path="/invite/accept" element={<AcceptInvitePage />} />
       <Route element={<AuthGuard />}>
         <Route element={<AppShell />}>
           {NAV_ITEMS.map((item) => {
