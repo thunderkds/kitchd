@@ -13,6 +13,14 @@ import type { Ingredient } from './types';
  * category with a required-field guard; edit edits name/unit/cost only and,
  * like the old inline row-edit, applies no required-field guard. An absent
  * `ingredient` prop means create mode; a present one means edit mode.
+ *
+ * T041 — added the low-stock threshold input (`minThreshold`), which was
+ * missing from both payloads and therefore permanently invisible to
+ * AlertsService#lowStock (`gt: 0` filter). Create pre-fills `5`; edit
+ * pre-fills the stored value or blank if null. A blank input is sent as
+ * `undefined`, never `0` — `Number('')` is `0`, which the alert service's
+ * `gt: 0` filter would silently exclude again. Also restored `category` to
+ * the edit payload, which this form was dropping.
  */
 export function IngredientFormDialog({
   ingredient,
@@ -30,14 +38,41 @@ export function IngredientFormDialog({
   const [unit, setUnit] = useState(ingredient?.unit ?? '');
   const [costPerUnit, setCostPerUnit] = useState(ingredient ? String(ingredient.costPerUnit) : '');
   const [category, setCategory] = useState(ingredient?.category ?? '');
+  // Create pre-fills the user's chosen default (5); edit pre-fills the
+  // stored value, or blank if the ingredient has none — a save must never
+  // invent a threshold the user didn't choose.
+  const [minThreshold, setMinThreshold] = useState(
+    isEdit ? (ingredient?.minThreshold != null ? String(ingredient.minThreshold) : '') : '5',
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Blank -> undefined (never 0 — Number('') is 0, and the alert service
+  // filters `gt: 0`, so a naive conversion would re-create this bug).
+  // Non-numeric, negative, and ZERO -> null, a sentinel meaning "block the
+  // submit". Zero must be blocked for the same reason blank must not become
+  // zero: `AlertsService#lowStock` filters `minThreshold: { not: null, gt: 0 }`,
+  // so a stored 0 is just as invisible to alerting as a null. Accepting it
+  // would let a user re-create this task's original bug by typing one
+  // character. Leave the field blank to mean "no threshold".
+  const parseThreshold = (): number | undefined | null => {
+    const trimmed = minThreshold.trim();
+    if (trimmed === '') return undefined;
+    const parsed = Number(trimmed);
+    if (Number.isNaN(parsed) || parsed <= 0) return null;
+    return parsed;
+  };
 
   const handleSubmit = async () => {
     if (submitting) return;
     // Create keeps its original required-field guard; edit keeps its original
     // behaviour of no guard (pre-filled fields are already non-blank).
     if (!isEdit && (!name.trim() || !unit.trim() || !costPerUnit.trim())) return;
+    const parsedThreshold = parseThreshold();
+    if (parsedThreshold === null) {
+      setError('Low stock threshold must be a number greater than 0 — leave it blank for no threshold');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -46,6 +81,8 @@ export function IngredientFormDialog({
           name: name.trim(),
           unit: unit.trim(),
           costPerUnit: Number(costPerUnit),
+          category: category.trim() || undefined,
+          minThreshold: parsedThreshold,
         });
         onUpdated(updated);
       } else {
@@ -54,6 +91,7 @@ export function IngredientFormDialog({
           unit: unit.trim(),
           costPerUnit: Number(costPerUnit),
           category: category.trim() || undefined,
+          minThreshold: parsedThreshold,
         });
         onCreated(created);
       }
@@ -98,15 +136,22 @@ export function IngredientFormDialog({
           onChange={(e) => setCostPerUnit(e.target.value)}
           aria-label="Cost per unit"
         />
-        {!isEdit && (
-          <input
-            className="border rounded px-2 py-2 text-sm"
-            placeholder="Category (optional)"
-            value={category ?? ''}
-            onChange={(e) => setCategory(e.target.value)}
-            aria-label="Ingredient category"
-          />
-        )}
+        <input
+          className="border rounded px-2 py-2 text-sm"
+          placeholder="Category (optional)"
+          value={category ?? ''}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label="Ingredient category"
+        />
+        <input
+          className="border rounded px-2 py-2 text-sm"
+          placeholder="Low stock threshold"
+          type="text"
+          inputMode="decimal"
+          value={minThreshold}
+          onChange={(e) => setMinThreshold(e.target.value)}
+          aria-label="Low stock threshold"
+        />
       </div>
       <div className="flex justify-end gap-2 mt-5">
         <button
