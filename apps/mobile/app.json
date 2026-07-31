@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "KitchenOS",
+    "slug": "kitchenos-mobile",
+    "scheme": "kitchenos",
+    "plugins": ["expo-router"]
+  }
+}
