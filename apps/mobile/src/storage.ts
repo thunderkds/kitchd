@@ -5,6 +5,8 @@ import { Platform } from 'react-native';
 const ACCESS_TOKEN_STORAGE_KEY = 'accessToken';
 const AUTH_USER_STORAGE_KEY = 'authUser';
 const NATIVE_SESSION_STORAGE_KEY = 'session';
+const LEGACY_ACCESS_TOKEN_STORAGE_KEY = ACCESS_TOKEN_STORAGE_KEY;
+const LEGACY_AUTH_USER_STORAGE_KEY = AUTH_USER_STORAGE_KEY;
 
 type NativeSessionState = {
   accessToken: string | null;
@@ -52,21 +54,40 @@ function loadNativeStorage(): Promise<void> {
   if (!nativeHydration) {
     nativeHydration = (async () => {
       const rawState = await SecureStore.getItemAsync(NATIVE_SESSION_STORAGE_KEY);
-      if (!rawState) {
-        nativeSessionState = defaultNativeSessionState();
+      if (rawState) {
+        try {
+          const parsed = JSON.parse(rawState) as Partial<NativeSessionState>;
+          nativeSessionState = {
+            accessToken: typeof parsed.accessToken === 'string' ? parsed.accessToken : null,
+            authUser: typeof parsed.authUser === 'string' ? parsed.authUser : null,
+          };
+          return;
+        } catch (error) {
+          nativeSessionState = defaultNativeSessionState();
+          console.warn('Failed to parse native session storage', error);
+          return;
+        }
+      }
+
+      const [legacyAccessToken, legacyAuthUser] = await Promise.all([
+        SecureStore.getItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
+        SecureStore.getItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
+      ]);
+
+      if (legacyAccessToken || legacyAuthUser) {
+        nativeSessionState = {
+          accessToken: legacyAccessToken,
+          authUser: legacyAuthUser,
+        };
+        await persistNativeSessionState();
+        await Promise.all([
+          SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
+          SecureStore.deleteItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
+        ]);
         return;
       }
 
-      try {
-        const parsed = JSON.parse(rawState) as Partial<NativeSessionState>;
-        nativeSessionState = {
-          accessToken: typeof parsed.accessToken === 'string' ? parsed.accessToken : null,
-          authUser: typeof parsed.authUser === 'string' ? parsed.authUser : null,
-        };
-      } catch (error) {
-        nativeSessionState = defaultNativeSessionState();
-        console.warn('Failed to parse native session storage', error);
-      }
+      nativeSessionState = defaultNativeSessionState();
     })().catch((error) => {
       console.warn('Failed to hydrate native session storage', error);
     });
@@ -138,6 +159,10 @@ export async function persistSession(token: string, user: StoredUser): Promise<v
   };
 
   await persistNativeSessionState();
+  await Promise.all([
+    SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
+    SecureStore.deleteItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
+  ]);
 }
 
 export async function clearSession(): Promise<void> {
@@ -149,4 +174,8 @@ export async function clearSession(): Promise<void> {
 
   nativeSessionState = defaultNativeSessionState();
   await SecureStore.deleteItemAsync(NATIVE_SESSION_STORAGE_KEY);
+  await Promise.all([
+    SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
+    SecureStore.deleteItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
+  ]);
 }
