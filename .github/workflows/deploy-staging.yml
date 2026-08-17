@@ -38,12 +38,18 @@ jobs:
     needs: guard-branch
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
       - name: Run Prisma migrations against staging DB
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
         run: |
-          npm ci --prefix apps/api
-          npm --prefix apps/api run migrate
+          pnpm install --frozen-lockfile --prod=false
+          pnpm --filter @kitchenos/api run migrate
       - name: Trigger Render deploy hook (api)
         run: |
           if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_API }}" ]; then
@@ -60,12 +66,8 @@ jobs:
       - name: Poll Render API for latest deploy status (web)
         if: ${{ secrets.RENDER_API_KEY != '' && secrets.RENDER_SERVICE_ID_WEB != '' }}
         run: |
-          curl -fsS -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_WEB }}/deploys?limit=1" \
-            | tee /dev/null
+          curl -fsS -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"             "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_WEB }}/deploys?limit=1"             | tee /dev/null
       - name: Poll Render API for latest deploy status (api)
         if: ${{ secrets.RENDER_API_KEY != '' && secrets.RENDER_SERVICE_ID_API != '' }}
         run: |
-          curl -fsS -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_API }}/deploys?limit=1" \
-            | tee /dev/null
+          curl -fsS -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"             "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_API }}/deploys?limit=1"             | tee /dev/null

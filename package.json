@@ -2,15 +2,12 @@
   "name": "kitchenos",
   "private": true,
   "version": "0.1.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "dev:web": "npm --prefix apps/web run dev",
-    "dev:api": "npm --prefix apps/api run start:dev",
-    "dev:mobile": "npm --prefix apps/mobile run start",
-    "build": "npm --prefix packages/shared run build && npm --prefix apps/api run build && npm --prefix apps/web run build",
-    "test:api": "npm --prefix apps/api run test"
-  }
+    "dev:web": "pnpm --filter @kitchenos/web run dev",
+    "dev:api": "pnpm --filter @kitchenos/api run start:dev",
+    "dev:mobile": "pnpm --filter @kitchenos/mobile run start",
+    "build": "pnpm --filter @kitchenos/shared run build && pnpm --filter @kitchenos/api run build && pnpm --filter @kitchenos/web run build",
+    "test:api": "pnpm --filter @kitchenos/api run test"
+  },
+  "packageManager": "pnpm@10.12.4"
 }
