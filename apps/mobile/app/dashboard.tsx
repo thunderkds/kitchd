@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { clearSession } from '../src/storage';
 import { session } from '../src/session';
 
 export default function DashboardScreen() {
@@ -11,9 +12,8 @@ export default function DashboardScreen() {
     return null;
   }
 
-  const signOut = () => {
-    session.clearToken();
-    session.clearUser();
+  const signOut = async () => {
+    await clearSession();
     router.replace('/');
   };
 
@@ -52,7 +52,7 @@ export default function DashboardScreen() {
         <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
           <Text style={styles.secondaryButtonText}>Open invites</Text>
         </Pressable>
-        <Pressable style={styles.primaryButton} onPress={signOut}>
+        <Pressable style={styles.primaryButton} onPress={() => void signOut()}>
           <Text style={styles.primaryButtonText}>Sign out</Text>
         </Pressable>
       </View>

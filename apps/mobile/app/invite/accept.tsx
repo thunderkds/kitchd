@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { acceptInvite } from '../../src/api';
-import { session, toStoredUser } from '../../src/session';
+import { persistSession } from '../../src/storage';
+import { toStoredUser } from '../../src/session';
 
 export default function AcceptInviteScreen() {
   const router = useRouter();
@@ -35,8 +36,7 @@ export default function AcceptInviteScreen() {
     try {
       const result = await acceptInvite(trimmedToken, password);
       const storedUser = toStoredUser(result.user);
-      session.setToken(result.accessToken);
-      session.setUser(storedUser);
+      await persistSession(result.accessToken, storedUser);
       setMessage(`Accepted invite for ${storedUser.email}`);
       router.replace('/dashboard');
     } catch (err) {

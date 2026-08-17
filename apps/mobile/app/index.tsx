@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { AuthResponseDto, StoredUser } from '@kitchenos/shared';
 import { API_BASE } from '../src/apiBase';
+import { persistSession } from '../src/storage';
 import { session, toStoredUser } from '../src/session';
 
 type Mode = 'login' | 'signup';
@@ -50,8 +51,7 @@ export default function HomeScreen() {
       }
 
       const storedUser = toStoredUser(data.user);
-      session.setToken(data.accessToken);
-      session.setUser(storedUser);
+      await persistSession(data.accessToken, storedUser);
       setCurrentUser(storedUser);
       router.replace('/dashboard');
     } catch (error) {
