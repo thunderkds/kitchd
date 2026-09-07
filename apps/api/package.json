@@ -76,6 +76,9 @@
       "json",
       "ts"
     ],
+    "moduleNameMapper": {
+      "^bcrypt$": "<rootDir>/../test/bcrypt.ts"
+    },
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {

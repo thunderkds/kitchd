@@ -44,11 +44,9 @@ describe('CSV export helpers', () => {
   });
 
   it('surfaces a failed recipes export through the shared error dialog', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({ message: 'Server error' }),
-    });
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Server error' }), { status: 500 }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const errorDialogModule = await import('../../errorDialog/ErrorDialogProvider');
