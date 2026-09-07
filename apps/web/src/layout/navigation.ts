@@ -13,6 +13,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Inventory', path: '/inventory', emptyMessage: 'No stock items tracked yet.' },
   { label: 'Notes', path: '/notes', emptyMessage: 'No notes yet.' },
   { label: 'Announcements', path: '/announcements', emptyMessage: 'No announcements yet.' },
+  { label: 'Shift Log', path: '/shift-logs', emptyMessage: 'No shift logs yet.' },
   { label: 'Team & Roles', path: '/team', emptyMessage: 'No team members to show yet.' },
   { label: 'Settings', path: '/settings', emptyMessage: 'Settings will appear here.' },
 ];

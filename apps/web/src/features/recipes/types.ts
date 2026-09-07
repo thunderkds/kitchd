@@ -24,6 +24,18 @@ export interface Recipe {
   costComputed: number;
 }
 
+export interface RecipeVersion {
+  id: string;
+  recipeId: string;
+  version: number;
+  name: string;
+  steps: string[];
+  servings: number | null;
+  ingredientsSnapshot: RecipeIngredientResolved[];
+  costComputedAtSnapshot: number;
+  createdAt: string;
+}
+
 // Input shape for POST/PATCH /recipes — mirrors CreateRecipeDto /
 // UpdateRecipeDto (name, steps, servings, ingredients[{ingredientId, qty}]).
 // Only schema-backed fields; see TASK_GUIDE_T036 Out of Scope for the

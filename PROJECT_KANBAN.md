@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-28
+**Last updated**: 2026-09-07
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -11,15 +11,15 @@
 
 ### Todo
 > Registered by the T042 coverage audit — see `docs/audits/backend-frontend-coverage_2026-07-28.md`. TASK_GUIDEs not yet written; each needs Stage 2 before pickup.
-- [ ] **T044** — Shift Log page + sidebar entry (T014's whole module unreachable: no page, no `features/shift-logs/`, not in nav) | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
-- [ ] **T045** — Expiring-soon widget (`GET /inventory/alerts/expiring` has no consumer; other half of T007, `LowStockWidget` is a working template) | frontend-developer | C1 | Risk: Low | P1 | ⚠️ guide not yet written
-- [ ] **T046** — CSV export controls (`/export/ingredients`, `/export/recipes` — all of T020 is unreachable) | frontend-developer | C1 | Risk: Low | P1 | ⚠️ guide not yet written
-- [ ] **T047** — Recipe version history UI (`GET /recipes/:id/versions`; T005's append-only audit trail is invisible) | frontend-developer | C1 | Risk: Low | P2 | ⚠️ guide not yet written
-- [ ] **T048** — Kitchen rename in Settings (`GET`/`PATCH /kitchens/:id`; kitchen name fixed at signup forever) | frontend-developer | C0 | Risk: Low | P2 | ⚠️ guide not yet written
 - [ ] **T049** — Allow clearing a set low-stock threshold (T041 P2: clearing the input sends no key, so the old value silently persists; needs `minThreshold: null` in the payload + backend nullability) | backend-developer + frontend-developer | C1 | Risk: Low | P2 | ⚠️ guide not yet written
 - [ ] **T050** — Extend `rbac-matrix.e2e.spec.ts` to cover the `/users` routes (T040 P2: the audit built to catch role-omission gaps asserts nothing about any `/users` route) | backend-developer | C1 | Risk: Medium | P2 | ⚠️ guide not yet written
 
 ### In Progress
+- **T048** — Kitchen rename in Settings (`GET`/`PATCH /kitchens/:id`; kitchen name fixed at signup forever) | frontend-developer | C0 | Risk: Low | P2 | Started: 2026-09-07 | guide written
+- **T045** — Expiring-soon widget (`GET /inventory/alerts/expiring` has no consumer; other half of T007, `LowStockWidget` is a working template) | frontend-developer | C1 | Risk: Low | P1 | Started: 2026-09-07 | guide written
+- **T046** — CSV export controls (`/export/ingredients`, `/export/recipes` — all of T020 is unreachable) | frontend-developer | C1 | Risk: Low | P1 | Started: 2026-09-07 | guide written
+- **T047** — Recipe version history UI (`GET /recipes/:id/versions`; T005's append-only audit trail is invisible) | frontend-developer | C1 | Risk: Low | P2 | Started: 2026-09-07 | guide written
+- **T044** — Shift Log page + sidebar entry (T014's whole module unreachable: no page, no `features/shift-logs/`, not in nav) | frontend-developer | C2 | Risk: Low | P1 | Started: 2026-09-07 | guide written
 
 ### Ready for Review
 

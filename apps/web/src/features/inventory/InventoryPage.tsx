@@ -9,6 +9,7 @@ import { IngredientFormDialog } from './IngredientFormDialog';
 import { getUser } from '../../routes/auth';
 import type { UserRole } from '../../routes/auth';
 import type { Ingredient } from './types';
+import { downloadIngredientsCsv } from '../export/api';
 
 const WRITE_ROLES: UserRole[] = ['OWNER', 'ADMIN', 'CHEF'];
 
@@ -120,13 +121,22 @@ export function InventoryPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h1 className="text-xl font-semibold">Inventory</h1>
         {canManage && (
-          <button
-            type="button"
-            className="px-3 py-2 text-sm rounded bg-accent text-white"
-            onClick={openCreate}
-          >
-            Add Ingredient
-          </button>
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <button
+              type="button"
+              className="px-3 py-2 text-sm rounded border"
+              onClick={downloadIngredientsCsv}
+            >
+              Export Ingredients CSV
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 text-sm rounded bg-accent text-white"
+              onClick={openCreate}
+            >
+              Add Ingredient
+            </button>
+          </div>
         )}
       </div>
 
