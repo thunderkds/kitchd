@@ -1,9 +1,37 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { InventoryPage } from './InventoryPage';
+import * as exportApi from '../../features/export/api';
 import type { Ingredient, StockMovement } from './types';
-import { setUser } from '../../routes/auth';
+
+let currentUser: {
+  id: string;
+  email: string;
+  organizationId: string;
+  kitchenId: string;
+  role: 'OWNER' | 'ADMIN' | 'CHEF' | 'STAFF' | 'VIEWER';
+  themePreference?: 'simple' | 'dark-neon';
+} | null = null;
+
+vi.mock('../../features/export/api', () => ({
+  downloadIngredientsCsv: vi.fn(),
+}));
+
+vi.mock('../../routes/auth', () => ({
+  getToken: () => 'test-token',
+  setUser: (user: typeof currentUser) => {
+    currentUser = user;
+  },
+  getUser: () => currentUser,
+  clearUser: () => {
+    currentUser = null;
+  },
+}));
+
+import { InventoryPage } from './InventoryPage';
+import { setUser, clearUser } from '../../routes/auth';
+
+const downloadIngredientsCsv = vi.mocked(exportApi.downloadIngredientsCsv);
 
 function makeIngredient(overrides: Partial<Ingredient> = {}): Ingredient {
   return {
@@ -57,14 +85,15 @@ describe('InventoryPage', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    window.localStorage.setItem('accessToken', 'test-token');
+    currentUser = null;
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
+    downloadIngredientsCsv.mockReset();
   });
 
   afterEach(() => {
+    clearUser();
     vi.unstubAllGlobals();
-    window.localStorage.clear();
   });
 
   it('AC1: renders the ingredient list with name, stock, unit, cost from GET /ingredients', async () => {
@@ -84,6 +113,29 @@ describe('InventoryPage', () => {
     expect(within(row).getByText('Flour')).toBeInTheDocument();
     expect(within(row).getByText(/Stock: 12 kg/)).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/ingredients'), expect.anything());
+  });
+
+  it('T046 AC1: Owner sees an Export Ingredients CSV control and clicking it triggers a download', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeMovement()] });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <InventoryPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Export Ingredients CSV' })).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Export Ingredients CSV' }));
+
+    expect(downloadIngredientsCsv).toHaveBeenCalledTimes(1);
   });
 
   it('AC2: Owner sees Add Ingredient control; Viewer does not', async () => {
@@ -231,6 +283,8 @@ describe('InventoryPage', () => {
     await waitFor(() => expect(screen.getByTestId('ingredient-ing-1')).toBeInTheDocument());
     // Only the two read calls (list + movements) fire — no write endpoint is
     // ever called since no write control exists to trigger one.
+    expect(screen.queryByRole('button', { name: 'Export Ingredients CSV' })).not.toBeInTheDocument();
+    expect(downloadIngredientsCsv).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const calledMethods = fetchMock.mock.calls.map(([, init]) => (init as RequestInit | undefined)?.method);
     expect(calledMethods.every((m) => m === undefined || m === 'GET')).toBe(true);

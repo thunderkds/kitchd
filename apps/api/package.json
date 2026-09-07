@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "npm install --include=dev && npm run prisma:generate && nest build",
+    "build": "npm run prisma:generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "npm run migrate && node dist/src/main",
     "start:dev": "nest start --watch",
@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "node scripts/prisma-generate.cjs",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "seed": "ts-node -r tsconfig-paths/register prisma/seed.ts"
@@ -76,6 +76,9 @@
       "json",
       "ts"
     ],
+    "moduleNameMapper": {
+      "^bcrypt$": "<rootDir>/../test/bcrypt.ts"
+    },
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {

@@ -7,25 +7,39 @@ on:
     branches: ["**"]
 
 jobs:
+  verify-build:
+    name: verify clean pnpm build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - name: Verify clean install/build
+        run: scripts/verify-build.sh
+
   web:
     name: web (lint, test, build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm"
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       - name: Build workspace dependency (packages/shared)
-        run: npm --prefix packages/shared run build
+        run: pnpm --filter @kitchenos/shared run build
       - name: Lint
-        run: npm --prefix apps/web run lint
+        run: pnpm --filter @kitchenos/web run lint
       - name: Test
-        run: npm --prefix apps/web run test
+        run: pnpm --filter @kitchenos/web run test
       - name: Build (includes typecheck via tsc -b)
-        run: npm --prefix apps/web run build
+        run: pnpm --filter @kitchenos/web run build
 
   api:
     name: api (lint, test, build)
@@ -50,19 +64,20 @@ jobs:
       JWT_EXPIRES_IN: "1d"
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm"
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       - name: Prisma generate
-        run: npm --prefix apps/api run prisma:generate
+        run: pnpm --filter @kitchenos/api run prisma:generate
       - name: Prisma migrate deploy (against ephemeral CI DB)
-        run: npm --prefix apps/api run migrate
+        run: pnpm --filter @kitchenos/api run migrate
       - name: Lint
-        run: npm --prefix apps/api run lint
+        run: pnpm --filter @kitchenos/api run lint
       - name: Test
-        run: npm --prefix apps/api run test
+        run: pnpm --filter @kitchenos/api run test
       - name: Build
-        run: npm --prefix apps/api run build
+        run: pnpm --filter @kitchenos/api run build

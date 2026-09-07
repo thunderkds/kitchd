@@ -1,9 +1,37 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import * as exportApi from '../../features/export/api';
+import type { Recipe, RecipeVersion } from './types';
+
+let currentUser: {
+  id: string;
+  email: string;
+  organizationId: string;
+  kitchenId: string;
+  role: 'OWNER' | 'ADMIN' | 'CHEF' | 'STAFF' | 'VIEWER';
+  themePreference?: 'simple' | 'dark-neon';
+} | null = null;
+
+vi.mock('../../features/export/api', () => ({
+  downloadRecipesCsv: vi.fn(),
+}));
+
+vi.mock('../../routes/auth', () => ({
+  getToken: () => 'test-token',
+  setUser: (user: typeof currentUser) => {
+    currentUser = user;
+  },
+  getUser: () => currentUser,
+  clearUser: () => {
+    currentUser = null;
+  },
+}));
+
 import { RecipesPage } from './RecipesPage';
-import type { Recipe } from './types';
-import { setUser } from '../../routes/auth';
+import { setUser, clearUser } from '../../routes/auth';
+
+const downloadRecipesCsv = vi.mocked(exportApi.downloadRecipesCsv);
 
 function makeRecipe(overrides: Partial<Recipe> = {}): Recipe {
   return {
@@ -25,6 +53,30 @@ function makeRecipe(overrides: Partial<Recipe> = {}): Recipe {
 
 function makeIngredient() {
   return { id: 'i1', name: 'Tomato', unit: 'kg', costPerUnit: 3, allergens: [] };
+}
+
+function makeVersion(overrides: Partial<RecipeVersion> = {}): RecipeVersion {
+  return {
+    id: 'rv-1',
+    recipeId: 'r1',
+    version: 2,
+    name: 'Tomato Soup',
+    steps: ['Chop tomatoes', 'Simmer 20 minutes'],
+    servings: 4,
+    ingredientsSnapshot: [
+      {
+        ingredientId: 'i1',
+        name: 'Tomato',
+        unit: 'kg',
+        qty: 2,
+        costPerUnit: 3,
+        lineCost: 6,
+      },
+    ],
+    costComputedAtSnapshot: 6,
+    createdAt: '2026-09-07T00:00:00.000Z',
+    ...overrides,
+  };
 }
 
 function setOwner() {
@@ -51,14 +103,15 @@ describe('RecipesPage', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    window.localStorage.setItem('accessToken', 'test-token');
+    currentUser = null;
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
+    downloadRecipesCsv.mockReset();
   });
 
   afterEach(() => {
+    clearUser();
     vi.unstubAllGlobals();
-    window.localStorage.clear();
   });
 
   it('renders a list of recipes (name, servings, cost) fetched from GET /recipes', async () => {
@@ -83,12 +136,39 @@ describe('RecipesPage', () => {
     );
   });
 
+  it('T046 AC2: Owner sees an Export Recipes CSV control and clicking it triggers a download', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeRecipe()] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <RecipesPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Export Recipes CSV' })).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Export Recipes CSV' }));
+
+    expect(downloadRecipesCsv).toHaveBeenCalledTimes(1);
+  });
+
   it('clicking a recipe shows steps, ingredients (name/qty/unit/line-cost) and total cost via GET /recipes/:id', async () => {
     setOwner();
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => [makeRecipe()] })
       .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] })
-      .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe() });
+      .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe() })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [makeVersion(), makeVersion({ id: 'rv-2', version: 1, createdAt: '2026-09-01T00:00:00.000Z' })],
+      });
 
     const { default: userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
@@ -116,6 +196,14 @@ describe('RecipesPage', () => {
     expect(ingredientsTable).toHaveTextContent('kg');
     expect(ingredientsTable).toHaveTextContent('$6.00');
     expect(screen.getByText('Total cost: $6.00')).toBeInTheDocument();
+    const versionsSection = screen.getByTestId('recipe-versions');
+    expect(versionsSection).toHaveTextContent('Recipe version history');
+    expect(versionsSection).toHaveTextContent('Version 2');
+    expect(versionsSection).toHaveTextContent('Version 1');
+    const rows = within(versionsSection).getAllByTestId('recipe-version-row');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('Version 2');
+    expect(rows[1]).toHaveTextContent('Version 1');
   });
 
   it('Owner sees a "New Recipe" control; submitting POSTs /recipes with name/steps/servings/ingredients and updates the list', async () => {
@@ -166,6 +254,10 @@ describe('RecipesPage', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe() })
       .mockResolvedValueOnce({
         ok: true,
+        json: async () => [makeVersion()],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
         json: async () => makeRecipe({ servings: 8 }),
       });
 
@@ -214,6 +306,8 @@ describe('RecipesPage', () => {
 
     await waitFor(() => expect(screen.getByTestId('recipes-list')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'New Recipe' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Export Recipes CSV' })).not.toBeInTheDocument();
+    expect(downloadRecipesCsv).not.toHaveBeenCalled();
 
     for (const call of fetchMock.mock.calls) {
       const init = call[1] as RequestInit | undefined;
@@ -225,7 +319,8 @@ describe('RecipesPage', () => {
     setViewer();
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => [makeRecipe()] })
-      .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe() });
+      .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe() })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeVersion()] });
 
     const { default: userEvent } = await import('@testing-library/user-event');
     const user = userEvent.setup();
@@ -241,6 +336,7 @@ describe('RecipesPage', () => {
 
     await screen.findByTestId('recipe-steps');
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('recipe-versions')).toBeInTheDocument();
   });
 
   it('submitting create with no name is blocked client-side, no POST fires', async () => {

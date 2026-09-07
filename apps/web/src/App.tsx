@@ -13,6 +13,7 @@ import { InventoryPage } from './features/inventory/InventoryPage';
 import { GuidelinesPage } from './features/guidelines/GuidelinesPage';
 import { RecipesPage } from './features/recipes/RecipesPage';
 import { AnnouncementsPage } from './features/announcements/AnnouncementsPage';
+import { ShiftLogsPage } from './features/shift-logs/ShiftLogsPage';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -64,6 +65,9 @@ function AppRoutes() {
             }
             if (item.path === '/announcements') {
               return <Route key={item.path} path={item.path} element={<AnnouncementsPage />} />;
+            }
+            if (item.path === '/shift-logs') {
+              return <Route key={item.path} path={item.path} element={<ShiftLogsPage />} />;
             }
             return <Route key={item.path} path={item.path} element={<SectionPage item={item} />} />;
           })}

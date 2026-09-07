@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: kitchenos-web
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @kitchenos/shared run build && pnpm --filter @kitchenos/web run build
+    startCommand: pnpm --filter @kitchenos/web run start
+
+  - type: web
+    name: kitchenos-api
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @kitchenos/shared run build && pnpm --filter @kitchenos/api run build
+    preDeployCommand: pnpm --filter @kitchenos/api run migrate
+    startCommand: pnpm --filter @kitchenos/api run start:prod

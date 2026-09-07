@@ -1,5 +1,5 @@
 import { getToken } from '../../routes/auth';
-import type { StoredUser, UserRole } from '../../routes/auth';
+import type { UserRole, AuthResponseDto } from '@kitchenos/shared';
 import { notifyApiError } from '../../errorDialog/ErrorDialogProvider';
 import type { Invite, Member } from './types';
 
@@ -63,16 +63,7 @@ export function inviteMember(email: string, role: UserRole): Promise<Invite> {
   });
 }
 
-/**
- * T043 — the accept endpoint's `AuthResult` payload. Same shape LoginPage
- * consumes: `themePreference` here is the backend's raw snake_case `Theme`
- * enum value and must go through `apiThemeToId()` before it is stored
- * (theme/themeMapping.ts is the only casing-boundary translator).
- */
-export interface AcceptInviteResult {
-  accessToken: string;
-  user: Omit<StoredUser, 'themePreference'> & { themePreference?: string | null };
-}
+export type AcceptInviteResult = AuthResponseDto;
 
 /**
  * T043 — `POST /users/invite/accept` is deliberately public (the invitee has

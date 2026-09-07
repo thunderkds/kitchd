@@ -1,9 +1,38 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import App from './App';
 import { NAV_ITEMS } from './layout/navigation';
-import { setToken } from './routes/auth';
+
+let currentToken: string | null = null;
+let currentUser: {
+  id: string;
+  email: string;
+  organizationId: string;
+  kitchenId: string;
+  role: 'OWNER' | 'ADMIN' | 'CHEF' | 'STAFF' | 'VIEWER';
+  themePreference?: 'simple' | 'dark-neon';
+} | null = null;
+
+vi.mock('./routes/auth', () => ({
+  getToken: () => currentToken,
+  setToken: (token: string) => {
+    currentToken = token;
+  },
+  clearToken: () => {
+    currentToken = null;
+  },
+  isAuthenticated: () => Boolean(currentToken),
+  setUser: (user: typeof currentUser) => {
+    currentUser = user;
+  },
+  getUser: () => currentUser,
+  clearUser: () => {
+    currentUser = null;
+  },
+}));
+
+import App from './App';
+import { setToken, clearToken } from './routes/auth';
 
 function renderAt(path: string) {
   return render(
@@ -15,7 +44,9 @@ function renderAt(path: string) {
 
 describe('App routing', () => {
   afterEach(() => {
-    window.localStorage.clear();
+    clearToken();
+    currentUser = null;
+    vi.unstubAllGlobals();
   });
 
   it('redirects an unauthenticated user hitting a gated route to /login', () => {
@@ -37,13 +68,13 @@ describe('App routing', () => {
   });
 
   // /tasks, /notes, /dashboard, /settings, /team, /inventory, /guidelines,
-  // /announcements, and /recipes render real feature pages (T008/T012/T018/
+  // /announcements, /recipes, and /shift-logs render real feature pages (T008/T012/T018/
   // T026/T028/T031/T032/T033/T036) instead of the SectionPage placeholder —
   // each has its own dedicated test suite (TasksPage.test.tsx,
   // NotesPage.test.tsx, Dashboard.test.tsx, TeamPage.test.tsx,
   // InventoryPage.test.tsx, GuidelinesPage.test.tsx,
-  // AnnouncementsPage.test.tsx, RecipesPage.test.tsx, this suite's
-  // "real Settings page" test below).
+  // AnnouncementsPage.test.tsx, RecipesPage.test.tsx, ShiftLogsPage.test.tsx,
+  // this suite's "real Settings page" test below).
   const placeholderItems = NAV_ITEMS.filter(
     (item) =>
       ![
@@ -56,6 +87,7 @@ describe('App routing', () => {
         '/guidelines',
         '/announcements',
         '/recipes',
+        '/shift-logs',
       ].includes(item.path),
   );
 
@@ -132,6 +164,17 @@ describe('App routing', () => {
     );
     renderAt('/recipes');
     expect(screen.getByRole('heading', { name: 'Recipes' })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('T044: renders the real Shift Log page (not the placeholder) when authenticated', () => {
+    setToken('fake-jwt');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+    );
+    renderAt('/shift-logs');
+    expect(screen.getByRole('heading', { name: 'Shift Log' })).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 

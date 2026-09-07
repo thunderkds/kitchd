@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm install --include=dev && tsc -b && vite build",
+    "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "start": "vite preview --host 0.0.0.0 --port $PORT",
     "test": "vitest run"
   },
   "dependencies": {
+    "@kitchenos/shared": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",

@@ -1,105 +1,113 @@
 # BRAINSTORMING_LOG.md
-**Generated**: 2026-07-02
-**Task / Context**: Phase 0 — KitchenOS MVP, Stage 0.5b greenfield architecture direction
+**Generated**: 2026-09-07
+**Task / Context**: T044 Shift Log page + sidebar entry
 **Skill**: `Skill({ skill: "brainstorming" })`
 
 ---
 
 ## The Problem Space
 
-KitchenOS's MVP spans ~10 interrelated entities (Org, Kitchen, User, Recipe, Ingredient, StockBatch/Movement, Guideline, Task, Note, Announcement, ShiftLog, Comment) with RBAC across 4 roles, cost roll-up logic, recurring task generation, and near-real-time collaboration (comments, task status, mentions). It's a solo build, greenfield repo, local-dev-only for now, but the data model must be multi-tenant-correct from day one per NFR-003. The core tension: enough structure to keep a ~10-entity RBAC-heavy domain consistent as a solo dev, without over-engineering for a userbase of one.
+The backend already exposes a kitchen-scoped Shift Log feed and a write endpoint, but the web app has no route or navigation surface that reaches either. The fix has to do two things at once: make the feed discoverable from the sidebar and present a small, readable page that lets non-Viewer users author shift handoffs without leaving the app shell.
 
----
+Constraints that are non-negotiable:
+- Keep the kitchen-scoped controller contract intact.
+- Preserve the existing role split: Viewer reads only, everyone else may write.
+- Avoid speculative filters, analytics, or a second page for the same feed.
+- Reuse the app's existing list + modal form patterns rather than inventing a new shell.
 
 ## Questions for the User
 
-All four resolved via forced choice before this doc was written:
-1. Repo layout → **Monorepo**
-2. Backend framework → **NestJS**
-3. Realtime mechanism → **Socket.IO from the start**
-4. Task recurrence model → **Cron-based generation**
-
----
+None. The scope is sufficiently clear from the audit and existing backend contract.
 
 ## Alternative Paths
 
 | Option | Name | Summary | Invasiveness | Code Volume | Regression Risk | Recommended? |
 |--------|------|---------|-------------|------------|----------------|--------------|
-| A | The Minimalist Path | Express + polling + single-package repo, virtual recurrence | Low | ~Low | Low (few moving parts) but high rework risk later | |
-| B | The Structured Path | NestJS + monorepo + Socket.IO + cron-based recurrence | Medium | ~Medium | Medium, offset by framework guardrails | ✅ Yes |
-| C | The Maximalist Path | NestJS microservices (separate auth/inventory/task services) + message queue + Socket.IO | High | High | High — massive overkill for solo/local MVP | |
+| A | Inline list page | Add a bare Shift Logs page with a feed list and a modal create form, then wire nav + route. | Low | ~250 lines | Low | |
+| B | Page + shared API/types | Add a dedicated page, typed API helpers, and a small shared form/list section with explicit viewer gating. | Medium | ~320 lines | Low | ✅ Yes |
+| C | Generic activity shell | Build a reusable "activity feed" abstraction and plug Shift Logs into it for future reuse. | High | ~500+ lines | Medium | |
 
-### Option A — The Minimalist Path
-**Approach**: Express, single package (no monorepo split), polling instead of WebSockets, recurrence computed virtually at read time.
-**Pros**: Fastest to first running screen; fewest dependencies; nothing to configure.
-**Cons**: RBAC guards, validation, and module boundaries must be hand-rolled per route — high risk of inconsistency across 10 entities; virtual recurrence complicates "did staff complete today's occurrence" state and stock-deduction-per-occurrence.
-**Why it might fail**: As Task/Comment/Notification routes multiply, hand-rolled auth checks silently diverge (one route forgets a role check) — exactly the kind of bug that's invisible until a Staff user edits a Guideline they shouldn't be able to touch.
+### Option A — Inline list page
+**Approach**: Create a single page component that fetches `/shift-logs`, renders rows, and opens a dialog for POSTing new entries.
+**Pros**:
+- Smallest useful surface.
+- Easy to test.
+- Matches existing page patterns.
+**Cons**:
+- The page ends up carrying all shift-log-specific fetch and formatting logic inline.
+- Harder to reuse if a future task needs the same data shape.
+**Why it might fail**:
+- It can drift into a one-off tangle if the list and create logic grow separately.
 
-### Option B — The Structured Path
-**Approach**: NestJS backend (modules/guards/DI mapping directly onto Organization→Kitchen→User RBAC), React frontend, monorepo (`/apps/web`, `/apps/api`, `/packages/shared` for shared TS types), Socket.IO for Task/Comment/Announcement push updates, a nightly cron job materializing real Task rows from recurring Task templates.
-**Pros**: NestJS guards give one consistent enforcement point for the 4-role RBAC model instead of 10+ hand-rolled checks; monorepo keeps API contract types shared and in sync for a solo dev; Socket.IO ships real-time UX correctly from day one instead of a polling-to-WebSocket migration later; cron-generated Tasks are real rows — completion, per-occurrence stock deduction (FR-008's confirm-prompt), and querying "today's tasks" all stay simple.
-**Cons**: More upfront boilerplate than Express; Socket.IO needs auth-over-WS handling even with a single user; cron job is one more moving part to run locally (needs a scheduler, e.g. `@nestjs/schedule`).
-**Why it might fail**: If the solo dev under-invests in the NestJS module boundaries early (dumping everything in one module), the framework's structure stops paying for itself and just adds ceremony. Mitigation: TASK_GUIDEs enforce one NestJS module per entity domain (recipes, inventory, tasks, notes, comms) from the first task.
+### Option B — Page + shared API/types
+**Approach**: Add `api.ts` + `types.ts`, then a dedicated `ShiftLogsPage` that owns fetch/render/create state and uses the shared `Dialog` modal pattern.
+**Pros**:
+- Keeps the backend contract explicit.
+- Easy to test and reason about.
+- Clean separation between data shape and UI.
+**Cons**:
+- A bit more code than the bare inline version.
+- Requires touching navigation and route wiring too.
+**Why it might fail**:
+- If the page tries to solve filtering/history/reply threads all at once, it will outgrow the task quickly.
 
-### Option C — The Maximalist Path
-**Approach**: NestJS microservices split by domain (auth-service, inventory-service, task-service), message queue (RabbitMQ/Kafka) for cross-service events, Socket.IO gateway service, API gateway.
-**Pros**: Scales to real multi-tenant SaaS traffic; services deployable/scalable independently.
-**Cons**: Massive operational overhead (service discovery, distributed transactions for stock-deduction-on-task-completion, local dev requires running N services) for a single-user local-dev MVP.
-**Why it might fail**: A solo dev spends Phase 0-2 wiring infrastructure instead of shipping the recipe/task/inventory features that are the actual point of the MVP — directly violates Simplicity First.
-
----
+### Option C — Generic activity shell
+**Approach**: Build a reusable feed abstraction and plug Shift Logs into it as the first consumer.
+**Pros**:
+- Potential future reuse.
+- Could reduce duplication if more feed-style screens arrive.
+**Cons**:
+- Highest code volume.
+- Introduces an abstraction before there is a second real consumer.
+**Why it might fail**:
+- This would almost certainly overfit to future unknowns and slow the current task down.
 
 ## 50% Rule Check
 
-For Option B: the biggest line-count driver is RBAC guard boilerplate across ~10 entities. Instead of a bespoke guard per controller, use one generic `@Roles(...)` decorator + a single `RolesGuard` reading `req.user.role` — implemented once in Common-Infrastructure-Agent's task, reused everywhere. Similarly, Socket.IO auth reuses the same JWT verification middleware as the REST layer rather than a parallel WS-auth implementation. This keeps Option B's boilerplate closer to Option A's volume while keeping its consistency guarantees.
+The same business goal can be reached with roughly half the code by skipping the abstraction layer entirely:
+- one `ShiftLogsPage`
+- one `api.ts`
+- one `types.ts`
+- one nav entry
+- one route mapping
 
----
+That is enough to make the feature reachable and shippable without inventing a shared feed framework.
 
 ## Recommended Path
 
-**Option B — The Structured Path**
+**Option B — Page + shared API/types**
 
-Matches the domain's actual shape (RBAC-heavy, ~10 entities, real-time collaboration is a named MVP requirement in §3.3) without paying for Option C's distributed-systems overhead that no current requirement calls for. The confirmed user answers (NestJS, monorepo, Socket.IO, cron recurrence) already point here — this doc formalizes why that combination coheres rather than being four independent picks.
-
----
+This is the safest path because it keeps the UI small, keeps the API contract typed, and avoids over-abstracting the first shift-log consumer.
 
 ## Surgical Scope
 
-Files that **should** be touched (Stage 1 scaffold, Stage 3 onward):
-- `/apps/api` — NestJS backend, one module per domain entity group
-- `/apps/web` — React + TypeScript frontend
-- `/packages/shared` — shared TypeScript types (DTOs, enums) between web and api
-- `/apps/api/prisma` or `/apps/api/migrations` — DB schema (framework choice: TBD at Stage 1 scaffold, Prisma or TypeORM — NestJS-idiomatic either way)
+Files that **should** be touched:
+- `apps/web/src/features/shift-logs/api.ts` - authenticated list/create helpers
+- `apps/web/src/features/shift-logs/types.ts` - ShiftLog type
+- `apps/web/src/features/shift-logs/ShiftLogsPage.tsx` - page UI
+- `apps/web/src/features/shift-logs/ShiftLogsPage.test.tsx` - list/create/viewer gating
+- `apps/web/src/features/shift-logs/api.test.tsx` - helper behavior
+- `apps/web/src/layout/navigation.ts` - add nav item
+- `apps/web/src/App.tsx` - add route
+- `apps/web/src/layout/navigation.test.tsx` - confirm nav entry
 
 Files that **must not** be touched:
-- `requirement.md`, `PRD.md` — source-of-truth docs; changes go through the Supervisor, not implementers
-- `memory/` cold files — Supervisor-only writes per Memory Write Protocol
-
----
+- `apps/api/src/shift-logs/*` - backend contract is already complete
+- `PRD.md` - protected source-of-truth
 
 ## Edge Case Checklist for TASK_GUIDE
 
-- [ ] Concurrent stock deduction: two staff completing recipe-linked tasks for the same ingredient at nearly the same time — must not race past min_threshold silently
-- [ ] Recurring task cron job failing silently overnight — no "today's tasks" for staff in the morning
-- [ ] @mention parsing on a user who isn't a member of that Kitchen (cross-kitchen mention)
-- [ ] Socket.IO reconnect after a dropped connection — must not duplicate task/comment events on reconnect
-- [ ] Role downgrade mid-session (Admin demotes a Chef to Staff) — existing WS connection must respect the new role, not the cached one
-- [ ] Recipe cost roll-up when an underlying Ingredient's cost_per_unit changes after the Recipe was created — historical cost vs live cost distinction
-- [ ] Expiry-date StockBatch with a past date at time of stock receipt entry (data-entry error)
-- [ ] CSV export with embedded commas/newlines in Recipe steps or Note bodies
-
----
+- [ ] Empty feed renders a clean empty state.
+- [ ] Viewer sees the page but no create control.
+- [ ] POST rejects missing/invalid shift values client-side before any network call.
+- [ ] New entries appear newest-first without a reload.
 
 ## Next Actions
 
-1. Stage 1: scaffold monorepo (`/apps/web`, `/apps/api`, `/packages/shared`), confirm ORM choice (Prisma vs TypeORM) with user during Common-Infrastructure-Agent setup
-2. Stage 1: set up `RolesGuard` + `@Roles()` decorator pattern once, reused across all entity modules
-3. Stage 2: break MVP into tracer-bullet vertical slices via `to-issues`, ordered per requirement.md §9 phases (Foundation → Guidelines/Inventory → Tasks/Notes → Communication → Dashboard/Roles/Polish)
-4. Stage 2: each Task-domain slice must reference the Edge Case Checklist above in its TASK_GUIDE
-
----
+1. Add the task guide and mark T044 in progress on the board.
+2. Write the API/page/navigation tests first, then implement the page and route wiring.
 
 ## User Selection
 
-> **Approved direction**: Option B — The Structured Path
-> Approved by user on 2026-07-02 (via forced-choice answers: NestJS, monorepo, Socket.IO, cron recurrence).
+> **Approved direction**: Option B — Page + shared API/types
+> Approved by user on 2026-09-07.

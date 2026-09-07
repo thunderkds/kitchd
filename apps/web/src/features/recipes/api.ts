@@ -1,6 +1,6 @@
 import { getToken } from '../../routes/auth';
 import { notifyApiError } from '../../errorDialog/ErrorDialogProvider';
-import type { Recipe, RecipeInput } from './types';
+import type { Recipe, RecipeInput, RecipeVersion } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -37,6 +37,10 @@ export function listRecipes(): Promise<Recipe[]> {
 
 export function getRecipe(id: string): Promise<Recipe> {
   return request<Recipe>(`/recipes/${id}`);
+}
+
+export function listRecipeVersions(id: string): Promise<RecipeVersion[]> {
+  return request<RecipeVersion[]>(`/recipes/${id}/versions`);
 }
 
 export function createRecipe(input: RecipeInput): Promise<Recipe> {

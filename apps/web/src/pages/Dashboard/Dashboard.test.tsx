@@ -3,10 +3,35 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { Dashboard } from './Dashboard';
 import * as tasksApi from '../../features/tasks/api';
 import * as lowStockApi from '../../components/LowStockWidget/api';
+import * as expiringSoonApi from '../../components/ExpiringSoonWidget/api';
 import * as announcementsApi from '../../components/AnnouncementsWidget/api';
 import * as notesApi from '../../features/notes/api';
-import { setUser, clearUser } from '../../routes/auth';
 import type { Task } from '../../features/tasks/types';
+
+let currentUser: {
+  id: string;
+  email: string;
+  organizationId: string;
+  kitchenId: string;
+  role: 'OWNER' | 'ADMIN' | 'CHEF' | 'STAFF' | 'VIEWER';
+  themePreference?: 'simple' | 'dark-neon';
+} | null = null;
+
+vi.mock('../../routes/auth', () => ({
+  getToken: () => null,
+  setToken: () => undefined,
+  clearToken: () => undefined,
+  isAuthenticated: () => false,
+  setUser: (user: typeof currentUser) => {
+    currentUser = user;
+  },
+  getUser: () => currentUser,
+  clearUser: () => {
+    currentUser = null;
+  },
+}));
+
+import { setUser, clearUser } from '../../routes/auth';
 
 const task = (overrides: Partial<Task> = {}): Task => ({
   id: 't1',
@@ -27,6 +52,7 @@ describe('Dashboard', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(lowStockApi, 'fetchLowStock').mockResolvedValue([]);
+    vi.spyOn(expiringSoonApi, 'fetchExpiringSoon').mockResolvedValue([]);
     vi.spyOn(announcementsApi, 'fetchAnnouncements').mockResolvedValue([]);
     vi.spyOn(notesApi, 'listNotes').mockResolvedValue([]);
   });
@@ -44,6 +70,7 @@ describe('Dashboard', () => {
     await waitFor(() => {
       expect(screen.getByTestId('tasks-widget')).toBeInTheDocument();
       expect(screen.getByTestId('low-stock-widget')).toBeInTheDocument();
+      expect(screen.getByTestId('expiring-soon-widget')).toBeInTheDocument();
       expect(screen.getByTestId('announcements-widget')).toBeInTheDocument();
       expect(screen.getByTestId('pinned-notes-widget')).toBeInTheDocument();
     });
@@ -90,6 +117,7 @@ describe('Dashboard', () => {
     await waitFor(() => {
       expect(screen.getByTestId('tasks-widget-empty')).toBeInTheDocument();
       expect(screen.getByTestId('low-stock-empty')).toBeInTheDocument();
+      expect(screen.getByTestId('expiring-soon-empty')).toBeInTheDocument();
       expect(screen.getByTestId('announcements-empty')).toBeInTheDocument();
       expect(screen.getByTestId('pinned-notes-empty')).toBeInTheDocument();
     });
@@ -102,6 +130,7 @@ describe('Dashboard', () => {
     // been called exactly once, before any of their promises resolved.
     const tasksSpy = vi.spyOn(tasksApi, 'listTasks').mockResolvedValue([]);
     const lowStockSpy = vi.spyOn(lowStockApi, 'fetchLowStock').mockResolvedValue([]);
+    const expiringSoonSpy = vi.spyOn(expiringSoonApi, 'fetchExpiringSoon').mockResolvedValue([]);
     const announcementsSpy = vi
       .spyOn(announcementsApi, 'fetchAnnouncements')
       .mockResolvedValue([]);
@@ -112,6 +141,7 @@ describe('Dashboard', () => {
 
     expect(tasksSpy).toHaveBeenCalledTimes(1);
     expect(lowStockSpy).toHaveBeenCalledTimes(1);
+    expect(expiringSoonSpy).toHaveBeenCalledTimes(1);
     expect(announcementsSpy).toHaveBeenCalledTimes(1);
     expect(notesSpy).toHaveBeenCalledTimes(1);
   });

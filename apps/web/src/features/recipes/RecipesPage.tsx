@@ -1,16 +1,27 @@
 import { useEffect, useState } from 'react';
-import { createRecipe, getRecipe, listRecipes, updateRecipe } from './api';
+import { createRecipe, getRecipe, listRecipeVersions, listRecipes, updateRecipe } from './api';
 import { listIngredients } from '../inventory/api';
 import { getUser } from '../../routes/auth';
 import { Dialog } from '../../components/Dialog/Dialog';
 import { RecipeForm } from './RecipeForm';
+import { downloadRecipesCsv } from '../export/api';
 import type { Ingredient } from '../inventory/types';
-import type { Recipe, RecipeInput } from './types';
+import type { Recipe, RecipeInput, RecipeVersion } from './types';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'];
 
 type ViewMode = 'list' | 'detail';
 type FormMode = 'create' | 'edit';
+
+function formatVersionDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Invalid date';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
 
 /**
  * Recipes page (T036, modal-converted in T037). Consumes T005's `/recipes`
@@ -34,6 +45,9 @@ export function RecipesPage() {
   const [mode, setMode] = useState<ViewMode>('list');
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editing, setEditing] = useState<Recipe | null>(null);
+  const [versions, setVersions] = useState<RecipeVersion[] | null>(null);
+  const [versionsError, setVersionsError] = useState<string | null>(null);
+  const [versionsLoading, setVersionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +75,37 @@ export function RecipesPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (mode !== 'detail' || !selected) {
+      setVersions(null);
+      setVersionsError(null);
+      setVersionsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setVersions(null);
+    setVersionsError(null);
+    setVersionsLoading(true);
+
+    listRecipeVersions(selected.id)
+      .then((data) => {
+        if (!cancelled) setVersions(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setVersionsError(err instanceof Error ? err.message : 'Failed to load recipe versions');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setVersionsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, selected?.id]);
 
   const openDetail = async (recipe: Recipe) => {
     setError(null);
@@ -201,6 +246,42 @@ export function RecipesPage() {
           </table>
         )}
         <p className="text-sm font-medium mt-3">Total cost: ${selected.costComputed.toFixed(2)}</p>
+
+        <section className="mt-5" data-testid="recipe-versions">
+          <h2 className="text-sm font-medium mb-2">Recipe version history</h2>
+          {versionsLoading && <p className="text-muted text-sm">Loading version history…</p>}
+          {versionsError && (
+            <p className="text-danger text-sm" role="alert">
+              {versionsError}
+            </p>
+          )}
+          {!versionsLoading && !versionsError && versions && versions.length === 0 && (
+            <p className="text-muted text-sm">No saved versions yet.</p>
+          )}
+          {!versionsLoading && !versionsError && versions && versions.length > 0 && (
+            <ul className="flex flex-col gap-2">
+              {versions.map((version) => (
+                <li
+                  key={version.id}
+                  data-testid="recipe-version-row"
+                  className="border bg-surface-raised rounded p-3 flex flex-col gap-1"
+                >
+                  <p className="font-medium">
+                    Version {version.version} <span className="text-muted font-normal">· {formatVersionDate(version.createdAt)}</span>
+                  </p>
+                  <p className="text-sm text-muted">
+                    {version.servings != null ? `${version.servings} servings · ` : ''}
+                    Cost snapshot: ${version.costComputedAtSnapshot.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {version.steps.length} steps · {version.ingredientsSnapshot.length} ingredients
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         {formDialog}
       </div>
     );
@@ -211,13 +292,22 @@ export function RecipesPage() {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h1 className="text-xl font-semibold">Recipes</h1>
         {canWrite && (
-          <button
-            type="button"
-            className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
-            onClick={openCreate}
-          >
-            New Recipe
-          </button>
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <button
+              type="button"
+              className="px-3 py-2 text-sm rounded border"
+              onClick={downloadRecipesCsv}
+            >
+              Export Recipes CSV
+            </button>
+            <button
+              type="button"
+              className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
+              onClick={openCreate}
+            >
+              New Recipe
+            </button>
+          </div>
         )}
       </div>
 

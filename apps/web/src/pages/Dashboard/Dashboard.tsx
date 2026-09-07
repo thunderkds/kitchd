@@ -1,12 +1,13 @@
 import { LowStockWidget } from '../../components/LowStockWidget/LowStockWidget';
+import { ExpiringSoonWidget } from '../../components/ExpiringSoonWidget/ExpiringSoonWidget';
 import { AnnouncementsWidget } from '../../components/AnnouncementsWidget/AnnouncementsWidget';
 import { PinnedNotesWidget } from '../../components/PinnedNotesWidget/PinnedNotesWidget';
 import { TasksWidget } from './TasksWidget';
 
 /**
  * T018 — Home dashboard (FR-020, US-012, NFR-001). Composes Tasks (T008),
- * Low Stock (T007), Announcements (T013) and Pinned Notes (T012) into one
- * role-aware landing page.
+ * Low Stock (T007), Expiring Soon (T045), Announcements (T013) and Pinned
+ * Notes (T012) into one role-aware landing page.
  *
  * Each widget below performs its own independent GET on mount (see
  * TasksWidget / LowStockWidget / AnnouncementsWidget / PinnedNotesWidget) —
@@ -26,6 +27,7 @@ export function Dashboard() {
       >
         <TasksWidget />
         <LowStockWidget />
+        <ExpiringSoonWidget />
         <AnnouncementsWidget />
         <PinnedNotesWidget />
       </div>
