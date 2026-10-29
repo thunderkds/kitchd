@@ -153,6 +153,30 @@ function createNativeStorage(): SessionStorageAdapter {
 
 const webStorage = createWebStorage();
 
+// Subscribers (realtime) that must react to the token changing. Every login/logout path funnels
+// through persistSession/clearSession, so notifying from here covers them all, including the 401
+// path in request(). Listeners run synchronously so a socket is closed before clearSession awaits.
+type SessionChangeListener = () => void;
+const sessionChangeListeners = new Set<SessionChangeListener>();
+
+export function onSessionChange(listener: SessionChangeListener): () => void {
+  sessionChangeListeners.add(listener);
+  return () => {
+    sessionChangeListeners.delete(listener);
+  };
+}
+
+function notifySessionChange(): void {
+  for (const listener of [...sessionChangeListeners]) {
+    try {
+      listener();
+    } catch (error) {
+      // A failing subscriber must never block login or, worse, logout. Message only, never the token.
+      console.warn('Session change listener failed', error instanceof Error ? error.message : 'unknown error');
+    }
+  }
+}
+
 export const sessionReady = webStorage ? Promise.resolve() : loadNativeStorage();
 
 export function createSessionStorage(): SessionStorageAdapter {
@@ -167,6 +191,7 @@ export async function persistSession(token: string, user: StoredUser): Promise<v
   if (webStorage) {
     webStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
     webStorage.setItem(AUTH_USER_STORAGE_KEY, serializedUser);
+    notifySessionChange();
     return;
   }
 
@@ -175,6 +200,7 @@ export async function persistSession(token: string, user: StoredUser): Promise<v
     accessToken: token,
     authUser: serializedUser,
   };
+  notifySessionChange();
 
   await persistNativeSessionState();
   await Promise.all([
@@ -191,11 +217,14 @@ export async function clearSession(): Promise<void> {
   if (webStorage) {
     webStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
     webStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    notifySessionChange();
     return;
   }
 
   nativeWriteVersion += 1;
   nativeSessionState = defaultNativeSessionState();
+  // Before the awaited SecureStore deletes, so the socket closes even if they throw.
+  notifySessionChange();
   await SecureStore.deleteItemAsync(NATIVE_SESSION_STORAGE_KEY);
   await Promise.all([
     SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
