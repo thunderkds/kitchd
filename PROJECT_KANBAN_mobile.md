@@ -13,6 +13,7 @@
 
 ### Done
 - [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
+- [x] **M012** — Session hardening: 401 clears session (stale-401 guarded), https-only `apiBase` outside dev, robust sign-out, invite token field, `expo-env.d.ts` stubs removed (typecheck real), hydration race | mobile-developer | C2 | Risk: Medium | P1 | Review: `tasks/TASK_REVIEW_M012.md` | Linear HUN-107 | Done: 2026-10-29
 - [x] **M003** — Mobile test foundation: jest-expo runner (+ `@react-native/jest-preset` ~0.86.2, `jest.setup.js` fetch stub so jest exits 0), 50 tests over `storage.ts`/`session.ts`/shared session; mutation-checked (3 mutants killed); found hydration race → M012 AC7 | qa-expert | C2 | Risk: Medium | P0 | Review: `tasks/TASK_REVIEW_M003.md` | Linear HUN-97 | Done: 2026-10-29
 - [x] **M002** — Retro code + security review of the RN migration: 0 P0, 0 P1, 6 P2 (→ M012/M003), 7 P3 (→ M013); 5 focus questions answered; security verdict PASS with follow-ups | Supervisor | C2 | Risk: High | P0 | Review: `tasks/TASK_REVIEW_M002.md` | Linear HUN-96 | Done: 2026-10-29
 - [x] **M001** — Monorepo committed to pnpm workspaces; clean-tree `scripts/verify-build.sh` passes; Stage 4 found and fixed a P1 (ambient Prisma client stub disabled all API type checking, `35abcdd`) | common-infrastructure | C2 | Risk: High | P0 | Evidence: `tasks/TASK_GUIDE_M001.md` | Live Render deploy still blocked (below) | Linear HUN-95 | Done: 2026-10-29
@@ -39,8 +40,7 @@
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
-- [ ] **M012** — Session hardening: M002 P2 findings F1–F5 (401 clears session, `apiBase` https/dev-only fallback, robust sign-out, invite token field reset, drop `expo-env.d.ts` `any` stubs) | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M012.md` | Linear HUN-107 | 👀 Ready for Review (1c0828f)
-- [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
+- [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) + M012 P3 residuals (`storage.ts:75` error-object log, no redirect after 401) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
 - [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M014.md` | Linear HUN-109
 - [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M015.md` | Linear HUN-110
 - [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M016.md` | Linear HUN-111
