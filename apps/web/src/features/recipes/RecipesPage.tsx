@@ -105,7 +105,7 @@ export function RecipesPage() {
     return () => {
       cancelled = true;
     };
-  }, [mode, selected?.id]);
+  }, [mode, selected?.id, selected?.version]);
 
   const openDetail = async (recipe: Recipe) => {
     setError(null);
@@ -296,7 +296,9 @@ export function RecipesPage() {
             <button
               type="button"
               className="px-3 py-2 text-sm rounded border"
-              onClick={downloadRecipesCsv}
+              onClick={() => {
+                downloadRecipesCsv().catch(() => undefined);
+              }}
             >
               Export Recipes CSV
             </button>

@@ -125,7 +125,9 @@ export function InventoryPage() {
             <button
               type="button"
               className="px-3 py-2 text-sm rounded border"
-              onClick={downloadIngredientsCsv}
+              onClick={() => {
+                downloadIngredientsCsv().catch(() => undefined);
+              }}
             >
               Export Ingredients CSV
             </button>

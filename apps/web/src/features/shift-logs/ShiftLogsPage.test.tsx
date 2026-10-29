@@ -158,6 +158,73 @@ describe('ShiftLogsPage', () => {
     expect(screen.queryByRole('button', { name: 'New Shift Log' })).not.toBeInTheDocument();
   });
 
+  it('empty submit shows the validation message inside the dialog and keeps the feed visible', async () => {
+    setStaff();
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [makeShiftLog()] });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <ShiftLogsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('shift-logs-list')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'New Shift Log' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Add Shift Log' }));
+
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Shift log body is required.');
+    expect(screen.getByTestId('shift-logs-list')).toBeInTheDocument();
+    expect(screen.getByText('Prepped the walk-in')).toBeInTheDocument();
+
+    // Typing clears the form error.
+    await user.type(within(dialog).getByLabelText('Shift log body'), 'x');
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('a failed create shows the error inside the dialog and keeps the feed visible', async () => {
+    setStaff();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeShiftLog()] })
+      .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({ message: 'Create failed' }) });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <ShiftLogsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('shift-logs-list')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'New Shift Log' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Shift log body'), 'Something');
+    await user.click(within(dialog).getByRole('button', { name: 'Add Shift Log' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Create failed');
+    expect(screen.getByTestId('shift-logs-list')).toBeInTheDocument();
+  });
+
+  it('a null user gets no write control', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [makeShiftLog()] });
+
+    render(
+      <MemoryRouter>
+        <ShiftLogsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('shift-logs-list')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'New Shift Log' })).not.toBeInTheDocument();
+  });
+
   it('shows an empty state when there are no shift logs', async () => {
     setOwner();
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [] });

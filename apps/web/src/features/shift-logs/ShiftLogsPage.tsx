@@ -20,12 +20,15 @@ function labelShift(shift: Shift): string {
   return shift.charAt(0) + shift.slice(1).toLowerCase();
 }
 
+const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF', 'STAFF'];
+
 export function ShiftLogsPage() {
   const caller = getUser();
-  const canWrite = caller?.role !== 'VIEWER';
+  const canWrite = caller ? WRITE_ROLES.includes(caller.role) : false;
 
   const [logs, setLogs] = useState<ShiftLog[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [shift, setShift] = useState<Shift>('MORNING');
   const [body, setBody] = useState('');
@@ -48,6 +51,7 @@ export function ShiftLogsPage() {
     if (!canWrite) return;
     setShift('MORNING');
     setBody('');
+    setFormError(null);
     setFormOpen(true);
   };
 
@@ -55,12 +59,14 @@ export function ShiftLogsPage() {
     setFormOpen(false);
     setShift('MORNING');
     setBody('');
+    setFormError(null);
   };
 
   const handleCreate = async () => {
     if (!canWrite) return;
+    setFormError(null);
     if (!body.trim()) {
-      setError('Shift log body is required.');
+      setFormError('Shift log body is required.');
       return;
     }
     try {
@@ -68,7 +74,7 @@ export function ShiftLogsPage() {
       setLogs((prev) => [created, ...(prev ?? [])]);
       closeForm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create shift log');
+      setFormError(err instanceof Error ? err.message : 'Failed to create shift log');
     }
   };
 
@@ -116,11 +122,19 @@ export function ShiftLogsPage() {
               <textarea
                 className="border rounded px-2 py-2 text-sm min-h-28"
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  setFormError(null);
+                }}
                 aria-label="Shift log body"
               />
             </label>
           </div>
+          {formError && (
+            <p className="text-danger text-sm mt-3" role="alert">
+              {formError}
+            </p>
+          )}
           <div className="flex justify-end gap-2 mt-5">
             <button
               type="button"

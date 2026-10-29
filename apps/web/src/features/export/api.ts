@@ -38,10 +38,12 @@ async function requestCsv(path: string, fallbackFilename: string): Promise<void>
 
   const filename = filenameFromContentDisposition(res.headers.get('content-disposition')) ?? fallbackFilename;
   const link = document.createElement('a');
-  link.href = `data:text/csv;charset=utf-8,${encodeURIComponent(body)}`;
+  const url = URL.createObjectURL(new Blob([body], { type: 'text/csv' }));
+  link.href = url;
   link.download = filename;
   link.rel = 'noopener';
   link.click();
+  URL.revokeObjectURL(url);
 }
 
 export function downloadIngredientsCsv(): Promise<void> {

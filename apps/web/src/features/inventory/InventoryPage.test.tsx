@@ -89,6 +89,7 @@ describe('InventoryPage', () => {
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     downloadIngredientsCsv.mockReset();
+    downloadIngredientsCsv.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -134,6 +135,31 @@ describe('InventoryPage', () => {
       expect(screen.getByRole('button', { name: 'Export Ingredients CSV' })).toBeInTheDocument(),
     );
     await user.click(screen.getByRole('button', { name: 'Export Ingredients CSV' }));
+
+    expect(downloadIngredientsCsv).toHaveBeenCalledTimes(1);
+  });
+
+  it('T046: a rejected Ingredients CSV export does not cause an unhandled rejection', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeMovement()] });
+    downloadIngredientsCsv.mockRejectedValue(new Error('boom'));
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <InventoryPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Export Ingredients CSV' })).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Export Ingredients CSV' }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(downloadIngredientsCsv).toHaveBeenCalledTimes(1);
   });

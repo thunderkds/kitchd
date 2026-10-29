@@ -6,8 +6,15 @@ vi.mock('../../routes/auth', () => ({
 }));
 
 describe('CSV export helpers', () => {
+  const createObjectURL = vi.fn(() => 'blob:mock-url');
+  const revokeObjectURL = vi.fn();
+
   beforeEach(() => {
     vi.restoreAllMocks();
+    createObjectURL.mockClear();
+    revokeObjectURL.mockClear();
+    URL.createObjectURL = createObjectURL;
+    URL.revokeObjectURL = revokeObjectURL;
   });
 
   afterEach(() => {
@@ -39,7 +46,29 @@ describe('CSV export helpers', () => {
     );
     expect(createElementSpy).toHaveBeenCalledWith('a');
     expect(link.download).toBe('ingredients.csv');
-    expect(link.href).toContain('data:text/csv;charset=utf-8,');
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blob = (createObjectURL.mock.calls[0] as unknown as [Blob])[0];
+    expect(blob.type).toBe('text/csv');
+    expect(link.href).toBe('blob:mock-url');
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+  });
+
+  it('downloads the recipes CSV from /export/recipes with the fallback filename', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('id,name\n1,Soup\n', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const link = document.createElement('a');
+    vi.spyOn(document, 'createElement').mockReturnValue(link);
+    const clickSpy = vi.spyOn(link, 'click').mockImplementation(() => undefined);
+
+    await exportApi.downloadRecipesCsv();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/export/recipes'),
+      expect.anything(),
+    );
+    expect(link.download).toBe('recipes.csv');
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 

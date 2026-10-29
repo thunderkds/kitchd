@@ -107,6 +107,7 @@ describe('RecipesPage', () => {
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     downloadRecipesCsv.mockReset();
+    downloadRecipesCsv.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -292,6 +293,76 @@ describe('RecipesPage', () => {
     );
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText(/8 servings/)).toBeInTheDocument();
+  });
+
+  it('T046: a rejected Recipes CSV export does not cause an unhandled rejection', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeRecipe()] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] });
+    downloadRecipesCsv.mockRejectedValue(new Error('boom'));
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <RecipesPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Export Recipes CSV' })).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Export Recipes CSV' }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(downloadRecipesCsv).toHaveBeenCalledTimes(1);
+  });
+
+  it('T047: editing from the detail view re-fetches the version history', async () => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeRecipe()] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient()] })
+      .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe() })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeVersion({ version: 1 })] })
+      .mockResolvedValueOnce({ ok: true, json: async () => makeRecipe({ servings: 8, version: 2 }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [makeVersion({ version: 2 }), makeVersion({ id: 'rv-2', version: 1 })],
+      });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <RecipesPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('recipe-r1')).toBeInTheDocument());
+    await user.click(screen.getByTestId('recipe-r1'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(screen.getByTestId('recipe-versions')).getAllByTestId('recipe-version-row')).toHaveLength(1),
+    );
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    const dialog = await screen.findByRole('dialog');
+    const servingsInput = within(dialog).getByLabelText('Recipe servings') as HTMLInputElement;
+    await user.clear(servingsInput);
+    await user.type(servingsInput, '8');
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() =>
+      expect(within(screen.getByTestId('recipe-versions')).getAllByTestId('recipe-version-row')).toHaveLength(2),
+    );
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('/recipes/r1/versions'),
+      expect.anything(),
+    );
   });
 
   it('Staff/Viewer does not see a "New Recipe" control and no write calls fire', async () => {
