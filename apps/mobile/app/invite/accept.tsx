@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { acceptInvite } from '../../src/api';
+import { FormTextInput } from '../../src/components/FormFields';
+import {
+  acceptInviteSchema,
+  type AcceptInviteFormValues,
+  type AcceptInvitePayload,
+} from '../../src/schemas/invite';
 import { persistSession } from '../../src/storage';
 import { toStoredUser } from '../../src/session';
 import { inviteTokenFromParam } from '../../src/inviteToken';
@@ -11,8 +19,10 @@ export default function AcceptInviteScreen() {
   const params = useLocalSearchParams();
   const initialToken = inviteTokenFromParam(params.token);
 
-  const [token, setToken] = useState(initialToken ?? '');
-  const [password, setPassword] = useState('');
+  const { control, handleSubmit, setValue } = useForm<AcceptInviteFormValues, undefined, AcceptInvitePayload>({
+    defaultValues: { token: initialToken ?? '', password: '' },
+    resolver: zodResolver(acceptInviteSchema),
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -20,23 +30,17 @@ export default function AcceptInviteScreen() {
   // Depend on the route param only: depending on `token` would reset the field on every keystroke.
   useEffect(() => {
     if (initialToken) {
-      setToken(initialToken);
+      setValue('token', initialToken);
     }
-  }, [initialToken]);
+  }, [initialToken, setValue]);
 
-  const submit = async () => {
-    const trimmedToken = token.trim();
-    if (!trimmedToken || !password) {
-      setError('Token and password are required');
-      return;
-    }
-
+  const submit = handleSubmit(async ({ token, password }) => {
     setLoading(true);
     setError(null);
     setMessage(null);
 
     try {
-      const result = await acceptInvite(trimmedToken, password);
+      const result = await acceptInvite(token, password);
       const storedUser = toStoredUser(result.user);
       await persistSession(result.accessToken, storedUser);
       setMessage(`Accepted invite for ${storedUser.email}`);
@@ -46,7 +50,7 @@ export default function AcceptInviteScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  });
 
   return (
     <View style={styles.screen}>
@@ -57,22 +61,22 @@ export default function AcceptInviteScreen() {
           Paste the invite token from the owner or admin. The mobile app uses the same public accept endpoint as the web flow.
         </Text>
 
-        <TextInput
+        <FormTextInput
+          control={control}
+          name="token"
           style={styles.input}
           placeholder="Invite token"
           placeholderTextColor="#6f7c92"
           autoCapitalize="none"
           autoCorrect={false}
-          value={token}
-          onChangeText={setToken}
         />
-        <TextInput
+        <FormTextInput
+          control={control}
+          name="password"
           style={styles.input}
           placeholder="Password"
           placeholderTextColor="#6f7c92"
           secureTextEntry
-          value={password}
-          onChangeText={setPassword}
         />
 
         <Pressable style={styles.primaryButton} disabled={loading} onPress={submit}>

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createGuideline,
   getGuideline,
@@ -10,6 +12,8 @@ import {
   type GuidelineInput,
   type GuidelineType,
 } from '../src/api';
+import { FormTextInput } from '../src/components/FormFields';
+import { guidelineSchema, type GuidelineFormValues, type GuidelinePayload } from '../src/schemas/guideline';
 import { queryLoadError, useGuidelines } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
@@ -19,13 +23,6 @@ const GUIDELINE_TYPES: GuidelineType[] = ['SOP', 'CHECKLIST'];
 
 type ViewMode = 'list' | 'detail';
 type FormMode = 'create' | 'edit';
-
-function splitSteps(text: string): string[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
 
 export default function GuidelinesScreen() {
   const router = useRouter();
@@ -46,9 +43,11 @@ export default function GuidelinesScreen() {
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editing, setEditing] = useState<Guideline | null>(null);
   const [actionError, setError] = useState<string | null>(null);
-  const [formTitle, setFormTitle] = useState('');
-  const [formType, setFormType] = useState<GuidelineType>('SOP');
-  const [formSteps, setFormSteps] = useState('');
+  const { control, handleSubmit, reset, watch, setValue } = useForm<GuidelineFormValues, undefined, GuidelinePayload>({
+    defaultValues: { title: '', type: 'SOP', steps: '' },
+    resolver: zodResolver(guidelineSchema),
+  });
+  const formType = watch('type');
   const [saving, setSaving] = useState(false);
 
   const selectedSteps = useMemo(() => selected?.steps ?? [], [selected]);
@@ -75,9 +74,7 @@ export default function GuidelinesScreen() {
 
   const resetForm = (guideline: Guideline | null = null) => {
     setEditing(guideline);
-    setFormTitle(guideline?.title ?? '');
-    setFormType(guideline?.type ?? 'SOP');
-    setFormSteps(guideline?.steps.join('\n') ?? '');
+    reset({ title: guideline?.title ?? '', type: guideline?.type ?? 'SOP', steps: guideline?.steps.join('\n') ?? '' });
   };
 
   const openCreate = () => {
@@ -97,20 +94,8 @@ export default function GuidelinesScreen() {
     setEditing(null);
   };
 
-  const submitForm = async () => {
+  const submitForm = handleSubmit(async (payload) => {
     if (!canWrite || saving) return;
-
-    const title = formTitle.trim();
-    if (!title) {
-      setError('Guideline title is required');
-      return;
-    }
-
-    const payload = {
-      title,
-      type: formType,
-      steps: splitSteps(formSteps),
-    };
 
     setSaving(true);
     setError(null);
@@ -128,7 +113,7 @@ export default function GuidelinesScreen() {
     } finally {
       setSaving(false);
     }
-  };
+  });
 
   const backToList = () => {
     setSelected(null);
@@ -217,12 +202,12 @@ export default function GuidelinesScreen() {
         {formMode && (
           <View style={styles.formCard}>
             <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit guideline' : 'Create guideline'}</Text>
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="title"
               style={styles.input}
               placeholder="Title"
               placeholderTextColor="#6f7c92"
-              value={formTitle}
-              onChangeText={setFormTitle}
             />
 
             <View style={styles.segmentRow}>
@@ -230,20 +215,20 @@ export default function GuidelinesScreen() {
                 <Pressable
                   key={candidate}
                   style={[styles.segmentButton, formType === candidate && styles.segmentButtonActive]}
-                  onPress={() => setFormType(candidate)}
+                  onPress={() => setValue('type', candidate)}
                 >
                   <Text style={[styles.segmentText, formType === candidate && styles.segmentTextActive]}>{candidate}</Text>
                 </Pressable>
               ))}
             </View>
 
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="steps"
               style={styles.multiLineInput}
               placeholder="Steps, one per line"
               placeholderTextColor="#6f7c92"
               multiline
-              value={formSteps}
-              onChangeText={setFormSteps}
             />
 
             <View style={styles.formActions}>
