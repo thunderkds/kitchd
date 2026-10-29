@@ -55,6 +55,15 @@ function connect(): void {
     hasConnected = true;
   });
 
+  // A rejected handshake (the gateway maps any auth failure, even a DB blip, to Unauthorized) kills
+  // this socket for good: socket.io does not retry it. Drop it so the next `active` builds a fresh
+  // one. No retry here (that would loop on a genuinely bad token). The error is never logged.
+  next.on('connect_error', () => {
+    if (socket === next) {
+      disconnect();
+    }
+  });
+
   for (const [event, keys] of Object.entries(EVENT_INVALIDATIONS)) {
     next.on(event, () => {
       for (const queryKey of keys) {

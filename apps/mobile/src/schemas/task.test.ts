@@ -29,6 +29,13 @@ describe('createTaskSchema (CreateTaskDto; web CreateTaskDialog: title required 
     expect(issues({ ...base, title: 'T', dueDate })).toEqual({ dueDate: 'Due date must be a valid YYYY-MM-DD date' })
   })
 
+  it('plain: reports a blank title and a bad due date together', () => {
+    expect(issues({ ...base, title: ' ', dueDate: 'tomorrow' })).toEqual({
+      title: 'Title is required',
+      dueDate: 'Due date must be a valid YYYY-MM-DD date',
+    })
+  })
+
   it('recipe: requires a selection and ignores the plain fields', () => {
     expect(issues({ ...base, mode: 'recipe' })).toEqual({ recipeId: 'Select a recipe' })
     expect(createTaskSchema.safeParse({ ...base, mode: 'recipe', recipeId: 'r1' }).data).toEqual({

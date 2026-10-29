@@ -26,6 +26,26 @@ describe('loginSchema (LoginDto: @IsEmail email, @MinLength(1) password)', () =>
   })
 })
 
+describe('email rule is permissive: the API @IsEmail is the strict policeman', () => {
+  it.each(['josé@example.com', 'a@münchen.de', 'a@xn--p1ai.xn--p1ai'])('accepts %p in login and signup', (email) => {
+    expect(loginSchema.safeParse({ email, password: 'x' }).success).toBe(true)
+    expect(
+      signupSchema.safeParse({ email, password: '12345678', organizationName: 'O', kitchenName: 'K' }).success,
+    ).toBe(true)
+  })
+
+  it.each(['abc', 'a@b', 'a b@c.com', '', '   '])('rejects %p', (email) => {
+    expect(loginSchema.safeParse({ email, password: 'x' }).success).toBe(false)
+  })
+
+  it('keeps the error texts', () => {
+    expect(errorsOf(loginSchema.safeParse({ email: '', password: 'x' }))).toEqual({ email: 'Email is required' })
+    expect(errorsOf(loginSchema.safeParse({ email: 'a@b', password: 'x' }))).toEqual({
+      email: 'Enter a valid email address',
+    })
+  })
+})
+
 describe('signupSchema (SignupDto: email, password >= 8, organizationName, kitchenName)', () => {
   const valid = { email: 'a@b.co', password: 'longenough', organizationName: ' Org ', kitchenName: ' Main ' }
 

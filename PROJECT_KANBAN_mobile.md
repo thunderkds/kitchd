@@ -13,6 +13,8 @@
 
 ### Done
 - [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
+- [x] **M005** — Forms: React Hook Form + Zod on 9 screens, rules mirror the API DTOs, zero calls on invalid submit; fixed blank-cost-as-0 and edit-threshold-null | mobile-developer | Review: `tasks/TASK_REVIEW_M005.md` | Linear HUN-99 | Done: 2026-10-29 (device check pending)
+- [x] **M009** — Socket.IO realtime: JWT per handshake, background-only disconnect, reconnect catch-up, connect_error recovery; native clients unaffected by gateway CORS (verified live) | mobile-developer | Review: `tasks/TASK_REVIEW_M009.md` | Linear HUN-103 | Done: 2026-10-29 (device check pending)
 - [x] **M004** — TanStack Query on mobile (8 screens, retry policy, foreground refetch, cache cleared on every session change, guarded rollbacks, 401 redirect) | mobile-developer | Review: `tasks/TASK_REVIEW_M004.md` | Linear HUN-98 | Done: 2026-10-29 (device check pending)
 - [x] **M006** — Settings: theme preference (simple = legacy look) + CHEF kitchen rename; fixed dark_neon login mapping | mobile-developer | Review: `tasks/TASK_REVIEW_M006.md` | Linear HUN-100 | Done: 2026-10-29 (device check pending)
 - [x] **M007** — Comments on task detail (post, own-delete, VIEWER read-only) | mobile-developer | Review: `tasks/TASK_REVIEW_M007.md` | Linear HUN-101 | Done: 2026-10-29 (device check pending)
@@ -34,17 +36,15 @@
 **Wave A — pay down the M000 debt (must clear before new features)**
 
 **Wave B — close the stack gap**
-- [ ] **M005** — Forms + validation: React Hook Form + Zod on mobile create/edit screens (none present today). | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written | 👀 Ready for Review (task/M005 c974be4)
 
 **Wave C — remaining parity screens**
-- [ ] **M009** — Socket.IO realtime (T017) on mobile, including background/foreground reconnect (flagged as a risk in the roadmap). | mobile-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_M009.md` | Linear HUN-103 | 👀 In Review (task/M009 c2214d1)
 
 **Wave D — native quality pass (Roadmap Phase 4)**
-- [ ] **M010** — FlashList on list-heavy screens (tasks/inventory/recipes/notes), `expo-image`, keyboard + safe-area handling, Reanimated only where it earns it. | frontend-developer | C2 | Risk: Low | P2 | ⚠️ guide not yet written
+- [ ] **M010** — FlashList on list-heavy screens (tasks/inventory/recipes/notes), `expo-image`, keyboard + safe-area handling, Reanimated only where it earns it. | frontend-developer | C2 | Risk: Low | P2 | ⚠️ guide not yet written | 🔄 In Progress (worktree ../kitchd-M010, branch task/M010)
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
-- [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) + M012 P3 residuals (`storage.ts:75` error-object log, no redirect after 401) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
+- [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) + M012 P3 residuals (`storage.ts:75` error-object log, no redirect after 401) + guideline detail→Edit renders no form until Back (M005 review) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
 - [ ] **M018** — Roll the M006 theme palette out to the remaining 9 hard-coded screens (tasks, recipes, guidelines, notes, inventory, team, invites, login, boot) so Dark Neon is not a mixed UI; reply composer for comments (web parity, M007 cut) | mobile-developer | C2 | Risk: Low | P3 | backlog — from Wave 2 review
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 

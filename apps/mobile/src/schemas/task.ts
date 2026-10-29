@@ -31,26 +31,32 @@ export const createTaskSchema = z
     guidelineId: z.string(),
   })
   .transform((value, ctx): CreateTaskRequest => {
+    // Collect every failing field so the user sees them all at once, not one per submit.
+    let failed = false
     const fail = (path: string, message: string, input: unknown) => {
       ctx.issues.push({ code: 'custom', message, path: [path], input })
-      return z.NEVER
+      failed = true
     }
 
     if (value.mode === 'recipe') {
-      return value.recipeId ? { mode: 'recipe', recipeId: value.recipeId } : fail('recipeId', 'Select a recipe', value.recipeId)
+      if (value.recipeId) return { mode: 'recipe', recipeId: value.recipeId }
+      fail('recipeId', 'Select a recipe', value.recipeId)
+      return z.NEVER
     }
     if (value.mode === 'guideline') {
-      return value.guidelineId
-        ? { mode: 'guideline', guidelineId: value.guidelineId }
-        : fail('guidelineId', 'Select a guideline', value.guidelineId)
+      if (value.guidelineId) return { mode: 'guideline', guidelineId: value.guidelineId }
+      fail('guidelineId', 'Select a guideline', value.guidelineId)
+      return z.NEVER
     }
 
     const title = requiredText('Title is required').safeParse(value.title)
-    if (!title.success) return fail('title', 'Title is required', value.title)
+    if (!title.success) fail('title', 'Title is required', value.title)
 
     const dueText = value.dueDate.trim()
     const dueAt = dueText === '' ? null : isoFromDateInput(dueText)
-    if (dueText !== '' && dueAt === null) return fail('dueDate', DATE_MESSAGE, value.dueDate)
+    if (dueText !== '' && dueAt === null) fail('dueDate', DATE_MESSAGE, value.dueDate)
+
+    if (failed || !title.success) return z.NEVER
 
     const assigneeId = value.assigneeId.trim()
     return {

@@ -14,6 +14,14 @@ describe('inviteSchema (InviteUserDto: @IsEmail email, role in CHEF/STAFF/VIEWER
     expect(errorsOf(inviteSchema.safeParse({ email, role: 'STAFF' }))).toHaveProperty('email')
   })
 
+  it.each(['josé@example.com', 'a@münchen.de', 'a@xn--p1ai.xn--p1ai'])('accepts the IDN/unicode email %p', (email) => {
+    expect(inviteSchema.safeParse({ email, role: 'STAFF' }).success).toBe(true)
+  })
+
+  it.each(['abc', 'a@b', 'a b@c.com'])('rejects %p', (email) => {
+    expect(errorsOf(inviteSchema.safeParse({ email, role: 'STAFF' }))).toEqual({ email: 'Enter a valid email address' })
+  })
+
   it.each(['OWNER', 'ADMIN', 'BOSS', ''])('rejects the non-invitable role %p', (role) => {
     expect(inviteSchema.safeParse({ email: 'a@b.co', role }).success).toBe(false)
   })

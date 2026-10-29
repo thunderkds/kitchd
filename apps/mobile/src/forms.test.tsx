@@ -519,3 +519,37 @@ describe('ingredient form (T041/T049 threshold rules)', () => {
     expectNoCalls(...writes('receiveStock'))
   })
 })
+
+describe('task create form: all errors at once', () => {
+  it('a blank title and a bad due date are both shown after one submit, with zero requests', async () => {
+    renderWithClient(<TasksScreen />)
+    fireEvent.press(await screen.findByText('New task'))
+    fireEvent.changeText(screen.getByPlaceholderText('Due date YYYY-MM-DD'), 'tomorrow')
+
+    fireEvent.press(screen.getAllByText('Create task')[1])
+
+    expect(await screen.findByText('Title is required')).toBeTruthy()
+    expect(screen.getByText('Due date must be a valid YYYY-MM-DD date')).toBeTruthy()
+    expectNoCalls(...writes('createTask', 'generateTaskFromRecipe', 'generateTaskFromGuideline'))
+  })
+})
+
+describe('login with a unicode / IDN email', () => {
+  it('is sent to the API instead of being blocked client-side', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ accessToken: 't', user: { id: 'u1', email: 'josé@example.com', role: 'OWNER' } }),
+    })
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+    mockUser.current = null
+    render(<HomeScreen />)
+    fireEvent.press(screen.getAllByText('Log in')[0])
+    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'josé@example.com')
+    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'x')
+
+    fireEvent.press(screen.getAllByText('Log in')[1])
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ email: 'josé@example.com', password: 'x' })
+  })
+})
