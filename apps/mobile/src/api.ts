@@ -499,3 +499,20 @@ export function confirmTaskCompletion(id: string): Promise<CompletionResult> {
     method: 'POST',
   });
 }
+
+// M016
+export interface RecipeVersion {
+  id: string;
+  recipeId: string;
+  version: number;
+  name: string;
+  steps: string[];
+  servings: number | null;
+  ingredientsSnapshot: RecipeIngredientResolved[];
+  costComputedAtSnapshot: number;
+  createdAt: string;
+}
+
+export function listRecipeVersions(id: string): Promise<RecipeVersion[]> {
+  return request<RecipeVersion[]>(`/recipes/${id}/versions`);
+}

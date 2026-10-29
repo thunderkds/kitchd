@@ -10,11 +10,12 @@ import {
   listNotes,
   listPendingInvites,
   listRecipes,
+  listRecipeVersions,
   listTasks,
   type Ingredient,
   type NoteScope,
 } from './api';
-import { queryKeys } from './queryKeys';
+import { queryKeys, recipeVersionKeys } from './queryKeys';
 
 export type IngredientRow = Ingredient & {
   currentStock: number | null;
@@ -90,4 +91,13 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
   }
 
   return error instanceof Error ? error.message : fallback;
+}
+
+// M016
+export function useRecipeVersions(recipeId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: recipeVersionKeys.list(recipeId ?? ''),
+    queryFn: () => listRecipeVersions(recipeId as string),
+    enabled: enabled && !!recipeId,
+  });
 }

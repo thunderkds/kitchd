@@ -38,3 +38,9 @@ export const queryKeys = {
     list: () => ['invites', 'list'] as const,
   },
 };
+
+// M016
+export const recipeVersionKeys = {
+  all: ['recipeVersions'] as const,
+  list: (recipeId: string) => ['recipeVersions', 'list', recipeId] as const,
+};
