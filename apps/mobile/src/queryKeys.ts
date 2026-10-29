@@ -37,4 +37,9 @@ export const queryKeys = {
     all: ['invites'] as const,
     list: () => ['invites', 'list'] as const,
   },
+  // M008
+  notifications: {
+    all: ['notifications'] as const,
+    feed: () => ['notifications', 'feed'] as const,
+  },
 };

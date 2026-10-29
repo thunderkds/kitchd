@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   currentStockFromMovements,
   fetchAssignableUsers,
+  fetchNotifications,
   listAnnouncements,
   listGuidelines,
   listIngredients,
@@ -90,4 +91,9 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
   }
 
   return error instanceof Error ? error.message : fallback;
+}
+
+// M008
+export function useNotifications(enabled = true) {
+  return useQuery({ queryKey: queryKeys.notifications.feed(), queryFn: fetchNotifications, enabled });
 }
