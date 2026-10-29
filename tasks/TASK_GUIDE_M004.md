@@ -30,7 +30,7 @@
 
 ## Dependencies & Reachability
 
-**Depends on**: M003 (runner), M012 (session hardening — 401 clears session; queries must not retry a 401)
+**Depends on**: M003 (runner), M012 (landed `1c0828f` — `request()` already clears the session on 401; queries must not retry a 401)
 **Entry point**: `apps/mobile/app/_layout.tsx` (`QueryClientProvider` inside the `sessionReady` gate)
 **Consumer**: `app/{tasks,recipes,guidelines,announcements,notes,inventory,team,invites}.tsx`
 
@@ -47,7 +47,8 @@
 | 5 | The 8 list screens read via `useQuery` and write via `useMutation` + `invalidateQueries`; loading/error/empty UI unchanged in wording | migration |
 | 6 | Logout (`clearSession`) also calls `queryClient.clear()` so user A's cached data can't render for user B | security |
 | 7 | Tests: retry policy (401 not retried, 500 retried once), `focusManager` wiring, logout clears the cache, and at least one screen-level hook test (e.g. a `useTasks` hook with a mocked `api.ts`) | test-first |
-| 8 | `pnpm --filter @kitchenos/mobile test` and `typecheck` pass | no regression |
+| 8 | `pnpm --filter @kitchenos/mobile test` (must print `exit=0`) and `typecheck` pass | no regression |
+| 9 | Add `@testing-library/react-native` (+ `react-test-renderer` pinned to the installed `react` version) as mobile devDependencies; use it for the screen-level hook test (`renderHook`) AND add the missing M012 F4 component test: `app/invite/accept.tsx` rendered with param `token=abc`, typing `x` → input value `abcx` (M012 review gap: AC4 was only covered by a helper test) | test-first / M012 gap |
 
 ---
 

@@ -25,7 +25,7 @@
 **Wave A — pay down the M000 debt (must clear before new features)**
 
 **Wave B — close the stack gap**
-- [ ] **M004** — Adopt the decided server-state stack: `apps/mobile/src/api.ts` is 478 lines of hand-rolled `fetch`; the roadmap locked TanStack Query. Decide keep-vs-adopt explicitly (DDR), then apply. | frontend-developer | C3 | Risk: Medium | P1 | ⚠️ guide not yet written
+- [ ] **M004** — Adopt the decided server-state stack: `apps/mobile/src/api.ts` is 478 lines of hand-rolled `fetch`; the roadmap locked TanStack Query. Decide keep-vs-adopt explicitly (DDR), then apply. | frontend-developer | C3 | Risk: Medium | P1 | ⚠️ guide not yet written | 🔄 In Progress (worktree ../kitchd-M004, branch task/M004)
 - [ ] **M005** — Forms + validation: React Hook Form + Zod on mobile create/edit screens (none present today). | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
 
 **Wave C — remaining parity screens**
@@ -39,7 +39,7 @@
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
-- [ ] **M012** — Session hardening: M002 P2 findings F1–F5 (401 clears session, `apiBase` https/dev-only fallback, robust sign-out, invite token field reset, drop `expo-env.d.ts` `any` stubs) | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M012.md` | Linear HUN-107 | 🔄 In Progress
+- [ ] **M012** — Session hardening: M002 P2 findings F1–F5 (401 clears session, `apiBase` https/dev-only fallback, robust sign-out, invite token field reset, drop `expo-env.d.ts` `any` stubs) | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M012.md` | Linear HUN-107 | 👀 Ready for Review (1c0828f)
 - [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
 - [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M014.md` | Linear HUN-109
 - [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M015.md` | Linear HUN-110
