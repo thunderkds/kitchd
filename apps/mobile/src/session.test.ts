@@ -54,6 +54,21 @@ describe('toStoredUser', () => {
     ).toEqual(chef)
   })
 
+  it('accepts the API snake_case value (dark_neon) as dark-neon (M006: the API sends the Prisma enum)', () => {
+    const { toStoredUser } = loadModules()
+
+    expect(
+      toStoredUser({
+        id: 'user-1',
+        email: 'chef@example.com',
+        organizationId: 'org-1',
+        kitchenId: 'kitchen-1',
+        role: 'CHEF',
+        themePreference: 'dark_neon',
+      }),
+    ).toEqual(chef)
+  })
+
   it('drops unsupported theme preferences', () => {
     const { toStoredUser } = loadModules()
 

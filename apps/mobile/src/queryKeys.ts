@@ -38,3 +38,9 @@ export const queryKeys = {
     list: () => ['invites', 'list'] as const,
   },
 };
+
+// M006
+export const kitchenKeys = {
+  all: ['kitchen'] as const,
+  detail: (id: string) => ['kitchen', 'detail', id] as const,
+};

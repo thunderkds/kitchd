@@ -6,11 +6,13 @@ import { createAnnouncement } from '../src/api';
 import { queryErrorMessage, useAnnouncements } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme } from '../src/theme';
 
 const BROADCAST_ROLES = ['OWNER', 'CHEF'] as const;
 
 export default function AnnouncementsScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
   const caller = session.getUser();
   const canBroadcast = !!caller && BROADCAST_ROLES.includes(caller.role as (typeof BROADCAST_ROLES)[number]);
 
@@ -76,19 +78,19 @@ export default function AnnouncementsScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
+    <View testID="announcements-screen" style={[styles.screen, { backgroundColor: palette.background }]}>
+      <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Announcements</Text>
+            <Text style={[styles.kicker, { color: palette.accent }]}>KitchenOS mobile</Text>
+            <Text style={[styles.title, { color: palette.text }]}>Announcements</Text>
           </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
+          <Pressable style={[styles.backButton, { backgroundColor: palette.background, borderColor: palette.border }]} onPress={() => router.back()}>
+            <Text style={[styles.backButtonText, { color: palette.text }]}>Back</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.note}>
+        <Text style={[styles.note, { color: palette.muted }]}>
           Read the kitchen history, and broadcast new announcements if your role allows it.
         </Text>
 
@@ -127,17 +129,17 @@ export default function AnnouncementsScreen() {
           </View>
         )}
 
-        {error && <Text style={styles.error}>{error}</Text>}
-        {announcements === null && !error && <Text style={styles.note}>Loading announcements...</Text>}
-        {announcements !== null && announcements.length === 0 && <Text style={styles.note}>No announcements yet.</Text>}
+        {error && <Text style={[styles.error, { color: palette.danger }]}>{error}</Text>}
+        {announcements === null && !error && <Text style={[styles.note, { color: palette.muted }]}>Loading announcements...</Text>}
+        {announcements !== null && announcements.length === 0 && <Text style={[styles.note, { color: palette.muted }]}>No announcements yet.</Text>}
 
         {announcements !== null && announcements.length > 0 && (
           <View style={styles.list}>
             {announcements.map((announcement) => (
-              <View key={announcement.id} style={styles.listRow}>
-                <Text style={styles.listTitle}>{announcement.title}</Text>
-                <Text style={styles.bodyText}>{announcement.body}</Text>
-                <Text style={styles.meta}>Read by {announcement.readBy.length}</Text>
+              <View key={announcement.id} style={[styles.listRow, { borderTopColor: palette.border }]}>
+                <Text style={[styles.listTitle, { color: palette.text }]}>{announcement.title}</Text>
+                <Text style={[styles.bodyText, { color: palette.text }]}>{announcement.body}</Text>
+                <Text style={[styles.meta, { color: palette.muted }]}>Read by {announcement.readBy.length}</Text>
               </View>
             ))}
           </View>

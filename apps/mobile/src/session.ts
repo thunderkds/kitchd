@@ -13,6 +13,11 @@ function normalizeThemePreference(value: string | null | undefined): ThemePrefer
     return value;
   }
 
+  // The API sends the Prisma enum value (snake_case).
+  if (value === 'dark_neon') {
+    return 'dark-neon';
+  }
+
   return undefined;
 }
 
