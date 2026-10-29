@@ -5,7 +5,14 @@ import { z } from 'zod'
 
 export const requiredText = (message: string) => z.string().trim().min(1, message)
 
-export const emailField = z.string().trim().min(1, 'Email is required').pipe(z.email('Enter a valid email address'))
+// Deliberately permissive: the API's @IsEmail accepts unicode local parts and IDN domains that z.email()
+// rejects, and an existing account must always be able to log in. Strict format policing is the API's job.
+const LOOSE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const emailField = z
+  .string()
+  .trim()
+  .min(1, 'Email is required')
+  .pipe(z.string().regex(LOOSE_EMAIL, 'Enter a valid email address'))
 
 export const MIN_PASSWORD_LENGTH = 8
 export const PASSWORD_TOO_SHORT = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
