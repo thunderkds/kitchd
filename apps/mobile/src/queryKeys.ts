@@ -37,4 +37,10 @@ export const queryKeys = {
     all: ['invites'] as const,
     list: () => ['invites', 'list'] as const,
   },
+  // M015
+  alerts: {
+    all: ['alerts'] as const,
+    lowStock: () => ['alerts', 'lowStock'] as const,
+    expiring: () => ['alerts', 'expiring'] as const,
+  },
 };

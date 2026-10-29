@@ -499,3 +499,37 @@ export function confirmTaskCompletion(id: string): Promise<CompletionResult> {
     method: 'POST',
   });
 }
+
+// M015 — inventory alerts. Response shapes mirror AlertsService: low-stock returns Ingredient rows
+// with the ledger-derived `currentStock` appended; expiring returns StockBatch rows with `ingredient`.
+export interface LowStockIngredient {
+  id: string;
+  name: string;
+  unit: string;
+  minThreshold: number | null;
+  currentStock: number;
+}
+
+export interface ExpiringSoonBatch {
+  id: string;
+  ingredientId: string;
+  qty: number;
+  expiryDate: string | null;
+  location: string | null;
+  createdAt: string;
+  ingredient: {
+    id: string;
+    name: string;
+    unit: string;
+  };
+}
+
+export function listLowStock(): Promise<LowStockIngredient[]> {
+  return request<LowStockIngredient[]>('/inventory/alerts/low-stock');
+}
+
+// No `days` by default: the server's window (DEFAULT_EXPIRING_SOON_DAYS = 3) is what web uses too.
+export function listExpiringSoon(days?: number): Promise<ExpiringSoonBatch[]> {
+  const query = days ? `?days=${days}` : '';
+  return request<ExpiringSoonBatch[]>(`/inventory/alerts/expiring${query}`);
+}

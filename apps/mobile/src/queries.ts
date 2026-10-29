@@ -3,8 +3,10 @@ import {
   currentStockFromMovements,
   fetchAssignableUsers,
   listAnnouncements,
+  listExpiringSoon,
   listGuidelines,
   listIngredients,
+  listLowStock,
   listMembers,
   listMovements,
   listNotes,
@@ -90,4 +92,14 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
   }
 
   return error instanceof Error ? error.message : fallback;
+}
+
+// M015
+export function useLowStock(enabled = true) {
+  return useQuery({ queryKey: queryKeys.alerts.lowStock(), queryFn: listLowStock, enabled });
+}
+
+export function useExpiringSoon(enabled = true) {
+  // Arrow wrapper so react-query's context arg is never mistaken for the `days` parameter.
+  return useQuery({ queryKey: queryKeys.alerts.expiring(), queryFn: () => listExpiringSoon(), enabled });
 }

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { clearSession } from '../src/storage';
 import { session } from '../src/session';
 import { signOut } from '../src/signOut';
+import { AlertWidgets } from '../src/components/AlertWidgets';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -23,6 +24,8 @@ export default function DashboardScreen() {
         <Text style={styles.note}>
           This is the mobile shell landing screen. The first live feature routes are tasks, recipes, guidelines, announcements, notes, inventory, team, and invites.
         </Text>
+
+        <AlertWidgets />
 
         <Pressable style={styles.secondaryButton} onPress={() => router.push('/tasks')}>
           <Text style={styles.secondaryButtonText}>Open tasks</Text>
