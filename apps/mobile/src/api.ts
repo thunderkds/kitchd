@@ -1,8 +1,9 @@
-import type { AuthResponseDto, UserRole } from '@kitchenos/shared';
+import type { AuthResponseDto, ThemePreferenceId, UserRole } from '@kitchenos/shared';
 import { API_BASE } from './apiBase';
 import { redirectToSignIn } from './onUnauthorized';
 import { session } from './session';
 import { clearSession } from './storage';
+import { toApiTheme } from './theme';
 
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
@@ -653,9 +654,7 @@ export function removeMember(id: string): Promise<TeamMember> {
   return request<TeamMember>(`/users/${id}`, { method: 'DELETE' });
 }
 
-// M006 (imports kept in this block so the sibling-merge hunk stays at the end of the file)
-import type { ThemePreferenceId } from '@kitchenos/shared';
-import { toApiTheme } from './theme';
+// M006
 
 export interface Kitchen {
   id: string;

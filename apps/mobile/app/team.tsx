@@ -3,18 +3,20 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { UserRole } from '@kitchenos/shared';
 import type { TeamMember } from '../src/api';
-import { queryErrorMessage, useMembers, useRemoveMember, useUpdateMemberRole } from '../src/queries';
+import { queryLoadError, useMembers, useRemoveMember, useUpdateMemberRole } from '../src/queries';
 import { session } from '../src/session';
-import { ASSIGNABLE_ROLES, canManageMember } from '../src/teamRules';
+import { ASSIGNABLE_ROLES, canManageMember, canManageTeam } from '../src/teamRules';
 
 export default function TeamScreen() {
   const router = useRouter();
   const caller = session.getUser();
   const signedIn = !!caller;
-  const membersQuery = useMembers(signedIn);
+  // GET /users is OWNER/ADMIN only (403 otherwise), so other roles never fetch it; same as web.
+  const canManage = canManageTeam(caller?.role);
+  const membersQuery = useMembers(signedIn && canManage);
   const members = membersQuery.data ?? [];
   const loading = membersQuery.isLoading;
-  const error = queryErrorMessage(membersQuery.error, 'Failed to load team');
+  const error = queryLoadError(membersQuery, 'Failed to load team');
   const updateRole = useUpdateMemberRole();
   const remove = useRemoveMember();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -51,6 +53,21 @@ export default function TeamScreen() {
       router.replace('/');
     }
   }, [router, signedIn]);
+
+  if (signedIn && !canManage) {
+    return (
+      <View style={styles.screen}>
+        <View style={styles.card}>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Team roster</Text>
+          <Text style={styles.note}>Team management is available to Owners and Admins only.</Text>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Back</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>

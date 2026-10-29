@@ -16,13 +16,14 @@ import {
   type TaskStatus,
 } from '../src/api';
 import {
-  queryErrorMessage,
+  queryLoadError,
   useAssignableUsers,
   useGuidelines,
   useIngredients,
   useRecipes,
   useTasks,
 } from '../src/queries';
+import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
@@ -155,7 +156,7 @@ export default function TasksScreen() {
     return user.role === 'STAFF' && task.assigneeId === currentUserId;
   };
 
-  const error = actionError ?? queryErrorMessage(tasksQuery.error, 'Failed to load tasks');
+  const error = actionError ?? queryLoadError(tasksQuery, 'Failed to load tasks');
 
   useEffect(() => {
     if (!user) {
@@ -174,26 +175,30 @@ export default function TasksScreen() {
 
   const completeMutation = useMutation({
     mutationFn: (taskId: string) => confirmTaskCompletion(taskId),
-    // Completion deducts stock, so refresh the ingredient caches along with the tasks.
+    // Completion deducts stock, so refresh the ingredient caches and dashboard alerts along with the tasks.
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.alerts.all }),
       ]),
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: TaskStatus }) => updateTaskStatus(id, status),
     onMutate: async ({ id, status }) => {
+      const tokenAtStart = sessionTokenAtStart();
       await queryClient.cancelQueries({ queryKey: queryKeys.tasks.list() });
       const previous = queryClient.getQueryData<Task[]>(queryKeys.tasks.list());
       queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (current) =>
         current?.map((item) => (item.id === id ? { ...item, status } : item)),
       );
-      return { previous };
+      return { previous, tokenAtStart };
     },
     onError: (_error, _variables, context) => {
-      queryClient.setQueryData(queryKeys.tasks.list(), context?.previous);
+      if (context) {
+        restoreIfSessionUnchanged(queryClient, queryKeys.tasks.list(), context.previous, context.tokenAtStart);
+      }
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
   });

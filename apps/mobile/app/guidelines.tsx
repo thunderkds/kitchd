@@ -10,7 +10,7 @@ import {
   type GuidelineInput,
   type GuidelineType,
 } from '../src/api';
-import { queryErrorMessage, useGuidelines } from '../src/queries';
+import { queryLoadError, useGuidelines } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
@@ -53,7 +53,7 @@ export default function GuidelinesScreen() {
 
   const selectedSteps = useMemo(() => selected?.steps ?? [], [selected]);
 
-  const error = actionError ?? queryErrorMessage(guidelinesQuery.error, 'Failed to load guidelines');
+  const error = actionError ?? queryLoadError(guidelinesQuery, 'Failed to load guidelines');
 
   useEffect(() => {
     if (!caller) {

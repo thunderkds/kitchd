@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createNote, deleteNote, updateNote, type Note, type NoteScope } from '../src/api';
-import { queryErrorMessage, useNotes } from '../src/queries';
+import { queryLoadError, useNotes } from '../src/queries';
+import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
@@ -39,7 +40,7 @@ export default function NotesScreen() {
     return [...notes].sort((a, b) => Number(b.pinned) - Number(a.pinned));
   }, [notes]);
 
-  const error = actionError ?? queryErrorMessage(notesQuery.error, 'Failed to load notes');
+  const error = actionError ?? queryLoadError(notesQuery, 'Failed to load notes');
 
   useEffect(() => {
     if (!caller) {
@@ -55,15 +56,18 @@ export default function NotesScreen() {
   const pinMutation = useMutation({
     mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => updateNote(id, { pinned }),
     onMutate: async ({ id, pinned }) => {
+      const tokenAtStart = sessionTokenAtStart();
       await queryClient.cancelQueries({ queryKey: queryKeys.notes.all });
       const previous = queryClient.getQueriesData<Note[]>({ queryKey: queryKeys.notes.all });
       queryClient.setQueriesData<Note[]>({ queryKey: queryKeys.notes.all }, (current) =>
         current?.map((item) => (item.id === id ? { ...item, pinned } : item)),
       );
-      return { previous };
+      return { previous, tokenAtStart };
     },
     onError: (_error, _variables, context) => {
-      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      context?.previous.forEach(([key, data]) =>
+        restoreIfSessionUnchanged(queryClient, key, data, context.tokenAtStart),
+      );
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.notes.all }),
   });
@@ -71,15 +75,18 @@ export default function NotesScreen() {
   const deleteMutation = useMutation({
     mutationFn: deleteNote,
     onMutate: async (id) => {
+      const tokenAtStart = sessionTokenAtStart();
       await queryClient.cancelQueries({ queryKey: queryKeys.notes.all });
       const previous = queryClient.getQueriesData<Note[]>({ queryKey: queryKeys.notes.all });
       queryClient.setQueriesData<Note[]>({ queryKey: queryKeys.notes.all }, (current) =>
         current?.filter((item) => item.id !== id),
       );
-      return { previous };
+      return { previous, tokenAtStart };
     },
     onError: (_error, _id, context) => {
-      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      context?.previous.forEach(([key, data]) =>
+        restoreIfSessionUnchanged(queryClient, key, data, context.tokenAtStart),
+      );
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.notes.all }),
   });

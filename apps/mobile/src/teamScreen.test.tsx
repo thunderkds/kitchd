@@ -91,15 +91,27 @@ describe('TeamScreen controls visibility (M017 AC1, AC3)', () => {
     expect(screen.queryByLabelText('Remove adm@example.com')).toBeNull()
   })
 
-  it.each(['CHEF', 'STAFF', 'VIEWER'])('%s caller never sees any management control', async (role) => {
-    mockCaller.current = { id: 'chef', email: 'chef@example.com', role }
-    mocked.listMembers.mockResolvedValue(roster)
-    renderScreen()
-    await screen.findByText('chef@example.com')
+  it.each(['CHEF', 'STAFF', 'VIEWER'])(
+    '%s caller never fetches the roster and sees the restricted message (M017 follow-up)',
+    async (role) => {
+      mockCaller.current = { id: 'chef', email: 'chef@example.com', role }
+      mocked.listMembers.mockRejectedValue(Object.assign(new Error('Forbidden'), { status: 403 }))
+      renderScreen()
 
-    expect(screen.queryByLabelText(/^Remove /)).toBeNull()
-    expect(screen.queryByLabelText(/^Set role of /)).toBeNull()
-  })
+      expect(await screen.findByText('Team management is available to Owners and Admins only.')).toBeTruthy()
+      // Give any (unwanted) request time to fail and render its error.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+
+      expect(mocked.listMembers).not.toHaveBeenCalled()
+      expect(screen.queryByText('Forbidden')).toBeNull()
+      expect(screen.queryByText('Loading members...')).toBeNull()
+      expect(screen.queryByText('No team members returned.')).toBeNull()
+      expect(screen.queryByLabelText(/^Remove /)).toBeNull()
+      expect(screen.queryByLabelText(/^Set role of /)).toBeNull()
+    },
+  )
 })
 
 describe('TeamScreen role change (M017 AC1)', () => {

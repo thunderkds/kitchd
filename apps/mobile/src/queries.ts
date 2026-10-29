@@ -3,7 +3,9 @@ import {
   currentStockFromMovements,
   fetchAssignableUsers,
   fetchNotifications,
+  getKitchen,
   listAnnouncements,
+  listComments,
   listExpiringSoon,
   listGuidelines,
   listIngredients,
@@ -14,14 +16,16 @@ import {
   listPendingInvites,
   listRecipes,
   listRecipeVersions,
+  listShiftLogs,
   listTasks,
   removeMember,
   updateMemberRole,
+  type CommentEntityType,
   type Ingredient,
   type NoteScope,
 } from './api';
 import type { UserRole } from '@kitchenos/shared';
-import { queryKeys, recipeVersionKeys } from './queryKeys';
+import { commentKeys, kitchenKeys, queryKeys, recipeVersionKeys } from './queryKeys';
 
 export type IngredientRow = Ingredient & {
   currentStock: number | null;
@@ -99,6 +103,12 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
   return error instanceof Error ? error.message : fallback;
 }
 
+// Load error for a list screen. Once data is on screen a failed background refetch keeps showing the
+// data (react-query retains it) instead of putting an error banner on top of it.
+export function queryLoadError(query: { data: unknown; error: unknown }, fallback: string): string | null {
+  return query.data === undefined ? queryErrorMessage(query.error, fallback) : null;
+}
+
 // M016
 export function useRecipeVersions(recipeId: string | null, enabled = true) {
   return useQuery({
@@ -119,8 +129,6 @@ export function useExpiringSoon(enabled = true) {
 }
 
 // M014
-import { listShiftLogs } from './api';
-
 export function useShiftLogs(enabled = true) {
   return useQuery({ queryKey: queryKeys.shiftLogs.list(), queryFn: listShiftLogs, enabled });
 }
@@ -131,9 +139,6 @@ export function useNotifications(enabled = true) {
 }
 
 // M007
-import { listComments, type CommentEntityType } from './api';
-import { commentKeys } from './queryKeys';
-
 export function useComments(entityType: CommentEntityType, entityId: string, enabled = true) {
   return useQuery({
     queryKey: commentKeys.list(entityType, entityId),
@@ -160,9 +165,6 @@ export function useRemoveMember() {
 }
 
 // M006
-import { getKitchen } from './api';
-import { kitchenKeys } from './queryKeys';
-
 export function useKitchen(id: string | undefined, enabled = true) {
   return useQuery({
     queryKey: kitchenKeys.detail(id ?? ''),

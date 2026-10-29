@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createAnnouncement } from '../src/api';
-import { queryErrorMessage, useAnnouncements } from '../src/queries';
+import { queryLoadError, useAnnouncements } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import { useTheme } from '../src/theme';
@@ -29,7 +29,7 @@ export default function AnnouncementsScreen() {
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const error = actionError ?? queryErrorMessage(announcementsQuery.error, 'Failed to load announcements');
+  const error = actionError ?? queryLoadError(announcementsQuery, 'Failed to load announcements');
 
   useEffect(() => {
     if (!caller) {

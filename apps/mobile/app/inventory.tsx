@@ -9,7 +9,7 @@ import {
   type CreateIngredientInput,
   type ReceiveStockInput,
 } from '../src/api';
-import { queryErrorMessage, useIngredientRows, type IngredientRow } from '../src/queries';
+import { queryLoadError, useIngredientRows, type IngredientRow } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
@@ -43,11 +43,21 @@ export default function InventoryScreen() {
   const saveMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string | null; payload: CreateIngredientInput }) =>
       id ? updateIngredient(id, payload) : createIngredient(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+    // Stock and thresholds drive the dashboard low-stock / expiring widgets too.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.alerts.all }),
+      ]),
   });
   const receiveMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: ReceiveStockInput }) => receiveStock(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+    // Stock and thresholds drive the dashboard low-stock / expiring widgets too.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.alerts.all }),
+      ]),
   });
   const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -58,7 +68,7 @@ export default function InventoryScreen() {
   const [receiveQty, setReceiveQty] = useState('');
   const [savingReceiveId, setSavingReceiveId] = useState<string | null>(null);
 
-  const error = actionError ?? queryErrorMessage(ingredientsQuery.error, 'Failed to load ingredients');
+  const error = actionError ?? queryLoadError(ingredientsQuery, 'Failed to load ingredients');
 
   useEffect(() => {
     if (!caller) {

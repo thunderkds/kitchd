@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { inviteMember, revokeInvite, type PendingInvite } from '../src/api';
-import { queryErrorMessage, usePendingInvites } from '../src/queries';
+import { queryLoadError, usePendingInvites } from '../src/queries';
+import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import type { UserRole } from '@kitchenos/shared';
@@ -25,7 +26,7 @@ export default function InvitesScreen() {
   const [actionError, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const error = actionError ?? queryErrorMessage(invitesQuery.error, 'Failed to load invites');
+  const error = actionError ?? queryLoadError(invitesQuery, 'Failed to load invites');
 
   useEffect(() => {
     if (!caller) {
@@ -42,15 +43,18 @@ export default function InvitesScreen() {
   const revokeMutation = useMutation({
     mutationFn: (id: string) => revokeInvite(id),
     onMutate: async (id) => {
+      const tokenAtStart = sessionTokenAtStart();
       await queryClient.cancelQueries({ queryKey: queryKeys.invites.all });
       const previous = queryClient.getQueryData<PendingInvite[]>(queryKeys.invites.list());
       queryClient.setQueryData<PendingInvite[]>(queryKeys.invites.list(), (current) =>
         current?.filter((item) => item.id !== id),
       );
-      return { previous };
+      return { previous, tokenAtStart };
     },
     onError: (_error, _id, context) => {
-      queryClient.setQueryData(queryKeys.invites.list(), context?.previous);
+      if (context) {
+        restoreIfSessionUnchanged(queryClient, queryKeys.invites.list(), context.previous, context.tokenAtStart);
+      }
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.invites.all }),
   });

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createRecipe, getRecipe, updateRecipe, type Recipe, type RecipeInput } from '../src/api';
-import { queryErrorMessage, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
+import { queryErrorMessage, queryLoadError, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
 import { queryKeys, recipeVersionKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
@@ -75,7 +75,7 @@ export default function RecipesScreen() {
   const [activeRow, setActiveRow] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const error = actionError ?? queryErrorMessage(recipesQuery.error, 'Failed to load recipes');
+  const error = actionError ?? queryLoadError(recipesQuery, 'Failed to load recipes');
 
   useEffect(() => {
     if (!caller) {
