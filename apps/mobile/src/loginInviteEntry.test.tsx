@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 import HomeScreen from '../app/index'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 const mockUser: { current: unknown } = { current: null }
@@ -31,5 +32,13 @@ describe('Login screen invite entry (M017 AC4)', () => {
     render(<HomeScreen />)
 
     expect(screen.getByRole('link', { name: 'I have an invite' })).toBeTruthy()
+  })
+})
+
+describe('Login screen native quality (M010)', () => {
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', () => {
+    render(<HomeScreen />)
+
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

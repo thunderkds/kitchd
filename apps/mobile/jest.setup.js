@@ -8,3 +8,14 @@ Object.defineProperty(globalThis, 'fetch', {
   writable: true,
   configurable: true,
 })
+
+// FlashList cannot measure itself under jest (no native layout), so every row would be virtualized away.
+// Plain functions, not jest.fn: a test's jest.restoreAllMocks() would wipe a jest.fn implementation.
+// The measurement helpers are stubbed with a phone-sized viewport and 100px rows; the real FlashList renders.
+// (@shopify/flash-list/jestSetup is not usable here: in 2.0.2 it replaces FlashList with an export that does not exist.)
+jest.mock('@shopify/flash-list/dist/recyclerview/utils/measureLayout', () => ({
+  ...jest.requireActual('@shopify/flash-list/dist/recyclerview/utils/measureLayout'),
+  measureParentSize: () => ({ x: 0, y: 0, width: 400, height: 900 }),
+  measureFirstChildLayout: () => ({ x: 0, y: 0, width: 400, height: 900 }),
+  measureItemLayout: () => ({ x: 0, y: 0, width: 100, height: 100 }),
+}))

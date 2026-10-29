@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import RecipesScreen from '../app/recipes'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 
@@ -150,5 +151,50 @@ describe('Recipe version history (M016)', () => {
     await waitFor(() => expect(mocked.updateRecipe).toHaveBeenCalledWith('rec-1', expect.any(Object)))
     expect(await screen.findByText('Version 2 · Oct 6, 2026')).toBeTruthy()
     expect(mocked.listRecipeVersions).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('RecipesScreen native quality (M010)', () => {
+  it('AC1: renders recipes through one FlashList keyed by recipe id', async () => {
+    mocked.listRecipes.mockResolvedValue([recipe(), recipe({ id: 'rec-2', name: 'Garlic bread' })])
+    renderScreen()
+
+    expect(await screen.findByText('Garlic bread')).toBeTruthy()
+    expect(screen.getByText('Onion soup')).toBeTruthy()
+    expectFlashListKeyedBy(['rec-1', 'rec-2'])
+  })
+
+  it('AC1: shows the empty text', async () => {
+    mocked.listRecipes.mockResolvedValue([])
+    renderScreen()
+
+    expect(await screen.findByText('No recipes yet.')).toBeTruthy()
+  })
+
+  it('AC2 + AC3: the list and its form sit in the safe area and avoid the keyboard', async () => {
+    renderScreen()
+    fireEvent.press(await screen.findByText('New recipe'))
+    expect(screen.getByPlaceholderText('Name')).toBeTruthy()
+
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC2 + AC3: the detail view sits in the safe area and avoids the keyboard', async () => {
+    mocked.listRecipeVersions.mockResolvedValue([])
+    await openDetail()
+
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC3: the recipe form in the list header keeps its inputs mounted while typing', async () => {
+    renderScreen()
+
+    fireEvent.press(await screen.findByText('New recipe'))
+    const name = screen.getByPlaceholderText('Name')
+    fireEvent.changeText(name, 'So')
+    fireEvent.changeText(screen.getByPlaceholderText('Name'), 'Soup')
+
+    expect(screen.getByPlaceholderText('Name')).toBe(name)
+    expect(screen.getByDisplayValue('Soup')).toBeTruthy()
   })
 })

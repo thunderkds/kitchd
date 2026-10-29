@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FlashList } from '@shopify/flash-list';
 import { createShiftLog, type CreateShiftLogInput, type Shift } from '../src/api';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { queryErrorMessage, useShiftLogs } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
@@ -76,100 +78,98 @@ export default function ShiftLogsScreen() {
     return null;
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Shift Log</Text>
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Shift Log</Text>
+        </View>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.note}>Read the kitchen's shift handover notes, newest first.</Text>
+
+      {canWrite && (
+        <View style={styles.formCard} testID="shift-log-form">
+          <Text style={styles.sectionTitle}>New shift log</Text>
+          <View style={styles.shiftRow}>
+            {SHIFTS.map((option) => {
+              const selected = shift === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${option.label} shift`}
+                  accessibilityState={{ selected }}
+                  style={[styles.shiftButton, selected && styles.shiftButtonSelected]}
+                  onPress={() => setShift(option.value)}
+                >
+                  <Text style={[styles.shiftButtonText, selected && styles.shiftButtonTextSelected]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
+          <TextInput
+            style={styles.multiLineInput}
+            accessibilityLabel="Shift log body"
+            placeholder="What should the next shift know?"
+            placeholderTextColor="#6f7c92"
+            multiline
+            value={body}
+            onChangeText={(text) => {
+              setBody(text);
+              setFormError(null);
+            }}
+          />
+          {formError && <Text style={styles.error}>{formError}</Text>}
+          <Pressable style={styles.primaryButton} disabled={saving} onPress={handleCreate}>
+            <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : 'Add shift log'}</Text>
           </Pressable>
         </View>
+      )}
 
-        <Text style={styles.note}>Read the kitchen's shift handover notes, newest first.</Text>
-
-        {canWrite && (
-          <View style={styles.formCard} testID="shift-log-form">
-            <Text style={styles.sectionTitle}>New shift log</Text>
-            <View style={styles.shiftRow}>
-              {SHIFTS.map((option) => {
-                const selected = shift === option.value;
-                return (
-                  <Pressable
-                    key={option.value}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${option.label} shift`}
-                    accessibilityState={{ selected }}
-                    style={[styles.shiftButton, selected && styles.shiftButtonSelected]}
-                    onPress={() => setShift(option.value)}
-                  >
-                    <Text style={[styles.shiftButtonText, selected && styles.shiftButtonTextSelected]}>
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <TextInput
-              style={styles.multiLineInput}
-              accessibilityLabel="Shift log body"
-              placeholder="What should the next shift know?"
-              placeholderTextColor="#6f7c92"
-              multiline
-              value={body}
-              onChangeText={(text) => {
-                setBody(text);
-                setFormError(null);
-              }}
-            />
-            {formError && <Text style={styles.error}>{formError}</Text>}
-            <Pressable style={styles.primaryButton} disabled={saving} onPress={handleCreate}>
-              <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : 'Add shift log'}</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {loadError && <Text style={styles.error}>{loadError}</Text>}
-        {logs === null && !loadError && <Text style={styles.note}>Loading shift logs...</Text>}
-        {logs !== null && logs.length === 0 && <Text style={styles.note}>No shift logs yet.</Text>}
-
-        {logs !== null && logs.length > 0 && (
-          <View style={styles.list}>
-            {logs.map((log) => (
-              <View key={log.id} style={styles.listRow}>
-                <View style={styles.rowHeader}>
-                  <Text style={styles.listTitle} testID="shift-log-shift">{labelShift(log.shift)}</Text>
-                  <Text style={styles.meta}>{formatCreatedAt(log.createdAt)}</Text>
-                </View>
-                <Text style={styles.bodyText} testID="shift-log-body">
-                  {log.body}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+      {loadError && <Text style={styles.error}>{loadError}</Text>}
+      {logs === null && !loadError && <Text style={styles.note}>Loading shift logs...</Text>}
+      {logs !== null && logs.length === 0 && <Text style={styles.note}>No shift logs yet.</Text>}
     </View>
+  );
+
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={logs ?? []}
+        keyExtractor={(log) => log.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: log }) => (
+          <View style={styles.listRow}>
+            <View style={styles.rowHeader}>
+              <Text style={styles.listTitle} testID="shift-log-shift">{labelShift(log.shift)}</Text>
+              <Text style={styles.meta}>{formatCreatedAt(log.createdAt)}</Text>
+            </View>
+            <Text style={styles.bodyText} testID="shift-log-body">
+              {log.body}
+            </Text>
+          </View>
+        )}
+      />
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -204,9 +204,6 @@ const styles = StyleSheet.create({
     color: '#f4f7ff',
     fontSize: 16,
     fontWeight: '700',
-  },
-  list: {
-    gap: 0,
   },
   listRow: {
     gap: 8,

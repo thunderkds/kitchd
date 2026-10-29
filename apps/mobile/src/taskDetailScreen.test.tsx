@@ -4,6 +4,7 @@ import { ScrollView } from 'react-native'
 import TaskDetailScreen from '../app/task/[taskId]'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 const mockUser = { id: 'u1', email: 'chef@example.com', role: 'CHEF' }
@@ -111,5 +112,14 @@ describe('TaskDetailScreen completion overlay (M007 review P2)', () => {
       finish({ task: { ...task, status: 'DONE' }, movements: [], hasNegativeWarning: false })
     })
     await waitFor(() => expect(screen.queryByText('Confirm stock deduction')).toBeNull())
+  })
+})
+
+describe('TaskDetailScreen native quality (M010)', () => {
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    renderScreen()
+
+    expect(await screen.findByText('Prep stock')).toBeTruthy()
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

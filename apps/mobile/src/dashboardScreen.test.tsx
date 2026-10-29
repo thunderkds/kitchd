@@ -5,6 +5,7 @@ import type { StoredUser } from '@kitchenos/shared'
 import DashboardScreen from '../app/dashboard'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 let mockUser: StoredUser | null = null
@@ -118,5 +119,14 @@ describe('DashboardScreen on a failed notifications fetch (M008 review P3)', () 
     expect(screen.getByText('Open notifications')).toBeTruthy()
     expect(screen.getByText('Sign out')).toBeTruthy()
     expect(screen.queryByTestId('notifications-unread-badge')).toBeNull()
+  })
+})
+
+describe('DashboardScreen native quality (M010)', () => {
+  it('AC2: sits in the safe area, painted with the palette background', () => {
+    mockUser = base
+    renderDashboard()
+
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

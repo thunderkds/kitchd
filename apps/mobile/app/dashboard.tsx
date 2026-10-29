@@ -4,6 +4,7 @@ import { clearSession } from '../src/storage';
 import { session } from '../src/session';
 import { signOut } from '../src/signOut';
 import { AlertWidgets } from '../src/components/AlertWidgets';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { useNotifications } from '../src/queries';
 import { useTheme } from '../src/theme';
 
@@ -19,66 +20,68 @@ export default function DashboardScreen() {
   }
 
   return (
-    <ScrollView
-      testID="dashboard-screen"
-      style={[styles.screen, { backgroundColor: palette.background }]}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
-        <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
-        <Text style={[styles.title, { color: palette.text }]}>Dashboard landing</Text>
-        <Text style={styles.body}>{user.email}</Text>
-        <Text style={[styles.meta, { color: palette.muted }]}>Role: {user.role}</Text>
-        <Text style={styles.note}>
-          This is the mobile shell landing screen. The first live feature routes are tasks, recipes, guidelines, announcements, notes, inventory, team, and invites.
-        </Text>
+    <ScreenFrame background={palette.background}>
+      <ScrollView
+        testID="dashboard-screen"
+        style={[styles.screen, { backgroundColor: palette.background }]}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+          <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
+          <Text style={[styles.title, { color: palette.text }]}>Dashboard landing</Text>
+          <Text style={styles.body}>{user.email}</Text>
+          <Text style={[styles.meta, { color: palette.muted }]}>Role: {user.role}</Text>
+          <Text style={styles.note}>
+            This is the mobile shell landing screen. The first live feature routes are tasks, recipes, guidelines, announcements, notes, inventory, team, and invites.
+          </Text>
 
-        <AlertWidgets />
+          <AlertWidgets />
 
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/tasks')}>
-          <Text style={styles.secondaryButtonText}>Open tasks</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/recipes')}>
-          <Text style={styles.secondaryButtonText}>Open recipes</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/guidelines')}>
-          <Text style={styles.secondaryButtonText}>Open guidelines</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/announcements')}>
-          <Text style={styles.secondaryButtonText}>Open announcements</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/notes')}>
-          <Text style={styles.secondaryButtonText}>Open notes</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/inventory')}>
-          <Text style={styles.secondaryButtonText}>Open inventory</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/team')}>
-          <Text style={styles.secondaryButtonText}>Open team roster</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
-          <Text style={styles.secondaryButtonText}>Open invites</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/shift-logs')}>
-          <Text style={styles.secondaryButtonText}>Open shift log</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/notifications')}>
-          <Text style={styles.secondaryButtonText}>Open notifications</Text>
-          {unreadCount > 0 && (
-            <View style={styles.badge} testID="notifications-unread-badge">
-              <Text style={styles.badgeText}>{unreadCount}</Text>
-            </View>
-          )}
-        </Pressable>
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/settings')}>
-          <Text style={styles.secondaryButtonText}>Open settings</Text>
-        </Pressable>
-        <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
-          <Text style={styles.primaryButtonText}>Sign out</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/tasks')}>
+            <Text style={styles.secondaryButtonText}>Open tasks</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/recipes')}>
+            <Text style={styles.secondaryButtonText}>Open recipes</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/guidelines')}>
+            <Text style={styles.secondaryButtonText}>Open guidelines</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/announcements')}>
+            <Text style={styles.secondaryButtonText}>Open announcements</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/notes')}>
+            <Text style={styles.secondaryButtonText}>Open notes</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/inventory')}>
+            <Text style={styles.secondaryButtonText}>Open inventory</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/team')}>
+            <Text style={styles.secondaryButtonText}>Open team roster</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
+            <Text style={styles.secondaryButtonText}>Open invites</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/shift-logs')}>
+            <Text style={styles.secondaryButtonText}>Open shift log</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/notifications')}>
+            <Text style={styles.secondaryButtonText}>Open notifications</Text>
+            {unreadCount > 0 && (
+              <View style={styles.badge} testID="notifications-unread-badge">
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/settings')}>
+            <Text style={styles.secondaryButtonText}>Open settings</Text>
+          </Pressable>
+          <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
+            <Text style={styles.primaryButtonText}>Sign out</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 

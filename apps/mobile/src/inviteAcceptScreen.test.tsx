@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import AcceptInviteScreen from '../app/invite/accept'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockParams: { token?: string | string[] } = {}
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
@@ -40,5 +41,13 @@ describe('AcceptInviteScreen (M012 F4 component test)', () => {
     render(<AcceptInviteScreen />)
 
     expect(screen.getByPlaceholderText('Invite token').props.value).toBe('')
+  })
+})
+
+describe('AcceptInviteScreen native quality (M010)', () => {
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', () => {
+    render(<AcceptInviteScreen />)
+
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

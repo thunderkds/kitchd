@@ -4,6 +4,7 @@ import TasksScreen from '../app/tasks'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 import { queryKeys } from './queryKeys'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 
@@ -216,5 +217,54 @@ describe('TasksScreen on TanStack Query (M004 AC5: UI text unchanged)', () => {
     await waitFor(() => expect(mocked.confirmTaskCompletion).toHaveBeenCalledWith('task-1'))
     await waitFor(() => expect(client.getQueryState(queryKeys.alerts.lowStock())?.isInvalidated).toBe(true))
     expect(client.getQueryState(queryKeys.ingredients.withStock())?.isInvalidated).toBe(true)
+  })
+})
+
+describe('TasksScreen native quality (M010)', () => {
+  it('AC1: renders every bucket through one FlashList keyed by task id', async () => {
+    mocked.listTasks.mockResolvedValue([
+      task({ id: 't-todo', title: 'Prep onions' }),
+      task({ id: 't-prog', title: 'Dice carrots', status: 'IN_PROGRESS' }),
+      task({ id: 't-done', title: 'Wash pans', status: 'DONE' }),
+    ])
+    renderScreen()
+
+    expect(await screen.findByText('Wash pans')).toBeTruthy()
+    expect(screen.getByText('Prep onions')).toBeTruthy()
+    expect(screen.getByText('Dice carrots')).toBeTruthy()
+    // Section title and the row badge both carry the status label.
+    for (const label of ['To Do', 'In Progress', 'Done']) {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0)
+    }
+    expectFlashListKeyedBy(['t-todo', 't-prog', 't-done'])
+  })
+
+  it('AC1: keeps the empty-bucket text inside the list', async () => {
+    mocked.listTasks.mockResolvedValue([task({ id: 't-todo' })])
+    renderScreen()
+
+    await screen.findByText('Prep onions')
+    expect(screen.getAllByText('No tasks in this bucket.')).toHaveLength(2)
+  })
+
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    mocked.listTasks.mockResolvedValue([])
+    renderScreen()
+
+    await screen.findByText('No tasks returned.')
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC3: the create form lives in the list header and keeps its inputs mounted while typing', async () => {
+    mocked.listTasks.mockResolvedValue([task({ id: 't-todo' })])
+    renderScreen()
+
+    fireEvent.press(await screen.findByText('New task'))
+    const input = screen.getByPlaceholderText('Task title')
+    fireEvent.changeText(input, 'Sli')
+    fireEvent.changeText(screen.getByPlaceholderText('Task title'), 'Slice')
+
+    expect(screen.getByPlaceholderText('Task title')).toBe(input)
+    expect(screen.getByDisplayValue('Slice')).toBeTruthy()
   })
 })

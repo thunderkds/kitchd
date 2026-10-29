@@ -14,6 +14,7 @@
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
     "@kitchenos/shared": "workspace:*",
+    "@shopify/flash-list": "2.0.2",
     "@tanstack/react-query": "^5.105.0",
     "expo": "~57.0.1",
     "expo-router": "~57.0.7",
@@ -21,6 +22,7 @@
     "react": "19.2.3",
     "react-hook-form": "^7.91.0",
     "react-native": "0.86.0",
+    "react-native-safe-area-context": "~5.7.0",
     "socket.io-client": "^4.8.3",
     "zod": "^4.6.7"
   },

@@ -4,6 +4,7 @@ import InventoryScreen from '../app/inventory'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 import { queryKeys } from './queryKeys'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 
@@ -115,5 +116,42 @@ describe('InventoryScreen writes refresh the dashboard alert widgets (M015 follo
 
     await waitFor(() => expect(mocked.createIngredient).toHaveBeenCalled())
     await waitFor(() => expect(isStale(client, queryKeys.alerts.lowStock())).toBe(true))
+  })
+})
+
+describe('InventoryScreen native quality (M010)', () => {
+  it('AC1: renders ingredients through one FlashList keyed by ingredient id', async () => {
+    mocked.listIngredients.mockResolvedValue([ingredient, { ...ingredient, id: 'ing-2', name: 'Garlic' }])
+    renderScreen()
+
+    expect(await screen.findByText('Garlic')).toBeTruthy()
+    expect(screen.getByText('Onion')).toBeTruthy()
+    expectFlashListKeyedBy(['ing-1', 'ing-2'])
+  })
+
+  it('AC1: shows the empty text', async () => {
+    mocked.listIngredients.mockResolvedValue([])
+    renderScreen()
+
+    expect(await screen.findByText('No ingredients yet.')).toBeTruthy()
+  })
+
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    renderScreen()
+
+    await screen.findByText('Onion')
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC1: the receive form on a row still works after the list change', async () => {
+    renderScreen()
+
+    fireEvent.press(await screen.findByText('Receive stock'))
+    const input = screen.getByPlaceholderText('Receive qty')
+    fireEvent.changeText(input, '1')
+    fireEvent.changeText(screen.getByPlaceholderText('Receive qty'), '12')
+
+    expect(screen.getByPlaceholderText('Receive qty')).toBe(input)
+    expect(screen.getByDisplayValue('12')).toBeTruthy()
   })
 })

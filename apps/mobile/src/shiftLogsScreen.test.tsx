@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import ShiftLogsScreen from '../app/shift-logs'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 let mockRole = 'CHEF'
@@ -176,5 +177,43 @@ describe('ShiftLogsScreen (M014)', () => {
     const message = await screen.findByText('Boom')
     expect(within(screen.getByTestId('shift-log-form')).queryByText('Boom')).toBeNull()
     expect(message).toBeTruthy()
+  })
+})
+
+describe('ShiftLogsScreen native quality (M010)', () => {
+  it('AC1: renders logs through one FlashList keyed by log id', async () => {
+    mocked.listShiftLogs.mockResolvedValue([log({ id: 'b', body: 'Newer' }), log({ id: 'a', body: 'Older' })])
+    renderScreen()
+
+    expect(await screen.findByText('Newer')).toBeTruthy()
+    expect(expectFlashListKeyedBy(['a', 'b'])).toEqual(['b', 'a'])
+  })
+
+  it('AC1: keeps the empty text', async () => {
+    mocked.listShiftLogs.mockResolvedValue([])
+    renderScreen()
+
+    expect(await screen.findByText('No shift logs yet.')).toBeTruthy()
+  })
+
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    mocked.listShiftLogs.mockResolvedValue([])
+    renderScreen()
+
+    await screen.findByText('No shift logs yet.')
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC3: the composer in the list header keeps its input mounted while typing', async () => {
+    mocked.listShiftLogs.mockResolvedValue([log({})])
+    renderScreen()
+
+    await screen.findByText('Walk-in cooler was at 4C')
+    const input = screen.getByLabelText('Shift log body')
+    fireEvent.changeText(input, 'Fr')
+    fireEvent.changeText(screen.getByLabelText('Shift log body'), 'Fridge')
+
+    expect(screen.getByLabelText('Shift log body')).toBe(input)
+    expect(screen.getByDisplayValue('Fridge')).toBeTruthy()
   })
 })

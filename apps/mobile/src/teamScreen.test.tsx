@@ -4,6 +4,7 @@ import { Alert } from 'react-native'
 import TeamScreen from '../app/team'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 const mockCaller: { current: { id: string; email: string; role: string } | null } = {
@@ -290,9 +291,11 @@ describe('TeamScreen double-submit guard (M017 review P2)', () => {
     })
     await waitFor(() => expect(mocked.removeMember).toHaveBeenCalledTimes(1))
 
-    const chip = screen.getByLabelText('Set role of staff@example.com to VIEWER')
-    expect(chip.props.accessibilityState.disabled).toBe(true)
-    fireEvent.press(chip)
+    // FlashList re-renders its rows one microtask after the screen does, so wait for the disabled state.
+    await waitFor(() =>
+      expect(screen.getByLabelText('Set role of staff@example.com to VIEWER').props.accessibilityState.disabled).toBe(true),
+    )
+    fireEvent.press(screen.getByLabelText('Set role of staff@example.com to VIEWER'))
     expect(mocked.updateMemberRole).not.toHaveBeenCalled()
 
     await act(async () => {
@@ -312,5 +315,37 @@ describe('TeamScreen double-submit guard (M017 review P2)', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('Remove staff@example.com').props.accessibilityState.disabled).toBe(false),
     )
+  })
+})
+
+describe('TeamScreen native quality (M010)', () => {
+  it('AC1: renders the roster through one FlashList keyed by member id', async () => {
+    mocked.listMembers.mockResolvedValue(roster)
+    renderScreen()
+
+    expect(await screen.findByText('staff@example.com')).toBeTruthy()
+    expectFlashListKeyedBy(['me', 'adm', 'chef', 'staff'])
+  })
+
+  it('AC1: keeps the empty text', async () => {
+    mocked.listMembers.mockResolvedValue([])
+    renderScreen()
+
+    expect(await screen.findByText('No team members returned.')).toBeTruthy()
+  })
+
+  it('AC2: sits in the safe area, on the roster and on the restricted view', async () => {
+    mocked.listMembers.mockResolvedValue(roster)
+    renderScreen()
+    await screen.findByText('staff@example.com')
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC2: the non-manager view is in the safe area too', () => {
+    mockCaller.current = { id: 'c', email: 'chef@example.com', role: 'CHEF' }
+    renderScreen()
+
+    expect(screen.getByText('Team management is available to Owners and Admins only.')).toBeTruthy()
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

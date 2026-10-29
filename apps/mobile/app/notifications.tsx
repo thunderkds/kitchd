@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FlashList } from '@shopify/flash-list';
 import { markNotificationsRead } from '../src/api';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { queryLoadError, useNotifications } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
@@ -73,68 +75,68 @@ export default function NotificationsScreen() {
     return null;
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Notifications</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
+  const notifications = feed?.notifications ?? [];
+
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Notifications</Text>
         </View>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
+      </View>
 
-        {feed !== null && feed.unreadCount > 0 && (
-          <Pressable style={styles.primaryButton} disabled={markReadMutation.isPending} onPress={handleMarkRead}>
-            <Text style={styles.primaryButtonText}>
-              {markReadMutation.isPending ? 'Marking...' : 'Mark all as read'}
+      {feed !== null && feed.unreadCount > 0 && (
+        <Pressable style={styles.primaryButton} disabled={markReadMutation.isPending} onPress={handleMarkRead}>
+          <Text style={styles.primaryButtonText}>
+            {markReadMutation.isPending ? 'Marking...' : 'Mark all as read'}
+          </Text>
+        </Pressable>
+      )}
+
+      {error && <Text style={styles.error}>{error}</Text>}
+      {feed === null && !error && <Text style={styles.note}>Loading notifications...</Text>}
+      {feed !== null && feed.notifications.length === 0 && <Text style={styles.note}>No notifications yet.</Text>}
+    </View>
+  );
+
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={notifications}
+        keyExtractor={(notification) => notification.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: notification }) => (
+          <View style={styles.listRow}>
+            <Text style={styles.meta}>
+              {TYPE_LABEL[notification.type] ?? notification.type} {formatDate(notification.createdAt)}
             </Text>
-          </Pressable>
-        )}
-
-        {error && <Text style={styles.error}>{error}</Text>}
-        {feed === null && !error && <Text style={styles.note}>Loading notifications...</Text>}
-        {feed !== null && feed.notifications.length === 0 && <Text style={styles.note}>No notifications yet.</Text>}
-
-        {feed !== null && feed.notifications.length > 0 && (
-          <View style={styles.list}>
-            {feed.notifications.map((notification) => (
-              <View key={notification.id} style={styles.listRow}>
-                <Text style={styles.meta}>
-                  {TYPE_LABEL[notification.type] ?? notification.type} {formatDate(notification.createdAt)}
-                </Text>
-                <Text style={notification.read ? styles.bodyText : styles.bodyTextUnread}>{notification.body}</Text>
-                <Text
-                  testID={`notification-${notification.id}-state`}
-                  style={notification.read ? styles.stateRead : styles.stateUnread}
-                >
-                  {notification.read ? 'Read' : 'Unread'}
-                </Text>
-              </View>
-            ))}
+            <Text style={notification.read ? styles.bodyText : styles.bodyTextUnread}>{notification.body}</Text>
+            <Text
+              testID={`notification-${notification.id}-state`}
+              style={notification.read ? styles.stateRead : styles.stateUnread}
+            >
+              {notification.read ? 'Read' : 'Unread'}
+            </Text>
           </View>
         )}
-      </View>
-    </View>
+      />
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -164,9 +166,6 @@ const styles = StyleSheet.create({
     color: '#ff8c8c',
     fontSize: 13,
     lineHeight: 18,
-  },
-  list: {
-    gap: 0,
   },
   listRow: {
     gap: 6,

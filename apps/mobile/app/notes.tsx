@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FlashList } from '@shopify/flash-list';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createNote, deleteNote, updateNote, type Note, type NoteScope } from '../src/api';
 import { FormTextInput } from '../src/components/FormFields';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { noteSchema, type NoteFormValues, type NotePayload } from '../src/schemas/note';
 import { queryLoadError, useNotes } from '../src/queries';
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
@@ -151,97 +153,106 @@ export default function NotesScreen() {
     return null;
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Notes</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Notes</Text>
         </View>
-
-        <Text style={styles.note}>
-          Notes are authorable by every role. Switch between your notes and the full team feed, filter by tag, and manage pin state.
-        </Text>
-
-        <View style={styles.segmentRow}>
-          {NOTE_SCOPES.map((candidate) => (
-            <Pressable
-              key={candidate}
-              style={[styles.segmentButton, scope === candidate && styles.segmentButtonActive]}
-              onPress={() => setScope(candidate)}
-            >
-              <Text style={[styles.segmentText, scope === candidate && styles.segmentTextActive]}>
-                {candidate === 'mine' ? 'My Notes' : 'Team Notes'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Search by tag"
-          placeholderTextColor="#6f7c92"
-          value={tagQuery}
-          onChangeText={setTagQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <Pressable style={styles.primaryButton} onPress={openForm}>
-          <Text style={styles.primaryButtonText}>New note</Text>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
         </Pressable>
+      </View>
 
-        {formOpen && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Create note</Text>
-            <FormTextInput
-              control={control}
-              name="title"
-              style={styles.input}
-              placeholder="Title (optional)"
-              placeholderTextColor="#6f7c92"
-            />
-            <FormTextInput
-              control={control}
-              name="body"
-              style={styles.multiLineInput}
-              placeholder="Write a note..."
-              placeholderTextColor="#6f7c92"
-              multiline
-            />
-            <FormTextInput
-              control={control}
-              name="tags"
-              style={styles.input}
-              placeholder="Tags, comma separated"
-              placeholderTextColor="#6f7c92"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <View style={styles.formActions}>
-              <Pressable style={styles.secondaryButton} onPress={closeForm}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} disabled={savingId === 'create'} onPress={handleCreate}>
-                <Text style={styles.primaryButtonText}>{savingId === 'create' ? 'Saving...' : 'Add note'}</Text>
-              </Pressable>
-            </View>
+      <Text style={styles.note}>
+        Notes are authorable by every role. Switch between your notes and the full team feed, filter by tag, and manage pin state.
+      </Text>
+
+      <View style={styles.segmentRow}>
+        {NOTE_SCOPES.map((candidate) => (
+          <Pressable
+            key={candidate}
+            style={[styles.segmentButton, scope === candidate && styles.segmentButtonActive]}
+            onPress={() => setScope(candidate)}
+          >
+            <Text style={[styles.segmentText, scope === candidate && styles.segmentTextActive]}>
+              {candidate === 'mine' ? 'My Notes' : 'Team Notes'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Search by tag"
+        placeholderTextColor="#6f7c92"
+        value={tagQuery}
+        onChangeText={setTagQuery}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+
+      <Pressable style={styles.primaryButton} onPress={openForm}>
+        <Text style={styles.primaryButtonText}>New note</Text>
+      </Pressable>
+
+      {formOpen && (
+        <View style={styles.formCard}>
+          <Text style={styles.sectionTitle}>Create note</Text>
+          <FormTextInput
+            control={control}
+            name="title"
+            style={styles.input}
+            placeholder="Title (optional)"
+            placeholderTextColor="#6f7c92"
+          />
+          <FormTextInput
+            control={control}
+            name="body"
+            style={styles.multiLineInput}
+            placeholder="Write a note..."
+            placeholderTextColor="#6f7c92"
+            multiline
+          />
+          <FormTextInput
+            control={control}
+            name="tags"
+            style={styles.input}
+            placeholder="Tags, comma separated"
+            placeholderTextColor="#6f7c92"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <View style={styles.formActions}>
+            <Pressable style={styles.secondaryButton} onPress={closeForm}>
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </Pressable>
+            <Pressable style={styles.primaryButton} disabled={savingId === 'create'} onPress={handleCreate}>
+              <Text style={styles.primaryButtonText}>{savingId === 'create' ? 'Saving...' : 'Add note'}</Text>
+            </Pressable>
           </View>
-        )}
+        </View>
+      )}
 
-        {error && <Text style={styles.error}>{error}</Text>}
-        {loading && <Text style={styles.note}>Loading notes...</Text>}
-        {!loading && sortedNotes.length === 0 && <Text style={styles.note}>No notes yet.</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
+      {loading && <Text style={styles.note}>Loading notes...</Text>}
+      {!loading && sortedNotes.length === 0 && <Text style={styles.note}>No notes yet.</Text>}
+    </View>
+  );
 
-        {sortedNotes.map((note) => {
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={sortedNotes}
+        keyExtractor={(note) => note.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: note }) => {
           const linked = describeLink(note);
           return (
-            <View key={note.id} style={styles.noteCard}>
+            <View style={styles.noteCard}>
               <View style={styles.noteHeader}>
                 <View style={styles.noteIdentity}>
                   {note.title ? <Text style={styles.noteTitle}>{note.title}</Text> : <Text style={styles.noteTitleMuted}>Untitled note</Text>}
@@ -263,26 +274,19 @@ export default function NotesScreen() {
               {linked && <Text style={styles.linked}>{linked}</Text>}
             </View>
           );
-        })}
-      </View>
-    </View>
+        }}
+      />
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   headerRow: {
     flexDirection: 'row',

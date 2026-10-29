@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -17,6 +17,7 @@ import { guidelineSchema, type GuidelineFormValues, type GuidelinePayload } from
 import { queryLoadError, useGuidelines } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
 const GUIDELINE_TYPES: GuidelineType[] = ['SOP', 'CHECKLIST'];
@@ -127,146 +128,155 @@ export default function GuidelinesScreen() {
 
   if (loading) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
-          <Text style={styles.kicker}>KitchenOS mobile</Text>
-          <Text style={styles.title}>Guidelines</Text>
-          <Text style={styles.note}>Loading guidelines...</Text>
-        </View>
-      </View>
+      <ScreenFrame>
+        <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
+            <Text style={styles.kicker}>KitchenOS mobile</Text>
+            <Text style={styles.title}>Guidelines</Text>
+            <Text style={styles.note}>Loading guidelines...</Text>
+          </View>
+        </ScrollView>
+      </ScreenFrame>
     );
   }
 
   if (mode === 'detail' && selected) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.kicker}>KitchenOS mobile</Text>
-              <Text style={styles.title}>{selected.title}</Text>
-            </View>
-            <Pressable style={styles.backButton} onPress={backToList}>
-              <Text style={styles.backButtonText}>Back</Text>
-            </Pressable>
-          </View>
-
-          <Text style={styles.meta}>{selected.type}</Text>
-          {error && <Text style={styles.error}>{error}</Text>}
-
-          <Text style={styles.sectionTitle}>Steps</Text>
-          {selectedSteps.length === 0 ? (
-            <Text style={styles.note}>No steps yet.</Text>
-          ) : (
-            selectedSteps.map((step, index) => (
-              <View key={`${selected.id}-step-${index}`} style={styles.stepRow}>
-                <Text style={styles.stepIndex}>{index + 1}</Text>
-                <Text style={styles.stepText}>{step}</Text>
+      <ScreenFrame>
+        <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.kicker}>KitchenOS mobile</Text>
+                <Text style={styles.title}>{selected.title}</Text>
               </View>
-            ))
-          )}
+              <Pressable style={styles.backButton} onPress={backToList}>
+                <Text style={styles.backButtonText}>Back</Text>
+              </Pressable>
+            </View>
 
-          {canWrite && (
-            <Pressable style={styles.primaryButton} onPress={() => openEdit(selected)}>
-              <Text style={styles.primaryButtonText}>Edit guideline</Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
+            <Text style={styles.meta}>{selected.type}</Text>
+            {error && <Text style={styles.error}>{error}</Text>}
+
+            <Text style={styles.sectionTitle}>Steps</Text>
+            {selectedSteps.length === 0 ? (
+              <Text style={styles.note}>No steps yet.</Text>
+            ) : (
+              selectedSteps.map((step, index) => (
+                <View key={`${selected.id}-step-${index}`} style={styles.stepRow}>
+                  <Text style={styles.stepIndex}>{index + 1}</Text>
+                  <Text style={styles.stepText}>{step}</Text>
+                </View>
+              ))
+            )}
+
+            {canWrite && (
+              <Pressable style={styles.primaryButton} onPress={() => openEdit(selected)}>
+                <Text style={styles.primaryButtonText}>Edit guideline</Text>
+              </Pressable>
+            )}
+          </View>
+        </ScrollView>
+      </ScreenFrame>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Guidelines</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.note}>
-          Browse operational guidelines. Writers can create or edit SOP/checklist entries directly in the native shell.
-        </Text>
-
-        {canWrite && (
-          <Pressable style={styles.primaryButton} onPress={openCreate}>
-            <Text style={styles.primaryButtonText}>New guideline</Text>
-          </Pressable>
-        )}
-
-        {formMode && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit guideline' : 'Create guideline'}</Text>
-            <FormTextInput
-              control={control}
-              name="title"
-              style={styles.input}
-              placeholder="Title"
-              placeholderTextColor="#6f7c92"
-            />
-
-            <View style={styles.segmentRow}>
-              {GUIDELINE_TYPES.map((candidate) => (
-                <Pressable
-                  key={candidate}
-                  style={[styles.segmentButton, formType === candidate && styles.segmentButtonActive]}
-                  onPress={() => setValue('type', candidate)}
-                >
-                  <Text style={[styles.segmentText, formType === candidate && styles.segmentTextActive]}>{candidate}</Text>
-                </Pressable>
-              ))}
+    <ScreenFrame>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.kicker}>KitchenOS mobile</Text>
+              <Text style={styles.title}>Guidelines</Text>
             </View>
-
-            <FormTextInput
-              control={control}
-              name="steps"
-              style={styles.multiLineInput}
-              placeholder="Steps, one per line"
-              placeholderTextColor="#6f7c92"
-              multiline
-            />
-
-            <View style={styles.formActions}>
-              <Pressable style={styles.secondaryButton} onPress={closeForm}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} disabled={saving} onPress={submitForm}>
-                <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : formMode === 'edit' ? 'Save' : 'Create'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        {guidelines.length === 0 ? (
-          <Text style={styles.note}>No guidelines yet.</Text>
-        ) : (
-          guidelines.map((guideline) => (
-            <Pressable key={guideline.id} style={styles.listRow} onPress={() => openDetail(guideline)}>
-              <View style={styles.listIdentity}>
-                <Text style={styles.listTitle}>{guideline.title}</Text>
-                <Text style={styles.meta}>{guideline.type}</Text>
-              </View>
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>Back</Text>
             </Pressable>
-          ))
-        )}
-      </View>
-    </View>
+          </View>
+
+          <Text style={styles.note}>
+            Browse operational guidelines. Writers can create or edit SOP/checklist entries directly in the native shell.
+          </Text>
+
+          {canWrite && (
+            <Pressable style={styles.primaryButton} onPress={openCreate}>
+              <Text style={styles.primaryButtonText}>New guideline</Text>
+            </Pressable>
+          )}
+
+          {formMode && (
+            <View style={styles.formCard}>
+              <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit guideline' : 'Create guideline'}</Text>
+              <FormTextInput
+                control={control}
+                name="title"
+                style={styles.input}
+                placeholder="Title"
+                placeholderTextColor="#6f7c92"
+              />
+
+              <View style={styles.segmentRow}>
+                {GUIDELINE_TYPES.map((candidate) => (
+                  <Pressable
+                    key={candidate}
+                    style={[styles.segmentButton, formType === candidate && styles.segmentButtonActive]}
+                    onPress={() => setValue('type', candidate)}
+                  >
+                    <Text style={[styles.segmentText, formType === candidate && styles.segmentTextActive]}>{candidate}</Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <FormTextInput
+                control={control}
+                name="steps"
+                style={styles.multiLineInput}
+                placeholder="Steps, one per line"
+                placeholderTextColor="#6f7c92"
+                multiline
+              />
+
+              <View style={styles.formActions}>
+                <Pressable style={styles.secondaryButton} onPress={closeForm}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.primaryButton} disabled={saving} onPress={submitForm}>
+                  <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : formMode === 'edit' ? 'Save' : 'Create'}</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          {guidelines.length === 0 ? (
+            <Text style={styles.note}>No guidelines yet.</Text>
+          ) : (
+            guidelines.map((guideline) => (
+              <Pressable key={guideline.id} style={styles.listRow} onPress={() => openDetail(guideline)}>
+                <View style={styles.listIdentity}>
+                  <Text style={styles.listTitle}>{guideline.title}</Text>
+                  <Text style={styles.meta}>{guideline.type}</Text>
+                </View>
+              </Pressable>
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,

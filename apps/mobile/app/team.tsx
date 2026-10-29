@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import type { UserRole } from '@kitchenos/shared';
 import type { TeamMember } from '../src/api';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { queryLoadError, useMembers, useRemoveMember, useUpdateMemberRole } from '../src/queries';
 import { session } from '../src/session';
 import { ASSIGNABLE_ROLES, canManageMember, canManageTeam } from '../src/teamRules';
@@ -14,7 +16,7 @@ export default function TeamScreen() {
   // GET /users is OWNER/ADMIN only (403 otherwise), so other roles never fetch it; same as web.
   const canManage = canManageTeam(caller?.role);
   const membersQuery = useMembers(signedIn && canManage);
-  const members = membersQuery.data ?? [];
+  const members = useMemo(() => membersQuery.data ?? [], [membersQuery.data]);
   const loading = membersQuery.isLoading;
   const error = queryLoadError(membersQuery, 'Failed to load team');
   const updateRole = useUpdateMemberRole();
@@ -58,8 +60,8 @@ export default function TeamScreen() {
 
   if (signedIn && !canManage) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
+      <ScreenFrame>
+        <View style={[styles.content, styles.header]}>
           <Text style={styles.kicker}>KitchenOS mobile</Text>
           <Text style={styles.title}>Team roster</Text>
           <Text style={styles.note}>Team management is available to Owners and Admins only.</Text>
@@ -67,39 +69,49 @@ export default function TeamScreen() {
             <Text style={styles.backButtonText}>Back</Text>
           </Pressable>
         </View>
-      </View>
+      </ScreenFrame>
     );
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Team roster</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Team roster</Text>
         </View>
-
-        <Text style={styles.note}>
-          This screen uses the shared auth session token and authenticated API helper to load the team.
-        </Text>
-
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
-          <Text style={styles.secondaryButtonText}>Open invites</Text>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
         </Pressable>
+      </View>
 
-        {loading && <Text style={styles.note}>Loading members...</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-        {actionError && <Text style={styles.error}>{actionError}</Text>}
+      <Text style={styles.note}>
+        This screen uses the shared auth session token and authenticated API helper to load the team.
+      </Text>
 
-        {!loading && !error && members.length === 0 && <Text style={styles.note}>No team members returned.</Text>}
+      <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
+        <Text style={styles.secondaryButtonText}>Open invites</Text>
+      </Pressable>
 
-        {members.map((member) => (
-          <View key={member.id} style={styles.memberBlock}>
+      {loading && <Text style={styles.note}>Loading members...</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
+      {actionError && <Text style={styles.error}>{actionError}</Text>}
+
+      {!loading && !error && members.length === 0 && <Text style={styles.note}>No team members returned.</Text>}
+    </View>
+  );
+
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={members}
+        extraData={busy}
+        keyExtractor={(member) => member.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: member }) => (
+          <View style={styles.memberBlock}>
             <View style={styles.memberRow}>
               <View style={styles.memberIdentity}>
                 <Text style={styles.memberEmail}>{member.email}</Text>
@@ -137,26 +149,19 @@ export default function TeamScreen() {
               </View>
             )}
           </View>
-        ))}
-      </View>
-    </View>
+        )}
+      />
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   headerRow: {
     flexDirection: 'row',

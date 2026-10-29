@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,6 +13,7 @@ import {
 import { persistSession } from '../../src/storage';
 import { toStoredUser } from '../../src/session';
 import { inviteTokenFromParam } from '../../src/inviteToken';
+import { ScreenFrame } from '../../src/components/ScreenFrame';
 
 export default function AcceptInviteScreen() {
   const router = useRouter();
@@ -53,53 +54,58 @@ export default function AcceptInviteScreen() {
   });
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.kicker}>KitchenOS mobile</Text>
-        <Text style={styles.title}>Accept invite</Text>
-        <Text style={styles.body}>
-          Paste the invite token from the owner or admin. The mobile app uses the same public accept endpoint as the web flow.
-        </Text>
+    <ScreenFrame>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Accept invite</Text>
+          <Text style={styles.body}>
+            Paste the invite token from the owner or admin. The mobile app uses the same public accept endpoint as the web flow.
+          </Text>
 
-        <FormTextInput
-          control={control}
-          name="token"
-          style={styles.input}
-          placeholder="Invite token"
-          placeholderTextColor="#6f7c92"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <FormTextInput
-          control={control}
-          name="password"
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#6f7c92"
-          secureTextEntry
-        />
+          <FormTextInput
+            control={control}
+            name="token"
+            style={styles.input}
+            placeholder="Invite token"
+            placeholderTextColor="#6f7c92"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <FormTextInput
+            control={control}
+            name="password"
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#6f7c92"
+            secureTextEntry
+          />
 
-        <Pressable style={styles.primaryButton} disabled={loading} onPress={submit}>
-          <Text style={styles.primaryButtonText}>{loading ? 'Accepting...' : 'Accept invite'}</Text>
-        </Pressable>
+          <Pressable style={styles.primaryButton} disabled={loading} onPress={submit}>
+            <Text style={styles.primaryButtonText}>{loading ? 'Accepting...' : 'Accept invite'}</Text>
+          </Pressable>
 
-        <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
-          <Text style={styles.secondaryButtonText}>Back</Text>
-        </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
+            <Text style={styles.secondaryButtonText}>Back</Text>
+          </Pressable>
 
-        {message && <Text style={styles.success}>{message}</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-      </View>
-    </View>
+          {message && <Text style={styles.success}>{message}</Text>}
+          {error && <Text style={styles.error}>{error}</Text>}
+        </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,

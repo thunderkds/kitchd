@@ -4,6 +4,7 @@ import type { StoredUser } from '@kitchenos/shared'
 import AnnouncementsScreen from '../app/announcements'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 let mockUser: StoredUser | null = null
@@ -43,4 +44,17 @@ it.each([
   expect(flat(screen.getByTestId('announcements-screen').props.style).backgroundColor).toBe(background)
   expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
   await screen.findByText('Announcements')
+})
+
+it('announcements screen sits in the safe area and avoids the keyboard (M010 AC2 + AC3)', async () => {
+  mockUser = { id: 'u1', email: 'a@b.c', organizationId: 'o', kitchenId: 'k', role: 'OWNER' }
+  mocked.listAnnouncements.mockResolvedValue([])
+  render(
+    <QueryClientProvider client={client}>
+      <AnnouncementsScreen />
+    </QueryClientProvider>,
+  )
+
+  await screen.findByText('No announcements yet.')
+  expectSafeAreaAndKeyboardAvoidance()
 })

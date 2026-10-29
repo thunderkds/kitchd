@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -15,6 +15,7 @@ import { queryLoadError, useAnnouncements } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import { useTheme } from '../src/theme';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 
 const BROADCAST_ROLES = ['OWNER', 'CHEF'] as const;
 
@@ -79,83 +80,88 @@ export default function AnnouncementsScreen() {
   }
 
   return (
-    <View testID="announcements-screen" style={[styles.screen, { backgroundColor: palette.background }]}>
-      <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
-            <Text style={[styles.title, { color: palette.text }]}>Announcements</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.note}>
-          Read the kitchen history, and broadcast new announcements if your role allows it.
-        </Text>
-
-        {canBroadcast && (
-          <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={openForm}>
-            <Text style={styles.primaryButtonText}>New announcement</Text>
-          </Pressable>
-        )}
-
-        {formOpen && canBroadcast && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Broadcast announcement</Text>
-            <FormTextInput
-              control={control}
-              name="title"
-              style={styles.input}
-              placeholder="Title"
-              placeholderTextColor="#6f7c92"
-            />
-            <FormTextInput
-              control={control}
-              name="body"
-              style={styles.multiLineInput}
-              placeholder="Message"
-              placeholderTextColor="#6f7c92"
-              multiline
-            />
-            <View style={styles.formActions}>
-              <Pressable style={styles.secondaryButton} onPress={closeForm}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} disabled={saving} onPress={handleBroadcast}>
-                <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Broadcast'}</Text>
-              </Pressable>
+    <ScreenFrame background={palette.background}>
+      <ScrollView testID="announcements-screen" style={[styles.screen, { backgroundColor: palette.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
+              <Text style={[styles.title, { color: palette.text }]}>Announcements</Text>
             </View>
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>Back</Text>
+            </Pressable>
           </View>
-        )}
 
-        {error && <Text style={[styles.error, { color: palette.danger }]}>{error}</Text>}
-        {announcements === null && !error && <Text style={styles.note}>Loading announcements...</Text>}
-        {announcements !== null && announcements.length === 0 && <Text style={styles.note}>No announcements yet.</Text>}
+          <Text style={styles.note}>
+            Read the kitchen history, and broadcast new announcements if your role allows it.
+          </Text>
 
-        {announcements !== null && announcements.length > 0 && (
-          <View style={styles.list}>
-            {announcements.map((announcement) => (
-              <View key={announcement.id} style={styles.listRow}>
-                <Text style={[styles.listTitle, { color: palette.text }]}>{announcement.title}</Text>
-                <Text style={styles.bodyText}>{announcement.body}</Text>
-                <Text style={[styles.meta, { color: palette.muted }]}>Read by {announcement.readBy.length}</Text>
+          {canBroadcast && (
+            <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={openForm}>
+              <Text style={styles.primaryButtonText}>New announcement</Text>
+            </Pressable>
+          )}
+
+          {formOpen && canBroadcast && (
+            <View style={styles.formCard}>
+              <Text style={styles.sectionTitle}>Broadcast announcement</Text>
+              <FormTextInput
+                control={control}
+                name="title"
+                style={styles.input}
+                placeholder="Title"
+                placeholderTextColor="#6f7c92"
+              />
+              <FormTextInput
+                control={control}
+                name="body"
+                style={styles.multiLineInput}
+                placeholder="Message"
+                placeholderTextColor="#6f7c92"
+                multiline
+              />
+              <View style={styles.formActions}>
+                <Pressable style={styles.secondaryButton} onPress={closeForm}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} disabled={saving} onPress={handleBroadcast}>
+                  <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Broadcast'}</Text>
+                </Pressable>
               </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </View>
+            </View>
+          )}
+
+          {error && <Text style={[styles.error, { color: palette.danger }]}>{error}</Text>}
+          {announcements === null && !error && <Text style={styles.note}>Loading announcements...</Text>}
+          {announcements !== null && announcements.length === 0 && <Text style={styles.note}>No announcements yet.</Text>}
+
+          {announcements !== null && announcements.length > 0 && (
+            <View style={styles.list}>
+              {announcements.map((announcement) => (
+                <View key={announcement.id} style={styles.listRow}>
+                  <Text style={[styles.listTitle, { color: palette.text }]}>{announcement.title}</Text>
+                  <Text style={styles.bodyText}>{announcement.body}</Text>
+                  <Text style={[styles.meta, { color: palette.muted }]}>Read by {announcement.readBy.length}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,

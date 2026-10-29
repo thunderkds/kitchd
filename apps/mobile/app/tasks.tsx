@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,10 +28,16 @@ import {
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { FieldError, FormTextInput } from '../src/components/FormFields';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { createTaskSchema, type CreateTaskFormValues, type CreateTaskRequest } from '../src/schemas/task';
 import { session } from '../src/session';
 
 type CreateMode = 'plain' | 'recipe' | 'guideline';
+
+type TaskListRow =
+  | { kind: 'section'; id: string; status: TaskStatus }
+  | { kind: 'empty'; id: string }
+  | { kind: 'task'; id: string; task: Task };
 
 type PendingCompletion = {
   taskId: string;
@@ -120,6 +127,18 @@ export default function TasksScreen() {
     IN_PROGRESS: tasks.filter((task) => task.status === 'IN_PROGRESS'),
     DONE: tasks.filter((task) => task.status === 'DONE'),
   }), [tasks]);
+
+  // One flat list for FlashList: a heading, then that bucket's tasks (or its empty note), per status.
+  const rows = useMemo<TaskListRow[]>(
+    () =>
+      (['TODO', 'IN_PROGRESS', 'DONE'] as TaskStatus[]).flatMap((status) => [
+        { kind: 'section', id: `section-${status}`, status } as const,
+        ...(grouped[status].length === 0
+          ? [{ kind: 'empty', id: `empty-${status}` } as const]
+          : grouped[status].map((task) => ({ kind: 'task', id: task.id, task }) as const)),
+      ]),
+    [grouped],
+  );
 
   const ingredientNameById = useMemo(
     () => Object.fromEntries(ingredients.map((ingredient) => [ingredient.id, ingredient.name])),
@@ -298,202 +317,216 @@ export default function TasksScreen() {
     return null;
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Tasks</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View style={styles.headerCopy}>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Tasks</Text>
         </View>
-
-        <Text style={styles.note}>
-          Tasks, source generation, checklist updates, and the stock-confirm completion flow now run through the native shell.
-        </Text>
-
-        {canCreate && (
-          <Pressable style={styles.primaryButton} onPress={openCreate}>
-            <Text style={styles.primaryButtonText}>New task</Text>
-          </Pressable>
-        )}
-
-        {createOpen && canCreate && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Create task</Text>
-            <View style={styles.segmentRow}>
-              {(['plain', 'recipe', 'guideline'] as CreateMode[]).map((mode) => (
-                <Pressable
-                  key={mode}
-                  style={[styles.segmentButton, createMode === mode && styles.segmentButtonActive]}
-                  onPress={() => {
-                    setCreateValue('mode', mode);
-                    clearCreateErrors();
-                    setCreateError(null);
-                  }}
-                >
-                  <Text style={[styles.segmentText, createMode === mode && styles.segmentTextActive]}>
-                    {mode === 'plain' ? 'Plain task' : mode === 'recipe' ? 'From recipe' : 'From guideline'}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {createMode === 'plain' && (
-              <>
-                <FormTextInput
-                  control={createControl}
-                  name="title"
-                  style={styles.input}
-                  placeholder="Task title"
-                  placeholderTextColor="#6f7c92"
-                />
-                <FormTextInput
-                  control={createControl}
-                  name="dueDate"
-                  style={styles.input}
-                  placeholder="Due date YYYY-MM-DD"
-                  placeholderTextColor="#6f7c92"
-                  autoCapitalize="none"
-                />
-                <FormTextInput
-                  control={createControl}
-                  name="assigneeId"
-                  style={styles.input}
-                  placeholder="Assignee ID (optional)"
-                  placeholderTextColor="#6f7c92"
-                  autoCapitalize="none"
-                />
-                {assignableUsers.length > 0 && (
-                  <View style={styles.selectorList}>
-                    {assignableUsers.map((member) => (
-                      <Pressable
-                        key={member.id}
-                        style={[styles.selectorButton, createAssigneeId === member.id && styles.selectorButtonActive]}
-                        onPress={() => setCreateValue('assigneeId', member.id)}
-                      >
-                        <Text style={[styles.selectorButtonText, createAssigneeId === member.id && styles.selectorButtonTextActive]}>
-                          {member.email}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-              </>
-            )}
-
-            {createMode === 'recipe' && (
-              <View style={styles.selectorList}>
-                {recipes.length === 0 ? (
-                  <Text style={styles.note}>No recipes yet.</Text>
-                ) : (
-                  recipes.map((recipe) => (
-                    <Pressable
-                      key={recipe.id}
-                      style={[styles.selectorButton, selectedRecipeId === recipe.id && styles.selectorButtonActive]}
-                      onPress={() => setCreateValue('recipeId', recipe.id, { shouldValidate: !!createErrors.recipeId })}
-                    >
-                      <Text style={[styles.selectorButtonText, selectedRecipeId === recipe.id && styles.selectorButtonTextActive]}>
-                        {recipe.name}
-                      </Text>
-                    </Pressable>
-                  ))
-                )}
-                <FieldError message={createErrors.recipeId?.message} />
-              </View>
-            )}
-
-            {createMode === 'guideline' && (
-              <View style={styles.selectorList}>
-                {guidelines.length === 0 ? (
-                  <Text style={styles.note}>No guidelines yet.</Text>
-                ) : (
-                  guidelines.map((guideline) => (
-                    <Pressable
-                      key={guideline.id}
-                      style={[styles.selectorButton, selectedGuidelineId === guideline.id && styles.selectorButtonActive]}
-                      onPress={() => setCreateValue('guidelineId', guideline.id, { shouldValidate: !!createErrors.guidelineId })}
-                    >
-                      <Text style={[styles.selectorButtonText, selectedGuidelineId === guideline.id && styles.selectorButtonTextActive]}>
-                        {guideline.title}
-                      </Text>
-                    </Pressable>
-                  ))
-                )}
-                <FieldError message={createErrors.guidelineId?.message} />
-              </View>
-            )}
-
-            {createError && <Text style={styles.error}>{createError}</Text>}
-
-            <View style={styles.rowActions}>
-              <Pressable style={styles.secondaryButton} onPress={closeCreate} disabled={createMutation.isPending}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} onPress={handleCreate} disabled={createMutation.isPending}>
-                <Text style={styles.primaryButtonText}>{createMutation.isPending ? 'Creating...' : 'Create task'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        {loading && <Text style={styles.note}>Loading tasks...</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-        {!loading && tasks.length === 0 && <Text style={styles.note}>No tasks returned.</Text>}
-
-        {(['TODO', 'IN_PROGRESS', 'DONE'] as TaskStatus[]).map((status) => (
-          <View key={status} style={styles.section}>
-            <Text style={styles.sectionTitle}>{STATUS_LABEL[status]}</Text>
-            {grouped[status].length === 0 ? (
-              <Text style={styles.note}>No tasks in this bucket.</Text>
-            ) : (
-              grouped[status].map((task) => {
-                const next = NEXT_STATUS[task.status];
-                const canMove = canEditTask(task) && !!next;
-                const sourceTitle = sourceTitleForTask(task);
-
-                return (
-                  <View key={task.id} style={styles.taskRow}>
-                    <Pressable style={styles.taskIdentity} onPress={() => router.push(`/task/${task.id}`)}>
-                      <Text style={styles.taskTitle}>{task.title}</Text>
-                      <Text style={styles.taskMeta}>{task.id}</Text>
-                      <Text style={styles.taskMeta}>{task.checklistItems.length} checklist items</Text>
-                      <Text style={styles.taskMeta}>Assignee: {assigneeLabelForTask(task)}</Text>
-                      <Text style={styles.taskMeta}>Due: {formatDate(task.dueAt)}</Text>
-                      {sourceTitle && (
-                        <Text style={styles.taskMeta}>
-                          From: {sourceTitle}
-                        </Text>
-                      )}
-                    </Pressable>
-                    <View style={styles.taskActions}>
-                      <View style={styles.badge}>
-                        <Text style={styles.badgeText}>{STATUS_LABEL[task.status]}</Text>
-                      </View>
-                      {canMove ? (
-                        <Pressable
-                          style={styles.actionButton}
-                          disabled={savingId === task.id}
-                          onPress={() => moveTask(task)}
-                        >
-                          <Text style={styles.actionButtonText}>
-                            {savingId === task.id ? 'Saving...' : `Move to ${STATUS_LABEL[next as TaskStatus]}`}
-                          </Text>
-                        </Pressable>
-                      ) : (
-                        <Text style={styles.note}>{task.status === 'DONE' ? 'Completed' : 'Read only'}</Text>
-                      )}
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </View>
-        ))}
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
       </View>
+
+      <Text style={styles.note}>
+        Tasks, source generation, checklist updates, and the stock-confirm completion flow now run through the native shell.
+      </Text>
+
+      {canCreate && (
+        <Pressable style={styles.primaryButton} onPress={openCreate}>
+          <Text style={styles.primaryButtonText}>New task</Text>
+        </Pressable>
+      )}
+
+      {createOpen && canCreate && (
+        <View style={styles.formCard}>
+          <Text style={styles.sectionTitle}>Create task</Text>
+          <View style={styles.segmentRow}>
+            {(['plain', 'recipe', 'guideline'] as CreateMode[]).map((mode) => (
+              <Pressable
+                key={mode}
+                style={[styles.segmentButton, createMode === mode && styles.segmentButtonActive]}
+                onPress={() => {
+                  setCreateValue('mode', mode);
+                  clearCreateErrors();
+                  setCreateError(null);
+                }}
+              >
+                <Text style={[styles.segmentText, createMode === mode && styles.segmentTextActive]}>
+                  {mode === 'plain' ? 'Plain task' : mode === 'recipe' ? 'From recipe' : 'From guideline'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {createMode === 'plain' && (
+            <>
+              <FormTextInput
+                control={createControl}
+                name="title"
+                style={styles.input}
+                placeholder="Task title"
+                placeholderTextColor="#6f7c92"
+              />
+              <FormTextInput
+                control={createControl}
+                name="dueDate"
+                style={styles.input}
+                placeholder="Due date YYYY-MM-DD"
+                placeholderTextColor="#6f7c92"
+                autoCapitalize="none"
+              />
+              <FormTextInput
+                control={createControl}
+                name="assigneeId"
+                style={styles.input}
+                placeholder="Assignee ID (optional)"
+                placeholderTextColor="#6f7c92"
+                autoCapitalize="none"
+              />
+              {assignableUsers.length > 0 && (
+                <View style={styles.selectorList}>
+                  {assignableUsers.map((member) => (
+                    <Pressable
+                      key={member.id}
+                      style={[styles.selectorButton, createAssigneeId === member.id && styles.selectorButtonActive]}
+                      onPress={() => setCreateValue('assigneeId', member.id)}
+                    >
+                      <Text style={[styles.selectorButtonText, createAssigneeId === member.id && styles.selectorButtonTextActive]}>
+                        {member.email}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+
+          {createMode === 'recipe' && (
+            <View style={styles.selectorList}>
+              {recipes.length === 0 ? (
+                <Text style={styles.note}>No recipes yet.</Text>
+              ) : (
+                recipes.map((recipe) => (
+                  <Pressable
+                    key={recipe.id}
+                    style={[styles.selectorButton, selectedRecipeId === recipe.id && styles.selectorButtonActive]}
+                    onPress={() => setCreateValue('recipeId', recipe.id, { shouldValidate: !!createErrors.recipeId })}
+                  >
+                    <Text style={[styles.selectorButtonText, selectedRecipeId === recipe.id && styles.selectorButtonTextActive]}>
+                      {recipe.name}
+                    </Text>
+                  </Pressable>
+                ))
+              )}
+              <FieldError message={createErrors.recipeId?.message} />
+            </View>
+          )}
+
+          {createMode === 'guideline' && (
+            <View style={styles.selectorList}>
+              {guidelines.length === 0 ? (
+                <Text style={styles.note}>No guidelines yet.</Text>
+              ) : (
+                guidelines.map((guideline) => (
+                  <Pressable
+                    key={guideline.id}
+                    style={[styles.selectorButton, selectedGuidelineId === guideline.id && styles.selectorButtonActive]}
+                    onPress={() => setCreateValue('guidelineId', guideline.id, { shouldValidate: !!createErrors.guidelineId })}
+                  >
+                    <Text style={[styles.selectorButtonText, selectedGuidelineId === guideline.id && styles.selectorButtonTextActive]}>
+                      {guideline.title}
+                    </Text>
+                  </Pressable>
+                ))
+              )}
+              <FieldError message={createErrors.guidelineId?.message} />
+            </View>
+          )}
+
+          {createError && <Text style={styles.error}>{createError}</Text>}
+
+          <View style={styles.rowActions}>
+            <Pressable style={styles.secondaryButton} onPress={closeCreate} disabled={createMutation.isPending}>
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </Pressable>
+            <Pressable style={styles.primaryButton} onPress={handleCreate} disabled={createMutation.isPending}>
+              <Text style={styles.primaryButtonText}>{createMutation.isPending ? 'Creating...' : 'Create task'}</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {loading && <Text style={styles.note}>Loading tasks...</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
+      {!loading && tasks.length === 0 && <Text style={styles.note}>No tasks returned.</Text>}
+    </View>
+  );
+
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={rows}
+        keyExtractor={(row) => row.id}
+        getItemType={(row) => row.kind}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: row }) => {
+          if (row.kind === 'section') {
+            return (
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{STATUS_LABEL[row.status]}</Text>
+              </View>
+            );
+          }
+
+          if (row.kind === 'empty') {
+            return <Text style={styles.note}>No tasks in this bucket.</Text>;
+          }
+
+          const task = row.task;
+          const next = NEXT_STATUS[task.status];
+          const canMove = canEditTask(task) && !!next;
+          const sourceTitle = sourceTitleForTask(task);
+
+          return (
+            <View style={styles.taskRow}>
+              <Pressable style={styles.taskIdentity} onPress={() => router.push(`/task/${task.id}`)}>
+                <Text style={styles.taskTitle}>{task.title}</Text>
+                <Text style={styles.taskMeta}>{task.id}</Text>
+                <Text style={styles.taskMeta}>{task.checklistItems.length} checklist items</Text>
+                <Text style={styles.taskMeta}>Assignee: {assigneeLabelForTask(task)}</Text>
+                <Text style={styles.taskMeta}>Due: {formatDate(task.dueAt)}</Text>
+                {sourceTitle && (
+                  <Text style={styles.taskMeta}>
+                    From: {sourceTitle}
+                  </Text>
+                )}
+              </Pressable>
+              <View style={styles.taskActions}>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{STATUS_LABEL[task.status]}</Text>
+                </View>
+                {canMove ? (
+                  <Pressable
+                    style={styles.actionButton}
+                    disabled={savingId === task.id}
+                    onPress={() => moveTask(task)}
+                  >
+                    <Text style={styles.actionButtonText}>
+                      {savingId === task.id ? 'Saving...' : `Move to ${STATUS_LABEL[next as TaskStatus]}`}
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <Text style={styles.note}>{task.status === 'DONE' ? 'Completed' : 'Read only'}</Text>
+                )}
+              </View>
+            </View>
+          );
+        }}
+      />
 
       {pendingCompletion && (
         <View style={styles.overlay}>
@@ -526,24 +559,17 @@ export default function TasksScreen() {
           </View>
         </View>
       )}
-    </View>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    gap: 16,
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -587,9 +613,9 @@ const styles = StyleSheet.create({
     color: '#ffd27a',
     fontWeight: '700',
   },
-  section: {
-    gap: 10,
+  sectionHeader: {
     paddingTop: 8,
+    paddingBottom: 10,
     borderTopWidth: 1,
     borderTopColor: '#222b3a',
   },

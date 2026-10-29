@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -12,6 +12,7 @@ import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisti
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import type { UserRole } from '@kitchenos/shared';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 
 
 export default function InvitesScreen() {
@@ -103,94 +104,101 @@ export default function InvitesScreen() {
 
   if (!canManage) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
-          <Text style={styles.kicker}>KitchenOS mobile</Text>
-          <Text style={styles.title}>Invites</Text>
-          <Text style={styles.note}>Invite management is available to Owners and Admins only.</Text>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        </View>
-      </View>
+      <ScreenFrame>
+        <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
+            <Text style={styles.kicker}>KitchenOS mobile</Text>
+            <Text style={styles.title}>Invites</Text>
+            <Text style={styles.note}>Invite management is available to Owners and Admins only.</Text>
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>Back</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </ScreenFrame>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Invites</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.note}>
-          Create or revoke pending invites. The invitation token is returned by the API and can be shared out-of-band.
-        </Text>
-
-        <Pressable style={styles.secondaryButton} onPress={() => router.push('/invite/accept')}>
-          <Text style={styles.secondaryButtonText}>Open accept invite</Text>
-        </Pressable>
-
-        <FormTextInput
-          control={control}
-          name="email"
-          style={styles.input}
-          placeholder="Invite email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <View style={styles.segmentRow}>
-          {INVITABLE_ROLES.map((candidate) => (
-            <Pressable
-              key={candidate}
-              style={[styles.segmentButton, role === candidate && styles.segmentButtonActive]}
-              onPress={() => setValue('role', candidate)}
-            >
-              <Text style={[styles.segmentText, role === candidate && styles.segmentTextActive]}>{candidate}</Text>
+    <ScreenFrame>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.kicker}>KitchenOS mobile</Text>
+              <Text style={styles.title}>Invites</Text>
+            </View>
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>Back</Text>
             </Pressable>
+          </View>
+
+          <Text style={styles.note}>
+            Create or revoke pending invites. The invitation token is returned by the API and can be shared out-of-band.
+          </Text>
+
+          <Pressable style={styles.secondaryButton} onPress={() => router.push('/invite/accept')}>
+            <Text style={styles.secondaryButtonText}>Open accept invite</Text>
+          </Pressable>
+
+          <FormTextInput
+            control={control}
+            name="email"
+            style={styles.input}
+            placeholder="Invite email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+
+          <View style={styles.segmentRow}>
+            {INVITABLE_ROLES.map((candidate) => (
+              <Pressable
+                key={candidate}
+                style={[styles.segmentButton, role === candidate && styles.segmentButtonActive]}
+                onPress={() => setValue('role', candidate)}
+              >
+                <Text style={[styles.segmentText, role === candidate && styles.segmentTextActive]}>{candidate}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Pressable style={styles.primaryButton} disabled={saving} onPress={handleInvite}>
+            <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Create invite'}</Text>
+          </Pressable>
+
+          {message && <Text style={styles.success}>{message}</Text>}
+          {error && <Text style={styles.error}>{error}</Text>}
+          {loading && <Text style={styles.note}>Loading invites...</Text>}
+
+          {!loading && invites.length === 0 && <Text style={styles.note}>No pending invites.</Text>}
+
+          {invites.map((invite) => (
+            <View key={invite.id} style={styles.inviteRow}>
+              <View style={styles.inviteIdentity}>
+                <Text style={styles.inviteEmail}>{invite.email}</Text>
+                <Text style={styles.inviteMeta}>{invite.role}</Text>
+                <Text style={styles.inviteMeta}>{invite.status}</Text>
+              </View>
+              <Pressable style={styles.revokeButton} onPress={() => handleRevoke(invite)}>
+                <Text style={styles.revokeButtonText}>Revoke</Text>
+              </Pressable>
+            </View>
           ))}
         </View>
-
-        <Pressable style={styles.primaryButton} disabled={saving} onPress={handleInvite}>
-          <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Create invite'}</Text>
-        </Pressable>
-
-        {message && <Text style={styles.success}>{message}</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-        {loading && <Text style={styles.note}>Loading invites...</Text>}
-
-        {!loading && invites.length === 0 && <Text style={styles.note}>No pending invites.</Text>}
-
-        {invites.map((invite) => (
-          <View key={invite.id} style={styles.inviteRow}>
-            <View style={styles.inviteIdentity}>
-              <Text style={styles.inviteEmail}>{invite.email}</Text>
-              <Text style={styles.inviteMeta}>{invite.role}</Text>
-              <Text style={styles.inviteMeta}>{invite.status}</Text>
-            </View>
-            <Pressable style={styles.revokeButton} onPress={() => handleRevoke(invite)}>
-              <Text style={styles.revokeButtonText}>Revoke</Text>
-            </Pressable>
-          </View>
-        ))}
-      </View>
-    </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,

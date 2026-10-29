@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,6 +9,7 @@ import { FormTextInput } from '../src/components/FormFields';
 import { loginSchema, signupSchema, type AuthFormValues } from '../src/schemas/auth';
 import { persistSession } from '../src/storage';
 import { session, toStoredUser } from '../src/session';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 
 type Mode = 'login' | 'signup';
 
@@ -75,83 +76,90 @@ export default function HomeScreen() {
 
   if (signedIn) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
-          <Text style={styles.kicker}>KitchenOS mobile</Text>
-          <Text style={styles.title}>Redirecting to dashboard</Text>
-          <Text style={styles.body}>{currentUser?.email}</Text>
-        </View>
-      </View>
+      <ScreenFrame>
+        <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
+            <Text style={styles.kicker}>KitchenOS mobile</Text>
+            <Text style={styles.title}>Redirecting to dashboard</Text>
+            <Text style={styles.body}>{currentUser?.email}</Text>
+          </View>
+        </ScrollView>
+      </ScreenFrame>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.kicker}>KitchenOS mobile</Text>
-        <Text style={styles.title}>Shared core, separate shells</Text>
-        <Text style={styles.body}>
-          Log in or sign up against the API using the shared auth DTO and shared session store.
-        </Text>
+    <ScreenFrame>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Shared core, separate shells</Text>
+          <Text style={styles.body}>
+            Log in or sign up against the API using the shared auth DTO and shared session store.
+          </Text>
 
-        <View style={styles.segmentRow}>
-          <Pressable
-            style={[styles.segmentButton, mode === 'signup' && styles.segmentButtonActive]}
-            onPress={() => changeMode('signup')}
-          >
-            <Text style={[styles.segmentText, mode === 'signup' && styles.segmentTextActive]}>Sign up</Text>
+          <View style={styles.segmentRow}>
+            <Pressable
+              style={[styles.segmentButton, mode === 'signup' && styles.segmentButtonActive]}
+              onPress={() => changeMode('signup')}
+            >
+              <Text style={[styles.segmentText, mode === 'signup' && styles.segmentTextActive]}>Sign up</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.segmentButton, mode === 'login' && styles.segmentButtonActive]}
+              onPress={() => changeMode('login')}
+            >
+              <Text style={[styles.segmentText, mode === 'login' && styles.segmentTextActive]}>Log in</Text>
+            </Pressable>
+          </View>
+
+          <FormTextInput
+            control={control}
+            name="email"
+            style={styles.input}
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <FormTextInput control={control} name="password" style={styles.input} placeholder="Password" secureTextEntry />
+          {mode === 'signup' && (
+            <>
+              <FormTextInput control={control} name="organizationName" style={styles.input} placeholder="Organization name" />
+              <FormTextInput control={control} name="kitchenName" style={styles.input} placeholder="Kitchen name" />
+            </>
+          )}
+
+          <Pressable style={styles.primaryButton} disabled={loading} onPress={submit}>
+            <Text style={styles.primaryButtonText}>{loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : 'Log in'}</Text>
           </Pressable>
+
+          {message && <Text style={styles.note}>{message}</Text>}
+
+          {/* M017 / T043: signup creates a NEW org, so an invitee must go to invite acceptance
+              instead. Works signed-out and without the deep link (token pasted manually). */}
           <Pressable
-            style={[styles.segmentButton, mode === 'login' && styles.segmentButtonActive]}
-            onPress={() => changeMode('login')}
+            accessibilityRole="link"
+            accessibilityLabel="I have an invite"
+            style={styles.linkButton}
+            onPress={() => router.push('/invite/accept')}
           >
-            <Text style={[styles.segmentText, mode === 'login' && styles.segmentTextActive]}>Log in</Text>
+            <Text style={styles.linkButtonText}>I have an invite</Text>
           </Pressable>
         </View>
-
-        <FormTextInput
-          control={control}
-          name="email"
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <FormTextInput control={control} name="password" style={styles.input} placeholder="Password" secureTextEntry />
-        {mode === 'signup' && (
-          <>
-            <FormTextInput control={control} name="organizationName" style={styles.input} placeholder="Organization name" />
-            <FormTextInput control={control} name="kitchenName" style={styles.input} placeholder="Kitchen name" />
-          </>
-        )}
-
-        <Pressable style={styles.primaryButton} disabled={loading} onPress={submit}>
-          <Text style={styles.primaryButtonText}>{loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : 'Log in'}</Text>
-        </Pressable>
-
-        {message && <Text style={styles.note}>{message}</Text>}
-
-        {/* M017 / T043: signup creates a NEW org, so an invitee must go to invite acceptance
-            instead. Works signed-out and without the deep link (token pasted manually). */}
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="I have an invite"
-          style={styles.linkButton}
-          onPress={() => router.push('/invite/accept')}
-        >
-          <Text style={styles.linkButtonText}>I have an invite</Text>
-        </Pressable>
-      </View>
-    </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,

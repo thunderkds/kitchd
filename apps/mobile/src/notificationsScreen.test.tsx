@@ -7,6 +7,7 @@ import * as api from './api'
 import { useNotifications } from './queries'
 import { queryKeys } from './queryKeys'
 import { createQueryClient } from './queryClient'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 
@@ -208,5 +209,35 @@ describe('useNotifications', () => {
     })
     expect(mocked.fetchNotifications).not.toHaveBeenCalled()
     unmount()
+  })
+})
+
+describe('NotificationsScreen native quality (M010)', () => {
+  it('AC1: renders the feed through one FlashList keyed by notification id', async () => {
+    mocked.fetchNotifications.mockResolvedValue({
+      notifications: [notification({ id: 'n1', body: 'First' }), notification({ id: 'n2', body: 'Second', read: true })],
+      unreadCount: 1,
+    })
+    wrap(<NotificationsScreen />)
+
+    expect(await screen.findByText('Second')).toBeTruthy()
+    expect(screen.getByText('First')).toBeTruthy()
+    expect(screen.getByText('Mark all as read')).toBeTruthy()
+    expect(expectFlashListKeyedBy(['n1', 'n2'])).toEqual(['n1', 'n2'])
+  })
+
+  it('AC1: keeps the empty text', async () => {
+    mocked.fetchNotifications.mockResolvedValue({ notifications: [], unreadCount: 0 })
+    wrap(<NotificationsScreen />)
+
+    expect(await screen.findByText('No notifications yet.')).toBeTruthy()
+  })
+
+  it('AC2: sits in the safe area', async () => {
+    mocked.fetchNotifications.mockResolvedValue({ notifications: [], unreadCount: 0 })
+    wrap(<NotificationsScreen />)
+
+    await screen.findByText('No notifications yet.')
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

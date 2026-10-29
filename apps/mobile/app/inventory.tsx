@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FlashList } from '@shopify/flash-list';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -11,6 +12,7 @@ import {
   type ReceiveStockInput,
 } from '../src/api';
 import { FormTextInput } from '../src/components/FormFields';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import {
   ingredientSchema,
   receiveStockSchema,
@@ -172,74 +174,83 @@ export default function InventoryScreen() {
     return null;
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Inventory</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Inventory</Text>
         </View>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
+      </View>
 
-        <Text style={styles.note}>
-          Browse ingredients, see current stock from the movement ledger, and manage ingredients when your role allows it.
-        </Text>
+      <Text style={styles.note}>
+        Browse ingredients, see current stock from the movement ledger, and manage ingredients when your role allows it.
+      </Text>
 
-        {canManage && (
-          <Pressable style={styles.primaryButton} onPress={openCreate}>
-            <Text style={styles.primaryButtonText}>Add ingredient</Text>
-          </Pressable>
-        )}
+      {canManage && (
+        <Pressable style={styles.primaryButton} onPress={openCreate}>
+          <Text style={styles.primaryButtonText}>Add ingredient</Text>
+        </Pressable>
+      )}
 
-        {formOpen && canManage && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>{editing ? 'Edit ingredient' : 'Add ingredient'}</Text>
-            <FormTextInput control={ingredientControl} name="name" style={styles.input} placeholder="Name" placeholderTextColor="#6f7c92" />
-            <FormTextInput control={ingredientControl} name="unit" style={styles.input} placeholder="Unit" placeholderTextColor="#6f7c92" />
-            <FormTextInput
-              control={ingredientControl}
-              name="costPerUnit"
-              style={styles.input}
-              placeholder="Cost per unit"
-              placeholderTextColor="#6f7c92"
-              keyboardType="decimal-pad"
-            />
-            <FormTextInput
-              control={ingredientControl}
-              name="category"
-              style={styles.input}
-              placeholder="Category"
-              placeholderTextColor="#6f7c92"
-            />
-            <FormTextInput
-              control={ingredientControl}
-              name="minThreshold"
-              style={styles.input}
-              placeholder="Low-stock threshold"
-              placeholderTextColor="#6f7c92"
-              keyboardType="decimal-pad"
-            />
-            <View style={styles.rowActions}>
-              <Pressable style={styles.primaryButton} disabled={savingForm} onPress={submitForm}>
-                <Text style={styles.primaryButtonText}>{savingForm ? 'Saving...' : 'Save ingredient'}</Text>
-              </Pressable>
-              <Pressable style={styles.secondaryButton} onPress={closeForm}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-            </View>
+      {formOpen && canManage && (
+        <View style={styles.formCard}>
+          <Text style={styles.sectionTitle}>{editing ? 'Edit ingredient' : 'Add ingredient'}</Text>
+          <FormTextInput control={ingredientControl} name="name" style={styles.input} placeholder="Name" placeholderTextColor="#6f7c92" />
+          <FormTextInput control={ingredientControl} name="unit" style={styles.input} placeholder="Unit" placeholderTextColor="#6f7c92" />
+          <FormTextInput
+            control={ingredientControl}
+            name="costPerUnit"
+            style={styles.input}
+            placeholder="Cost per unit"
+            placeholderTextColor="#6f7c92"
+            keyboardType="decimal-pad"
+          />
+          <FormTextInput
+            control={ingredientControl}
+            name="category"
+            style={styles.input}
+            placeholder="Category"
+            placeholderTextColor="#6f7c92"
+          />
+          <FormTextInput
+            control={ingredientControl}
+            name="minThreshold"
+            style={styles.input}
+            placeholder="Low-stock threshold"
+            placeholderTextColor="#6f7c92"
+            keyboardType="decimal-pad"
+          />
+          <View style={styles.rowActions}>
+            <Pressable style={styles.primaryButton} disabled={savingForm} onPress={submitForm}>
+              <Text style={styles.primaryButtonText}>{savingForm ? 'Saving...' : 'Save ingredient'}</Text>
+            </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={closeForm}>
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </Pressable>
           </View>
-        )}
+        </View>
+      )}
 
-        {loading && <Text style={styles.note}>Loading ingredients...</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-        {!loading && ingredients.length === 0 && <Text style={styles.note}>No ingredients yet.</Text>}
+      {loading && <Text style={styles.note}>Loading ingredients...</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
+      {!loading && ingredients.length === 0 && <Text style={styles.note}>No ingredients yet.</Text>}
+    </View>
+  );
 
-        {ingredients.map((ingredient) => (
-          <View key={ingredient.id} style={styles.ingredientRow}>
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={ingredients}
+        keyExtractor={(ingredient) => ingredient.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: ingredient }) => (
+          <View style={styles.ingredientRow}>
             <View style={styles.ingredientIdentity}>
               <Text style={styles.ingredientName}>{ingredient.name}</Text>
               <Text style={styles.ingredientMeta}>
@@ -290,26 +301,19 @@ export default function InventoryScreen() {
               )
             ) : null}
           </View>
-        ))}
-      </View>
-    </View>
+        )}
+      />
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   headerRow: {
     flexDirection: 'row',

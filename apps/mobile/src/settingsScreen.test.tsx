@@ -5,6 +5,7 @@ import SettingsScreen from '../app/settings'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 import { ThemeContext, createThemeStore } from './theme'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 let mockUser: StoredUser | null = null
@@ -179,5 +180,16 @@ describe('SettingsScreen kitchen (M006 AC4)', () => {
     fireEvent.press(screen.getByText('Save name'))
 
     expect(await screen.findByText('Forbidden resource')).toBeTruthy()
+  })
+})
+
+describe('SettingsScreen native quality (M010)', () => {
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    mockUser = userWith('CHEF', 'simple')
+    mocked.getKitchen.mockResolvedValue({ id: 'k1', name: 'Main Kitchen' } as api.Kitchen)
+    renderScreen()
+
+    await kitchenNameInput()
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

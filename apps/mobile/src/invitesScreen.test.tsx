@@ -4,6 +4,7 @@ import InvitesScreen from '../app/invites'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 import { queryKeys } from './queryKeys'
+import { expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 const mockToken: { current: string | null } = { current: 'token-A' }
@@ -101,5 +102,15 @@ describe('InvitesScreen optimistic revoke rollback (M004 P2-1, P2-2)', () => {
 
     expect(await screen.findByText('Conflict')).toBeTruthy()
     expect(client.getQueryData(queryKeys.invites.list())).toBeUndefined()
+  })
+})
+
+describe('InvitesScreen native quality (M010)', () => {
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    mocked.listPendingInvites.mockResolvedValue([invite])
+    renderScreen()
+
+    expect(await screen.findByText('new@example.com')).toBeTruthy()
+    expectSafeAreaAndKeyboardAvoidance()
   })
 })

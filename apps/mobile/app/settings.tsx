@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ThemePreferenceId } from '@kitchenos/shared';
@@ -8,6 +8,7 @@ import { queryErrorMessage, useKitchen } from '../src/queries';
 import { kitchenKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import { THEME_OPTIONS, useTheme } from '../src/theme';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -69,95 +70,100 @@ export default function SettingsScreen() {
   const themeError = queryErrorMessage(themeMutation.error, 'Failed to save theme');
 
   return (
-    <View testID="settings-screen" style={[styles.screen, { backgroundColor: palette.background }]}>
-      <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
-            <Text style={[styles.title, { color: palette.text }]}>Settings</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-            style={[styles.backButton, { borderColor: palette.border }]}
-            onPress={() => router.back()}
-          >
-            <Text style={[styles.backButtonText, { color: palette.text }]}>Back</Text>
-          </Pressable>
-        </View>
-
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Theme</Text>
-        <Text style={[styles.note, { color: palette.muted }]}>
-          Choose how KitchenOS looks. Your choice is saved to your account.
-        </Text>
-        <View accessibilityRole="radiogroup" style={styles.options}>
-          {THEME_OPTIONS.map((option) => {
-            const isSelected = preference === option.id;
-            return (
-              <Pressable
-                key={option.id}
-                accessibilityRole="radio"
-                accessibilityLabel={option.label}
-                accessibilityState={{ selected: isSelected, disabled: themeMutation.isPending }}
-                disabled={themeMutation.isPending}
-                style={[
-                  styles.option,
-                  { borderColor: isSelected ? palette.accent : palette.border, backgroundColor: palette.background },
-                ]}
-                onPress={() => {
-                  if (!isSelected) themeMutation.mutate(option.id);
-                }}
-              >
-                <Text style={[styles.optionLabel, { color: palette.text }]}>{option.label}</Text>
-                <Text style={[styles.optionDescription, { color: palette.muted }]}>{option.description}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {themeError ? <Text style={[styles.error, { color: palette.danger }]}>{themeError}</Text> : null}
-
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Kitchen</Text>
-        {kitchenQuery.isLoading ? (
-          <Text style={[styles.note, { color: palette.muted }]}>Loading kitchen...</Text>
-        ) : kitchenLoadError ? (
-          <Text style={[styles.error, { color: palette.danger }]}>{kitchenLoadError}</Text>
-        ) : canRename ? (
-          <>
-            <TextInput
-              style={[styles.input, { color: palette.text, borderColor: palette.border, backgroundColor: palette.background }]}
-              placeholder="Kitchen name"
-              placeholderTextColor={palette.muted}
-              value={nameValue}
-              editable={!renameMutation.isPending}
-              onChangeText={(value) => {
-                setDraft(value);
-                setRenameError(null);
-                setRenameStatus(null);
-              }}
-            />
+    <ScreenFrame background={palette.background}>
+      <ScrollView testID="settings-screen" style={[styles.screen, { backgroundColor: palette.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
+              <Text style={[styles.title, { color: palette.text }]}>Settings</Text>
+            </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Save name"
-              disabled={renameMutation.isPending}
-              style={[styles.primaryButton, { backgroundColor: palette.accent }, renameMutation.isPending && styles.disabled]}
-              onPress={() => void handleRename()}
+              accessibilityLabel="Back"
+              style={[styles.backButton, { borderColor: palette.border }]}
+              onPress={() => router.back()}
             >
-              <Text style={styles.primaryButtonText}>{renameMutation.isPending ? 'Saving...' : 'Save name'}</Text>
+              <Text style={[styles.backButtonText, { color: palette.text }]}>Back</Text>
             </Pressable>
-          </>
-        ) : (
-          <Text style={[styles.kitchenName, { color: palette.text }]}>{savedName}</Text>
-        )}
-        {renameError ? <Text style={[styles.error, { color: palette.danger }]}>{renameError}</Text> : null}
-        {renameStatus ? <Text style={[styles.note, { color: palette.muted }]}>{renameStatus}</Text> : null}
-      </View>
-    </View>
+          </View>
+
+          <Text style={[styles.sectionTitle, { color: palette.text }]}>Theme</Text>
+          <Text style={[styles.note, { color: palette.muted }]}>
+            Choose how KitchenOS looks. Your choice is saved to your account.
+          </Text>
+          <View accessibilityRole="radiogroup" style={styles.options}>
+            {THEME_OPTIONS.map((option) => {
+              const isSelected = preference === option.id;
+              return (
+                <Pressable
+                  key={option.id}
+                  accessibilityRole="radio"
+                  accessibilityLabel={option.label}
+                  accessibilityState={{ selected: isSelected, disabled: themeMutation.isPending }}
+                  disabled={themeMutation.isPending}
+                  style={[
+                    styles.option,
+                    { borderColor: isSelected ? palette.accent : palette.border, backgroundColor: palette.background },
+                  ]}
+                  onPress={() => {
+                    if (!isSelected) themeMutation.mutate(option.id);
+                  }}
+                >
+                  <Text style={[styles.optionLabel, { color: palette.text }]}>{option.label}</Text>
+                  <Text style={[styles.optionDescription, { color: palette.muted }]}>{option.description}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {themeError ? <Text style={[styles.error, { color: palette.danger }]}>{themeError}</Text> : null}
+
+          <Text style={[styles.sectionTitle, { color: palette.text }]}>Kitchen</Text>
+          {kitchenQuery.isLoading ? (
+            <Text style={[styles.note, { color: palette.muted }]}>Loading kitchen...</Text>
+          ) : kitchenLoadError ? (
+            <Text style={[styles.error, { color: palette.danger }]}>{kitchenLoadError}</Text>
+          ) : canRename ? (
+            <>
+              <TextInput
+                style={[styles.input, { color: palette.text, borderColor: palette.border, backgroundColor: palette.background }]}
+                placeholder="Kitchen name"
+                placeholderTextColor={palette.muted}
+                value={nameValue}
+                editable={!renameMutation.isPending}
+                onChangeText={(value) => {
+                  setDraft(value);
+                  setRenameError(null);
+                  setRenameStatus(null);
+                }}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Save name"
+                disabled={renameMutation.isPending}
+                style={[styles.primaryButton, { backgroundColor: palette.accent }, renameMutation.isPending && styles.disabled]}
+                onPress={() => void handleRename()}
+              >
+                <Text style={styles.primaryButtonText}>{renameMutation.isPending ? 'Saving...' : 'Save name'}</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={[styles.kitchenName, { color: palette.text }]}>{savedName}</Text>
+          )}
+          {renameError ? <Text style={[styles.error, { color: palette.danger }]}>{renameError}</Text> : null}
+          {renameStatus ? <Text style={[styles.note, { color: palette.muted }]}>{renameStatus}</Text> : null}
+        </View>
+      </ScrollView>
+    </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
   },

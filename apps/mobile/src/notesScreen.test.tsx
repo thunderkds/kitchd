@@ -4,6 +4,7 @@ import NotesScreen from '../app/notes'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 import { queryKeys } from './queryKeys'
+import { expectFlashListKeyedBy, expectSafeAreaAndKeyboardAvoidance } from './testing/nativeFrame'
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn() }
 const mockToken: { current: string | null } = { current: 'token-A' }
@@ -127,5 +128,44 @@ describe('NotesScreen optimistic pin/delete rollback (M004 P2-1, P2-2)', () => {
 
     expect(await screen.findByText('Conflict')).toBeTruthy()
     expect(client.getQueryData(listKey)).toBeUndefined()
+  })
+})
+
+describe('NotesScreen native quality (M010)', () => {
+  it('AC1: renders notes through one FlashList keyed by note id, pinned first', async () => {
+    mocked.listNotes.mockResolvedValue([note({ id: 'n-a', title: 'Alpha' }), note({ id: 'n-b', title: 'Bravo', pinned: true })])
+    renderScreen()
+
+    expect(await screen.findByText('Bravo')).toBeTruthy()
+    expect(screen.getByText('Alpha')).toBeTruthy()
+    expect(expectFlashListKeyedBy(['n-a', 'n-b'])).toEqual(['n-b', 'n-a'])
+  })
+
+  it('AC1: shows the empty text', async () => {
+    mocked.listNotes.mockResolvedValue([])
+    renderScreen()
+
+    expect(await screen.findByText('No notes yet.')).toBeTruthy()
+  })
+
+  it('AC2 + AC3: sits in the safe area and avoids the keyboard', async () => {
+    mocked.listNotes.mockResolvedValue([])
+    renderScreen()
+
+    await screen.findByText('No notes yet.')
+    expectSafeAreaAndKeyboardAvoidance()
+  })
+
+  it('AC3: the tag search in the list header keeps focus (is not remounted) while typing', async () => {
+    mocked.listNotes.mockResolvedValue([note()])
+    renderScreen()
+
+    await screen.findByText('Walk-in fridge')
+    const search = screen.getByPlaceholderText('Search by tag')
+    fireEvent.changeText(search, 'f')
+    fireEvent.changeText(screen.getByPlaceholderText('Search by tag'), 'fr')
+
+    expect(screen.getByPlaceholderText('Search by tag')).toBe(search)
+    expect(screen.getByDisplayValue('fr')).toBeTruthy()
   })
 })

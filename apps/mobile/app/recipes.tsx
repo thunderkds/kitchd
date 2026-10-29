@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createRecipe, getRecipe, updateRecipe, type Recipe, type RecipeInput } from '../src/api';
 import { FieldError, FormTextInput } from '../src/components/FormFields';
+import { ScreenFrame } from '../src/components/ScreenFrame';
 import { recipeSchema, type RecipeFormValues, type RecipeRowValues } from '../src/schemas/recipe';
 import { queryErrorMessage, queryLoadError, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
 import { queryKeys, recipeVersionKeys } from '../src/queryKeys';
@@ -263,159 +265,162 @@ export default function RecipesScreen() {
 
   if (loading) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
+      <ScreenFrame>
+        <View style={[styles.content, styles.header]}>
           <Text style={styles.kicker}>KitchenOS mobile</Text>
           <Text style={styles.title}>Recipes</Text>
           <Text style={styles.note}>Loading recipes...</Text>
         </View>
-      </View>
+      </ScreenFrame>
     );
   }
 
   if (mode === 'detail' && selected) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.card}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.kicker}>KitchenOS mobile</Text>
-              <Text style={styles.title}>{selected.name}</Text>
-            </View>
-            <Pressable style={styles.backButton} onPress={backToList}>
-              <Text style={styles.backButtonText}>Back</Text>
-            </Pressable>
-          </View>
-
-          {error && <Text style={styles.error}>{error}</Text>}
-          <Text style={styles.meta}>
-            {selected.servings != null ? `${selected.servings} servings · ` : ''}
-            Version {selected.version} · Cost {selected.costComputed.toFixed(2)}
-          </Text>
-
-          <Text style={styles.sectionTitle}>Steps</Text>
-          {selected.steps.length === 0 ? (
-            <Text style={styles.note}>No steps yet.</Text>
-          ) : (
-            selected.steps.map((step, idx) => (
-              <View key={`${selected.id}-step-${idx}`} style={styles.stepRow}>
-                <Text style={styles.stepIndex}>{idx + 1}</Text>
-                <Text style={styles.stepText}>{step}</Text>
+      <ScreenFrame>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.header}>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.kicker}>KitchenOS mobile</Text>
+                <Text style={styles.title}>{selected.name}</Text>
               </View>
-            ))
-          )}
+              <Pressable style={styles.backButton} onPress={backToList}>
+                <Text style={styles.backButtonText}>Back</Text>
+              </Pressable>
+            </View>
 
-          <Text style={styles.sectionTitle}>Ingredients</Text>
-          {selected.ingredients.length === 0 ? (
-            <Text style={styles.note}>No ingredients yet.</Text>
-          ) : (
-            selected.ingredients.map((line) => (
-              <View key={line.ingredientId} style={styles.ingredientLine}>
-                <Text style={styles.ingredientName}>{line.name}</Text>
+            {error && <Text style={styles.error}>{error}</Text>}
+            <Text style={styles.meta}>
+              {selected.servings != null ? `${selected.servings} servings · ` : ''}
+              Version {selected.version} · Cost {selected.costComputed.toFixed(2)}
+            </Text>
+
+            <Text style={styles.sectionTitle}>Steps</Text>
+            {selected.steps.length === 0 ? (
+              <Text style={styles.note}>No steps yet.</Text>
+            ) : (
+              selected.steps.map((step, idx) => (
+                <View key={`${selected.id}-step-${idx}`} style={styles.stepRow}>
+                  <Text style={styles.stepIndex}>{idx + 1}</Text>
+                  <Text style={styles.stepText}>{step}</Text>
+                </View>
+              ))
+            )}
+
+            <Text style={styles.sectionTitle}>Ingredients</Text>
+            {selected.ingredients.length === 0 ? (
+              <Text style={styles.note}>No ingredients yet.</Text>
+            ) : (
+              selected.ingredients.map((line) => (
+                <View key={line.ingredientId} style={styles.ingredientLine}>
+                  <Text style={styles.ingredientName}>{line.name}</Text>
+                  <Text style={styles.ingredientMeta}>
+                    {line.qty} {line.unit} · {line.lineCost.toFixed(2)}
+                  </Text>
+                </View>
+              ))
+            )}
+
+            <Text style={styles.total}>Total cost: {selected.costComputed.toFixed(2)}</Text>
+
+            <Text style={styles.sectionTitle}>Recipe version history</Text>
+            {versionsQuery.isLoading && <Text style={styles.note}>Loading version history...</Text>}
+            {versionsQuery.isError && (
+              <Text style={styles.error}>
+                {queryErrorMessage(versionsQuery.error, 'Failed to load recipe versions')}
+              </Text>
+            )}
+            {versionsQuery.data && versionsQuery.data.length === 0 && (
+              <Text style={styles.note}>No saved versions yet.</Text>
+            )}
+            {versionsQuery.data?.map((entry) => (
+              <View key={entry.id} style={styles.ingredientLine}>
+                <Text style={styles.ingredientName}>
+                  Version {entry.version} · {formatVersionDate(entry.createdAt)}
+                </Text>
                 <Text style={styles.ingredientMeta}>
-                  {line.qty} {line.unit} · {line.lineCost.toFixed(2)}
+                  {entry.servings != null ? `${entry.servings} servings · ` : ''}Cost snapshot:{' '}
+                  {entry.costComputedAtSnapshot.toFixed(2)}
+                </Text>
+                <Text style={styles.ingredientMeta}>
+                  {entry.steps.length} steps · {entry.ingredientsSnapshot.length} ingredients
                 </Text>
               </View>
-            ))
-          )}
+            ))}
 
-          <Text style={styles.total}>Total cost: {selected.costComputed.toFixed(2)}</Text>
+            {canWrite && (
+              <Pressable style={styles.secondaryButton} onPress={() => openEdit(selected)}>
+                <Text style={styles.secondaryButtonText}>Edit recipe</Text>
+              </Pressable>
+            )}
+          </View>
 
-          <Text style={styles.sectionTitle}>Recipe version history</Text>
-          {versionsQuery.isLoading && <Text style={styles.note}>Loading version history...</Text>}
-          {versionsQuery.isError && (
-            <Text style={styles.error}>
-              {queryErrorMessage(versionsQuery.error, 'Failed to load recipe versions')}
-            </Text>
-          )}
-          {versionsQuery.data && versionsQuery.data.length === 0 && (
-            <Text style={styles.note}>No saved versions yet.</Text>
-          )}
-          {versionsQuery.data?.map((entry) => (
-            <View key={entry.id} style={styles.ingredientLine}>
-              <Text style={styles.ingredientName}>
-                Version {entry.version} · {formatVersionDate(entry.createdAt)}
-              </Text>
-              <Text style={styles.ingredientMeta}>
-                {entry.servings != null ? `${entry.servings} servings · ` : ''}Cost snapshot:{' '}
-                {entry.costComputedAtSnapshot.toFixed(2)}
-              </Text>
-              <Text style={styles.ingredientMeta}>
-                {entry.steps.length} steps · {entry.ingredientsSnapshot.length} ingredients
-              </Text>
-            </View>
-          ))}
-
-          {canWrite && (
-            <Pressable style={styles.secondaryButton} onPress={() => openEdit(selected)}>
-              <Text style={styles.secondaryButtonText}>Edit recipe</Text>
-            </Pressable>
-          )}
-        </View>
-
-        {recipeForm}
-      </View>
+          {recipeForm}
+        </ScrollView>
+      </ScreenFrame>
     );
   }
 
-  return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Recipes</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.kicker}>KitchenOS mobile</Text>
+          <Text style={styles.title}>Recipes</Text>
         </View>
-
-        <Text style={styles.note}>
-          Browse recipes, open a detail view, and create or edit recipes when your role allows it.
-        </Text>
-
-        {canWrite && (
-          <Pressable style={styles.primaryButton} onPress={openCreate}>
-            <Text style={styles.primaryButtonText}>New recipe</Text>
-          </Pressable>
-        )}
-
-        {error && <Text style={styles.error}>{error}</Text>}
-        {recipes.length === 0 ? (
-          <Text style={styles.note}>No recipes yet.</Text>
-        ) : (
-          recipes.map((recipe) => (
-            <Pressable key={recipe.id} style={styles.recipeRow} onPress={() => openDetail(recipe)}>
-              <Text style={styles.recipeName}>{recipe.name}</Text>
-              <Text style={styles.recipeMeta}>
-                {recipe.servings != null ? `${recipe.servings} servings · ` : ''}
-                Cost {recipe.costComputed.toFixed(2)} · v{recipe.version}
-              </Text>
-            </Pressable>
-          ))
-        )}
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
       </View>
+
+      <Text style={styles.note}>
+        Browse recipes, open a detail view, and create or edit recipes when your role allows it.
+      </Text>
+
+      {canWrite && (
+        <Pressable style={styles.primaryButton} onPress={openCreate}>
+          <Text style={styles.primaryButtonText}>New recipe</Text>
+        </Pressable>
+      )}
+
+      {error && <Text style={styles.error}>{error}</Text>}
+
+      {recipes.length === 0 && <Text style={styles.note}>No recipes yet.</Text>}
 
       {recipeForm}
     </View>
   );
+
+  return (
+    <ScreenFrame>
+      <FlashList
+        data={recipes}
+        keyExtractor={(recipe) => recipe.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item: recipe }) => (
+          <Pressable style={styles.recipeRow} onPress={() => openDetail(recipe)}>
+            <Text style={styles.recipeName}>{recipe.name}</Text>
+            <Text style={styles.recipeMeta}>
+              {recipe.servings != null ? `${recipe.servings} servings · ` : ''}
+              Cost {recipe.costComputed.toFixed(2)} · v{recipe.version}
+            </Text>
+          </Pressable>
+        )}
+      />
+    </ScreenFrame>
+  );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
     padding: 24,
-    backgroundColor: '#0d1016',
   },
-  card: {
+  header: {
     gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
+    paddingBottom: 14,
   },
   formCard: {
     gap: 12,

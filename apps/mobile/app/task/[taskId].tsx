@@ -23,6 +23,7 @@ import {
   type TaskStatus,
 } from '../../src/api';
 import { CommentsSection } from '../../src/commentsSection';
+import { ScreenFrame } from '../../src/components/ScreenFrame';
 import { session } from '../../src/session';
 
 type PendingCompletion = {
@@ -410,190 +411,192 @@ export default function TaskDetailScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <ScrollView keyboardShouldPersistTaps="handled">
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Task detail</Text>
-          </View>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        </View>
-
-        {loading && <Text style={styles.note}>Loading task...</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-        {task && !editing && (
-          <>
-            <Text style={styles.taskTitle}>{task.title}</Text>
-            <Text style={styles.meta}>Status: {STATUS_LABEL[task.status]}</Text>
-            <Text style={styles.meta}>Checklist: {checklistCompleteCount}/{task.checklistItems.length}</Text>
-            <Text style={styles.meta}>Assignee: {assigneeLabelForTask(task)}</Text>
-            <Text style={styles.meta}>Due: {formatDate(task.dueAt)}</Text>
-            {sourceTitleForTask(task) && <Text style={styles.meta}>From: {sourceTitleForTask(task)}</Text>}
-            <Text style={styles.note}>Checklist changes and status updates now use the shared API path from the native shell.</Text>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Checklist</Text>
-              {task.checklistItems.length === 0 ? (
-                <Text style={styles.note}>No checklist items on this task.</Text>
-              ) : (
-                task.checklistItems.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    style={styles.checklistRow}
-                    disabled={!canEditTask}
-                    onPress={() => toggleChecklistItem(item)}
-                  >
-                    <View style={[styles.checkbox, item.done && styles.checkboxChecked]}>
-                      <Text style={styles.checkboxText}>{item.done ? '✓' : ''}</Text>
-                    </View>
-                    <Text style={[styles.checklistText, item.done && styles.checklistTextDone]}>{item.text}</Text>
-                    {canEditTask && (
-                      <Text style={styles.checklistAction}>{savingChecklistId === item.id ? 'Saving...' : item.done ? 'Undo' : 'Done'}</Text>
-                    )}
-                  </Pressable>
-                ))
-              )}
+    <ScreenFrame>
+      <View style={styles.screen}>
+        <ScrollView keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerCopy}>
+              <Text style={styles.kicker}>KitchenOS mobile</Text>
+              <Text style={styles.title}>Task detail</Text>
             </View>
-
-            {canEditTask && (
-              <View style={styles.rowActions}>
-                <Pressable style={styles.secondaryButton} onPress={openEdit}>
-                  <Text style={styles.secondaryButtonText}>Edit task</Text>
-                </Pressable>
-                {NEXT_STATUS[task.status] ? (
-                  <Pressable style={styles.primaryButton} disabled={savingStatus} onPress={advanceStatus}>
-                    <Text style={styles.primaryButtonText}>{savingStatus ? 'Saving...' : `Move to ${STATUS_LABEL[NEXT_STATUS[task.status] as TaskStatus]}`}</Text>
-                  </Pressable>
-                ) : (
-                  <Text style={styles.note}>This task is already done.</Text>
-                )}
-              </View>
-            )}
-
-            <CommentsSection entityType="task" entityId={task.id} />
-          </>
-        )}
-
-        {task && editing && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Edit task</Text>
-            {editError && <Text style={styles.error}>{editError}</Text>}
-
-            {canEditDetails && (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Task title"
-                  placeholderTextColor="#6f7c92"
-                  value={editTitle}
-                  onChangeText={setEditTitle}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Assignee ID"
-                  placeholderTextColor="#6f7c92"
-                  value={editAssigneeId}
-                  onChangeText={setEditAssigneeId}
-                  autoCapitalize="none"
-                />
-                {assignableUsers.length > 0 && (
-                  <View style={styles.selectorList}>
-                    {assignableUsers.map((member) => (
-                      <Pressable
-                        key={member.id}
-                        style={[styles.selectorButton, editAssigneeId === member.id && styles.selectorButtonActive]}
-                        onPress={() => setEditAssigneeId(member.id)}
-                      >
-                        <Text style={[styles.selectorButtonText, editAssigneeId === member.id && styles.selectorButtonTextActive]}>
-                          {member.email}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-                <TextInput
-                  style={styles.input}
-                  placeholder="Due date YYYY-MM-DD"
-                  placeholderTextColor="#6f7c92"
-                  value={editDueDate}
-                  onChangeText={setEditDueDate}
-                  autoCapitalize="none"
-                />
-              </>
-            )}
-
-            <Text style={styles.sectionTitle}>Checklist</Text>
-            {editItems.length === 0 && <Text style={styles.note}>No checklist items yet.</Text>}
-            {editItems.map((item, index) => (
-              <View key={item.key} style={styles.editChecklistRow}>
-                <Pressable style={[styles.checkbox, item.done && styles.checkboxChecked]} onPress={() => updateChecklistItem(item.key, { done: !item.done })}>
-                  <Text style={styles.checkboxText}>{item.done ? '✓' : ''}</Text>
-                </Pressable>
-                <TextInput
-                  style={styles.editChecklistInput}
-                  placeholder={`Checklist item ${index + 1}`}
-                  placeholderTextColor="#6f7c92"
-                  value={item.text}
-                  onChangeText={(value) => updateChecklistItem(item.key, { text: value })}
-                />
-                <Pressable style={styles.smallButton} onPress={() => removeChecklistItem(item.key)}>
-                  <Text style={styles.smallButtonText}>Remove</Text>
-                </Pressable>
-              </View>
-            ))}
-            <Pressable style={styles.secondaryButton} onPress={addChecklistItem}>
-              <Text style={styles.secondaryButtonText}>Add checklist item</Text>
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>Back</Text>
             </Pressable>
+          </View>
 
-            <View style={styles.rowActions}>
-              <Pressable style={styles.secondaryButton} onPress={closeEdit} disabled={savingEdit}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
+          {loading && <Text style={styles.note}>Loading task...</Text>}
+          {error && <Text style={styles.error}>{error}</Text>}
+          {task && !editing && (
+            <>
+              <Text style={styles.taskTitle}>{task.title}</Text>
+              <Text style={styles.meta}>Status: {STATUS_LABEL[task.status]}</Text>
+              <Text style={styles.meta}>Checklist: {checklistCompleteCount}/{task.checklistItems.length}</Text>
+              <Text style={styles.meta}>Assignee: {assigneeLabelForTask(task)}</Text>
+              <Text style={styles.meta}>Due: {formatDate(task.dueAt)}</Text>
+              {sourceTitleForTask(task) && <Text style={styles.meta}>From: {sourceTitleForTask(task)}</Text>}
+              <Text style={styles.note}>Checklist changes and status updates now use the shared API path from the native shell.</Text>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Checklist</Text>
+                {task.checklistItems.length === 0 ? (
+                  <Text style={styles.note}>No checklist items on this task.</Text>
+                ) : (
+                  task.checklistItems.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      style={styles.checklistRow}
+                      disabled={!canEditTask}
+                      onPress={() => toggleChecklistItem(item)}
+                    >
+                      <View style={[styles.checkbox, item.done && styles.checkboxChecked]}>
+                        <Text style={styles.checkboxText}>{item.done ? '✓' : ''}</Text>
+                      </View>
+                      <Text style={[styles.checklistText, item.done && styles.checklistTextDone]}>{item.text}</Text>
+                      {canEditTask && (
+                        <Text style={styles.checklistAction}>{savingChecklistId === item.id ? 'Saving...' : item.done ? 'Undo' : 'Done'}</Text>
+                      )}
+                    </Pressable>
+                  ))
+                )}
+              </View>
+
+              {canEditTask && (
+                <View style={styles.rowActions}>
+                  <Pressable style={styles.secondaryButton} onPress={openEdit}>
+                    <Text style={styles.secondaryButtonText}>Edit task</Text>
+                  </Pressable>
+                  {NEXT_STATUS[task.status] ? (
+                    <Pressable style={styles.primaryButton} disabled={savingStatus} onPress={advanceStatus}>
+                      <Text style={styles.primaryButtonText}>{savingStatus ? 'Saving...' : `Move to ${STATUS_LABEL[NEXT_STATUS[task.status] as TaskStatus]}`}</Text>
+                    </Pressable>
+                  ) : (
+                    <Text style={styles.note}>This task is already done.</Text>
+                  )}
+                </View>
+              )}
+
+              <CommentsSection entityType="task" entityId={task.id} />
+            </>
+          )}
+
+          {task && editing && (
+            <View style={styles.formCard}>
+              <Text style={styles.sectionTitle}>Edit task</Text>
+              {editError && <Text style={styles.error}>{editError}</Text>}
+
+              {canEditDetails && (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Task title"
+                    placeholderTextColor="#6f7c92"
+                    value={editTitle}
+                    onChangeText={setEditTitle}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Assignee ID"
+                    placeholderTextColor="#6f7c92"
+                    value={editAssigneeId}
+                    onChangeText={setEditAssigneeId}
+                    autoCapitalize="none"
+                  />
+                  {assignableUsers.length > 0 && (
+                    <View style={styles.selectorList}>
+                      {assignableUsers.map((member) => (
+                        <Pressable
+                          key={member.id}
+                          style={[styles.selectorButton, editAssigneeId === member.id && styles.selectorButtonActive]}
+                          onPress={() => setEditAssigneeId(member.id)}
+                        >
+                          <Text style={[styles.selectorButtonText, editAssigneeId === member.id && styles.selectorButtonTextActive]}>
+                            {member.email}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Due date YYYY-MM-DD"
+                    placeholderTextColor="#6f7c92"
+                    value={editDueDate}
+                    onChangeText={setEditDueDate}
+                    autoCapitalize="none"
+                  />
+                </>
+              )}
+
+              <Text style={styles.sectionTitle}>Checklist</Text>
+              {editItems.length === 0 && <Text style={styles.note}>No checklist items yet.</Text>}
+              {editItems.map((item, index) => (
+                <View key={item.key} style={styles.editChecklistRow}>
+                  <Pressable style={[styles.checkbox, item.done && styles.checkboxChecked]} onPress={() => updateChecklistItem(item.key, { done: !item.done })}>
+                    <Text style={styles.checkboxText}>{item.done ? '✓' : ''}</Text>
+                  </Pressable>
+                  <TextInput
+                    style={styles.editChecklistInput}
+                    placeholder={`Checklist item ${index + 1}`}
+                    placeholderTextColor="#6f7c92"
+                    value={item.text}
+                    onChangeText={(value) => updateChecklistItem(item.key, { text: value })}
+                  />
+                  <Pressable style={styles.smallButton} onPress={() => removeChecklistItem(item.key)}>
+                    <Text style={styles.smallButtonText}>Remove</Text>
+                  </Pressable>
+                </View>
+              ))}
+              <Pressable style={styles.secondaryButton} onPress={addChecklistItem}>
+                <Text style={styles.secondaryButtonText}>Add checklist item</Text>
               </Pressable>
-              <Pressable style={styles.primaryButton} onPress={handleSaveEdit} disabled={savingEdit}>
-                <Text style={styles.primaryButtonText}>{savingEdit ? 'Saving...' : 'Save changes'}</Text>
-              </Pressable>
+
+              <View style={styles.rowActions}>
+                <Pressable style={styles.secondaryButton} onPress={closeEdit} disabled={savingEdit}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.primaryButton} onPress={handleSaveEdit} disabled={savingEdit}>
+                  <Text style={styles.primaryButtonText}>{savingEdit ? 'Saving...' : 'Save changes'}</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </View>
+        </ScrollView>
+
+        {pendingCompletion && (
+          <View style={styles.overlay}>
+            <View style={styles.completionCard}>
+              <Text style={styles.sectionTitle}>Confirm stock deduction</Text>
+              <Text style={styles.note}>Completing this task will deduct the following ingredients:</Text>
+              {pendingCompletion.preview.hasNegativeWarning && (
+                <Text style={styles.warning}>
+                  Warning: at least one ingredient will go below zero on-hand. The deduction will still be applied.
+                </Text>
+              )}
+              <View style={styles.deductionList}>
+                {pendingCompletion.preview.deductions.map((deduction) => (
+                  <View key={deduction.ingredientId} style={styles.deductionRow}>
+                    <Text style={styles.deductionName}>{ingredientNameById[deduction.ingredientId] ?? deduction.ingredientId.slice(0, 8)}</Text>
+                    <Text style={[styles.deductionAmount, deduction.wouldGoNegative && styles.warningText]}>
+                      -{deduction.deductQty} (→ {deduction.resultingStock})
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.rowActions}>
+                <Pressable style={styles.secondaryButton} onPress={cancelCompletion} disabled={confirmingCompletion}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.primaryButton} onPress={confirmCompletion} disabled={confirmingCompletion}>
+                  <Text style={styles.primaryButtonText}>{confirmingCompletion ? 'Confirming...' : 'Confirm'}</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         )}
       </View>
-      </ScrollView>
-
-      {pendingCompletion && (
-        <View style={styles.overlay}>
-          <View style={styles.completionCard}>
-            <Text style={styles.sectionTitle}>Confirm stock deduction</Text>
-            <Text style={styles.note}>Completing this task will deduct the following ingredients:</Text>
-            {pendingCompletion.preview.hasNegativeWarning && (
-              <Text style={styles.warning}>
-                Warning: at least one ingredient will go below zero on-hand. The deduction will still be applied.
-              </Text>
-            )}
-            <View style={styles.deductionList}>
-              {pendingCompletion.preview.deductions.map((deduction) => (
-                <View key={deduction.ingredientId} style={styles.deductionRow}>
-                  <Text style={styles.deductionName}>{ingredientNameById[deduction.ingredientId] ?? deduction.ingredientId.slice(0, 8)}</Text>
-                  <Text style={[styles.deductionAmount, deduction.wouldGoNegative && styles.warningText]}>
-                    -{deduction.deductQty} (→ {deduction.resultingStock})
-                  </Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.rowActions}>
-              <Pressable style={styles.secondaryButton} onPress={cancelCompletion} disabled={confirmingCompletion}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} onPress={confirmCompletion} disabled={confirmingCompletion}>
-                <Text style={styles.primaryButtonText}>{confirmingCompletion ? 'Confirming...' : 'Confirm'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      )}
-    </View>
+    </ScreenFrame>
   );
 }
 
