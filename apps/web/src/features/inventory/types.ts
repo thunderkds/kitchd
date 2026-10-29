@@ -35,7 +35,7 @@ export interface UpdateIngredientInput {
   unit?: string;
   costPerUnit?: number;
   category?: string;
-  minThreshold?: number;
+  minThreshold?: number | null;
 }
 
 export interface ReceiveStockInput {

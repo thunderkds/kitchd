@@ -21,6 +21,11 @@ import type { Ingredient } from './types';
  * `undefined`, never `0` — `Number('')` is `0`, which the alert service's
  * `gt: 0` filter would silently exclude again. Also restored `category` to
  * the edit payload, which this form was dropping.
+ *
+ * T049 — in edit mode a blank input is sent as an explicit `null` so the
+ * stored threshold is actually cleared (an absent key is dropped by
+ * JSON.stringify and the old value would silently persist). Create mode still
+ * omits the key.
  */
 export function IngredientFormDialog({
   ingredient,
@@ -48,7 +53,8 @@ export function IngredientFormDialog({
   const [submitting, setSubmitting] = useState(false);
 
   // Blank -> undefined (never 0 — Number('') is 0, and the alert service
-  // filters `gt: 0`, so a naive conversion would re-create this bug).
+  // filters `gt: 0`, so a naive conversion would re-create this bug);
+  // handleSubmit turns it into an explicit null in edit mode.
   // Non-numeric, negative, and ZERO -> null, a sentinel meaning "block the
   // submit". Zero must be blocked for the same reason blank must not become
   // zero: `AlertsService#lowStock` filters `minThreshold: { not: null, gt: 0 }`,
@@ -82,7 +88,8 @@ export function IngredientFormDialog({
           unit: unit.trim(),
           costPerUnit: Number(costPerUnit),
           category: category.trim() || undefined,
-          minThreshold: parsedThreshold,
+          // Blank -> explicit null so the stored threshold is cleared.
+          minThreshold: parsedThreshold ?? null,
         });
         onUpdated(updated);
       } else {

@@ -112,6 +112,28 @@ describe('Inventory (e2e)', () => {
     expect(res.body.costPerUnit).toBe(3.1);
   });
 
+  it('T049 AC2: PATCH minThreshold null clears a set threshold (200, stored null)', async () => {
+    const owner = await signupOwner();
+    const created = await request(app.getHttpServer())
+      .post('/ingredients')
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send({ name: 'Salt', unit: 'kg', costPerUnit: 1, minThreshold: 5 })
+      .expect(201);
+    expect(created.body.minThreshold).toBe(5);
+
+    const res = await request(app.getHttpServer())
+      .patch(`/ingredients/${created.body.id}`)
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send({ minThreshold: null })
+      .expect(200);
+    expect(res.body.minThreshold).toBeNull();
+
+    const stored = await prisma.ingredient.findUnique({
+      where: { id: created.body.id },
+    });
+    expect(stored!.minThreshold).toBeNull();
+  });
+
   it('AC2: Staff gets 403 attempting to edit an Ingredient', async () => {
     const owner = await signupOwner();
     const staff = await inviteAndAccept(owner.accessToken, 'STAFF');

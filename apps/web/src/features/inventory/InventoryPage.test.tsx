@@ -563,6 +563,52 @@ describe('InventoryPage', () => {
     expect((within(dialog).getByLabelText('Low stock threshold') as HTMLInputElement).value).toBe('');
   });
 
+  // T049 AC1: a blank edit input must send an explicit null — an absent key is
+  // dropped by JSON.stringify and the old stored threshold would persist.
+  it.each([
+    ['cleared', ''],
+    ['whitespace-only', '   '],
+  ])('T049 AC1: edit with a %s threshold input PATCHes minThreshold: null', async (_label, typed) => {
+    setOwner();
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeIngredient({ minThreshold: 5 })] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [makeMovement()] })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeIngredient({ minThreshold: null }),
+      });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <InventoryPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('ingredient-ing-1')).toBeInTheDocument());
+    await user.click(within(screen.getByTestId('ingredient-ing-1')).getByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog');
+
+    const input = within(dialog).getByLabelText('Low stock threshold') as HTMLInputElement;
+    expect(input.value).toBe('5');
+    await user.clear(input);
+    if (typed) await user.type(input, typed);
+    await user.click(within(dialog).getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        expect.stringContaining('/ingredients/ing-1'),
+        expect.objectContaining({ method: 'PATCH' }),
+      ),
+    );
+    const lastCall = fetchMock.mock.calls[fetchMock.mock.calls.length - 1];
+    const sentBody = JSON.parse((lastCall[1] as RequestInit).body as string);
+    expect('minThreshold' in sentBody).toBe(true);
+    expect(sentBody.minThreshold).toBeNull();
+  });
+
   it('Edge case: zero/negative stock values render without crashing', async () => {
     setOwner();
     fetchMock
