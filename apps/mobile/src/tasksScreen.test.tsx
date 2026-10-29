@@ -255,13 +255,16 @@ describe('TasksScreen native quality (M010)', () => {
     expectSafeAreaAndKeyboardAvoidance()
   })
 
-  it('AC3: the create form lives in the list header and keeps its inputs mounted while typing', async () => {
+  it('AC3: the create form lives in the list header and keeps its inputs mounted across screen re-renders', async () => {
     mocked.listTasks.mockResolvedValue([task({ id: 't-todo' })])
+    mocked.fetchAssignableUsers.mockResolvedValue([{ id: 'u2', email: 'cook@example.com' }])
     renderScreen()
 
     fireEvent.press(await screen.findByText('New task'))
     const input = screen.getByPlaceholderText('Task title')
     fireEvent.changeText(input, 'Sli')
+    // Selecting an assignee chip updates screen state, so the screen (and its header element) re-renders.
+    fireEvent.press(await screen.findByText('cook@example.com'))
     fireEvent.changeText(screen.getByPlaceholderText('Task title'), 'Slice')
 
     expect(screen.getByPlaceholderText('Task title')).toBe(input)

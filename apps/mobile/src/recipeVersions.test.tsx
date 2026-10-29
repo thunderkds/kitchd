@@ -186,12 +186,18 @@ describe('RecipesScreen native quality (M010)', () => {
     expectSafeAreaAndKeyboardAvoidance()
   })
 
-  it('AC3: the recipe form in the list header keeps its inputs mounted while typing', async () => {
+  it('AC3: the recipe form in the list header keeps its inputs mounted across screen re-renders', async () => {
+    mocked.listIngredients.mockResolvedValue([
+      { id: 'ing-1', name: 'Onion', unit: 'kg', costPerUnit: 1.5, category: null, allergens: [], supplierId: null, minThreshold: null },
+    ])
     renderScreen()
 
     fireEvent.press(await screen.findByText('New recipe'))
     const name = screen.getByPlaceholderText('Name')
     fireEvent.changeText(name, 'So')
+    // Opening the ingredient picker updates screen state, so the screen (and its header element) re-renders.
+    fireEvent.press(await screen.findByText('Choose ingredient'))
+    await screen.findByText('Onion (kg)')
     fireEvent.changeText(screen.getByPlaceholderText('Name'), 'Soup')
 
     expect(screen.getByPlaceholderText('Name')).toBe(name)

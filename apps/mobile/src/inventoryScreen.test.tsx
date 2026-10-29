@@ -143,7 +143,21 @@ describe('InventoryScreen native quality (M010)', () => {
     expectSafeAreaAndKeyboardAvoidance()
   })
 
-  it('AC1: the receive form on a row still works after the list change', async () => {
+  it('AC3: the create-ingredient form in the list header keeps its inputs mounted across screen re-renders', async () => {
+    renderScreen()
+
+    fireEvent.press(await screen.findByText('Add ingredient'))
+    const name = screen.getByPlaceholderText('Name')
+    fireEvent.changeText(name, 'Gar')
+    // Opening a row's receive form updates screen state, so the screen (and its header element) re-renders.
+    fireEvent.press(await screen.findByText('Receive stock'))
+    fireEvent.changeText(screen.getByPlaceholderText('Name'), 'Garlic')
+
+    expect(screen.getByPlaceholderText('Name')).toBe(name)
+    expect(screen.getByDisplayValue('Garlic')).toBeTruthy()
+  })
+
+  it('AC1: the receive form on a row keeps its input mounted while typing', async () => {
     renderScreen()
 
     fireEvent.press(await screen.findByText('Receive stock'))

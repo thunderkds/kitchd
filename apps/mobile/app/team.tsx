@@ -105,6 +105,7 @@ export default function TeamScreen() {
     <ScreenFrame>
       <FlashList
         data={members}
+        // Guards a future memoised renderItem; the current inline renderItem already re-renders rows on busy.
         extraData={busy}
         keyExtractor={(member) => member.id}
         ListHeaderComponent={header}
