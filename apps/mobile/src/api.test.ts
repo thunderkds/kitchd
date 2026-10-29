@@ -5,6 +5,10 @@ const mockSecureStore = require('./testing/memorySecureStore').createMemorySecur
 >
 
 jest.mock('expo-secure-store', () => mockSecureStore)
+const mockRouterReplace = jest.fn()
+jest.mock('expo-router', () => ({
+  router: { replace: (...args: unknown[]) => mockRouterReplace(...args) },
+}))
 jest.mock('react-native', () => ({
   // storage.ts imports queryClient, which subscribes to AppState for focus refetching.
   AppState: { addEventListener: () => ({ remove: () => undefined }) },
@@ -41,6 +45,7 @@ const originalFetch = globalThis.fetch
 
 beforeEach(() => {
   mockSecureStore.reset()
+  mockRouterReplace.mockReset()
 })
 
 afterEach(() => {
@@ -157,5 +162,63 @@ describe('request(): error status (M004 AC3)', () => {
     })
 
     await expect(api.listTasks()).rejects.toMatchObject({ message: 'Request failed (502)', status: 502 })
+  })
+})
+
+describe('request(): redirect to sign-in after a 401 (M004)', () => {
+  it('navigates to / exactly once after clearing the session on a 401', async () => {
+    const { api, session, storage } = loadModules()
+    await storage.sessionReady
+    await storage.persistSession('token-123', user)
+    mockRouterReplace.mockImplementation(() => {
+      expect(session.getToken()).toBeNull()
+    })
+    globalThis.fetch = jest.fn().mockResolvedValue(mockResponse(401, { message: 'Unauthorized' }))
+
+    await expect(api.listTasks()).rejects.toMatchObject({ message: 'Unauthorized', status: 401 })
+
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1)
+    expect(mockRouterReplace).toHaveBeenCalledWith('/')
+  })
+
+  it('does not navigate for a stale 401 (the token changed while the request was in flight)', async () => {
+    const { api, session, storage } = loadModules()
+    await storage.sessionReady
+    await storage.persistSession('old-token', user)
+    globalThis.fetch = jest.fn().mockImplementation(async () => {
+      session.setToken('new-token')
+      return mockResponse(401, { message: 'Unauthorized' })
+    })
+
+    await expect(api.listTasks()).rejects.toThrow('Unauthorized')
+
+    expect(mockRouterReplace).not.toHaveBeenCalled()
+  })
+
+  it.each([403, 404, 500])('does not navigate on a %i', async (status) => {
+    const { api, storage } = loadModules()
+    await storage.sessionReady
+    await storage.persistSession('token-123', user)
+    globalThis.fetch = jest.fn().mockResolvedValue(mockResponse(status, { message: 'nope' }))
+
+    await expect(api.listTasks()).rejects.toThrow('nope')
+
+    expect(mockRouterReplace).not.toHaveBeenCalled()
+  })
+
+  it('still rejects with the original ApiError when navigating throws (no navigator mounted)', async () => {
+    const { api, storage } = loadModules()
+    await storage.sessionReady
+    await storage.persistSession('token-123', user)
+    mockRouterReplace.mockImplementation(() => {
+      throw new Error('Attempted to navigate before mounting the Root Layout')
+    })
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+    globalThis.fetch = jest.fn().mockResolvedValue(mockResponse(401, { message: 'Unauthorized' }))
+
+    await expect(api.listTasks()).rejects.toMatchObject({ message: 'Unauthorized', status: 401 })
+
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1)
+    warnSpy.mockRestore()
   })
 })

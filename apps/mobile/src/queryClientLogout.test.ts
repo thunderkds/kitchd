@@ -5,6 +5,7 @@ const mockSecureStore = require('./testing/memorySecureStore').createMemorySecur
 >
 
 jest.mock('expo-secure-store', () => mockSecureStore)
+jest.mock('expo-router', () => ({ router: { replace: jest.fn() } }))
 jest.mock('react-native', () => ({
   // storage.ts imports queryClient, which subscribes to AppState for focus refetching.
   AppState: { addEventListener: () => ({ remove: () => undefined }) },

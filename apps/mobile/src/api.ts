@@ -1,5 +1,6 @@
 import type { AuthResponseDto, UserRole } from '@kitchenos/shared';
 import { API_BASE } from './apiBase';
+import { redirectToSignIn } from './onUnauthorized';
 import { session } from './session';
 import { clearSession } from './storage';
 
@@ -270,6 +271,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch (error) {
       console.warn('Failed to clear session after 401', error instanceof Error ? error.message : 'unknown error');
     }
+    redirectToSignIn();
   }
 
   if (!res.ok) {

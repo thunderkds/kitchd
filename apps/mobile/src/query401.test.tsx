@@ -7,6 +7,7 @@ const mockSecureStore = require('./testing/memorySecureStore').createMemorySecur
 >
 
 jest.mock('expo-secure-store', () => mockSecureStore)
+jest.mock('expo-router', () => ({ router: { replace: jest.fn() } }))
 
 // Real api.ts + storage.ts + queryClient: a 401 inside a mounted query clears the session, and with it the
 // cache, while that very query is in flight. queryClient.clear() cancels that fetch silently, so the
