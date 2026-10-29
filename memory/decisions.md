@@ -184,3 +184,18 @@
 **Consequences**: `package-lock.json` is deleted and the root `package.json` drops its npm `workspaces` field (both package managers were declared simultaneously, with both lockfiles tracked — that dual declaration was the root ambiguity). CI and the staging deploy workflow move to `pnpm/action-setup` + `pnpm install --frozen-lockfile`. The dropped `npm install --include=dev` flag becomes `pnpm install --prod=false` — **pnpm skips devDependencies under `NODE_ENV=production` exactly like npm does**, so the original Render failure #1 is not fixed for free by the workspace install. Render config is being moved into a checked-in `render.yaml` rather than dashboard-only fields, because the original deploy chain lost a cycle to a dashboard typo that no review could see.
 
 **Guide**: `tasks/TASK_GUIDE_M001.md`. **Not verifiable end-to-end** — a real Render deploy still can't run (services/secrets don't exist; same human blocker as T023).
+
+### 2026-10-29 — Mobile server state = TanStack Query over the unchanged `api.ts`; cache cleared on every session change
+DDR-0001 implemented in M004. One `QueryClient` (`apps/mobile/src/queryClient.ts`), provider mounted after `sessionReady`, `focusManager` ↔ AppState, never retry 401/403/404. `queryClient.clear()` runs in BOTH `clearSession` and `persistSession` (every logout, 401 and login path reaches one of them). Optimistic rollbacks restore only if the session token is unchanged (`src/optimisticRollback.ts`). A 401 clears the session and navigates to `/` (`src/onUnauthorized.ts`).
+**Files**: `apps/mobile/src/{queryClient,queries,queryKeys,storage,optimisticRollback,onUnauthorized}.ts`
+
+### 2026-10-29 — Mobile realtime: socket bound to the session via a storage subscriber; background-only disconnect
+M009. `startRealtime()` connects only with a token and AppState `active`; the handshake `auth` is a callback so the token is read fresh each time. `storage.ts` exposes `onSessionChange` (notified before the awaited SecureStore writes) to avoid a storage→realtime import cycle. Disconnect on `background` (not `inactive` — iOS flips to inactive for Control Center). Catch-up `invalidateQueries()` on every reconnect except a session's first. `connect_error` nulls the socket so the next `active` rebuilds it. Gateway CORS (`WEB_ORIGIN`) does not affect native clients (verified live, `tasks/TASK_REVIEW_M009.md`).
+**Files**: `apps/mobile/src/realtime.ts`, `apps/mobile/src/storage.ts`, `apps/mobile/app/_layout.tsx`
+
+### 2026-10-29 — Mobile theme: `simple` palette = the legacy hard-coded dark colours
+M006. Only dashboard, announcements and settings consume the palette; 9 screens remain hard-coded. A light `simple` would have produced a mixed UI for every default user, so `simple` is byte-identical to the old literals and Dark Neon is an opt-in accent variant. Rollout to the remaining screens is M018.
+**Files**: `apps/mobile/src/theme.ts`
+
+### 2026-10-29 — Parallel mobile work runs in waves: one worktree per task, merged into an `integ/*` branch
+With ~10 tasks all touching `apps/mobile`, agents ran in parallel in `../kitchd-<ID>` worktrees branched from the previous wave's integration branch, appending to shared files (`api.ts`, `queries.ts`, `queryKeys.ts`, `dashboard.tsx`) in `// <ID>` blocks. A common-infrastructure agent merged branches one at a time (keep-both-sides only; stop on a true conflict), then one batched reviewer covered the wave. Waves: M012/M004 → M006–M017 → M005/M009 → M010.

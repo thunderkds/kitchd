@@ -284,3 +284,18 @@ After M001 moved to pnpm, `vite` dev rendered a blank page (T051): `@kitchenos/s
 ### 2026-10-29 — Route count is 57, not 58; jest "Cannot log after tests are done" exits 1
 (1) M011 recounted every controller route: 59 grep hits, 2 inside a comment — 57 real. T042's "58" was a miscount. (2) M003's agent reported a jest-expo teardown warning (`ExpoModulesCoreJSLogger`, from expo's lazy winter `fetch` global) as "cosmetic", but jest turns log-after-teardown into exit code 1 — every test passed and the runner still failed. **Lesson**: verify a runner by its exit code, never by its "Tests: N passed" line.
 **Files**: `docs/audits/backend-mobile-coverage_2026-10-29.md`, `apps/mobile/jest.config.js`
+
+### 2026-10-29 — TanStack Query in jest: settled mutations keep a 5-min gc timer that `client.clear()` doesn't cancel
+A single-file jest run hangs (exit 124) after the tests pass; the full suite hides it as "A worker process has failed to exit gracefully". Fix: test QueryClients set `mutations: { gcTime: Infinity }` (and `queries: { gcTime: Infinity }` where a test clears the cache under a mounted observer). Also: `mutationFn: apiFn` passes TanStack's context as a 2nd arg — wrap it (`(input) => apiFn(input)`) or `toHaveBeenCalledWith` fails.
+**Files**: `apps/mobile/src/*Screen.test.tsx`, `apps/mobile/src/query401.test.tsx`
+
+### 2026-10-29 — `queryClient.clear()` has two non-obvious effects: silent cancel, and rollback resurrection
+(1) It silently cancels in-flight queries — mounted observers stay on "Loading…" forever (M004 needed an explicit 401 redirect). (2) It does NOT cancel mutations — an `onError` rollback after `clear()` writes the previous (possibly other user's) data back. Guard rollbacks with a session check.
+**Files**: `apps/mobile/src/optimisticRollback.ts`, `apps/mobile/src/onUnauthorized.ts`
+
+### 2026-10-29 — `z.email()` (zod 4) is stricter than class-validator `@IsEmail`
+It rejects unicode local parts and IDN domains (`josé@example.com`, `a@münchen.de`) that the API accepts — on a login form that locks real users out. Client email checks use a permissive shape regex; the API polices format.
+**Files**: `apps/mobile/src/schemas/common.ts`
+
+### 2026-10-29 — Agents must not share a worktree with a concurrent writer
+A reviewer running tests in `kitchd-w3` while a fixer edited it saw "failures" that were the fixer's red-phase tests. Reviewers doing mutation checks now work in a `git archive <sha>` copy with `node_modules` symlinked. Also: `git stash` is shared across worktrees.

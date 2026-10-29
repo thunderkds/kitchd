@@ -171,3 +171,12 @@
 - [Ambient `declare module` stub hid all Prisma types](learnings.md#2026-10-29--an-ambient-declare-module-prismaclient-stub-silently-disabled-all-prisma-type-checking) — probe a permissive typecheck with one bogus field access
 - [Vite dev needs `optimizeDeps` for CJS `@kitchenos/shared`](learnings.md#2026-10-29--vite-dev-needs-optimizedepsinclude-for-the-cjs-workspace-package-build-and-tests-cant-catch-it) — build + tests green, dev blank; `smoke:dev` now covers it
 - [Verify a test runner by exit code, not the pass count](learnings.md#2026-10-29--route-count-is-57-not-58-jest-cannot-log-after-tests-are-done-exits-1) — jest-expo teardown log made a 50/50 run exit 1; also real route count is 57
+- **2026-10-29 mobile waves** — M003/M012/M004/M005/M006–M009/M014–M017 Done on `feat/m001-pnpm-workspace` (406 mobile tests). Device checks pending (no simulator). M013/M018 backlog.
+- [Mobile server state: TanStack Query, cache cleared on every session change](decisions.md#2026-10-29--mobile-server-state--tanstack-query-over-the-unchanged-apits-cache-cleared-on-every-session-change)
+- [Mobile realtime bound to session via storage subscriber; native unaffected by gateway CORS](decisions.md#2026-10-29--mobile-realtime-socket-bound-to-the-session-via-a-storage-subscriber-background-only-disconnect)
+- [Mobile `simple` palette = legacy dark (no mixed UI)](decisions.md#2026-10-29--mobile-theme-simple-palette--the-legacy-hard-coded-dark-colours)
+- [Parallel mobile work in worktree waves + integ branches](decisions.md#2026-10-29--parallel-mobile-work-runs-in-waves-one-worktree-per-task-merged-into-an-integ-branch)
+- [TanStack mutation gc timer hangs single-file jest runs](learnings.md#2026-10-29--tanstack-query-in-jest-settled-mutations-keep-a-5-min-gc-timer-that-clientclear-doesnt-cancel) — `gcTime: Infinity` in test clients
+- [`queryClient.clear()` silently cancels queries but not mutation rollbacks](learnings.md#2026-10-29--queryclientclear-has-two-non-obvious-effects-silent-cancel-and-rollback-resurrection)
+- [`z.email()` stricter than `@IsEmail` — locks out unicode emails](learnings.md#2026-10-29--zemail-zod-4-is-stricter-than-class-validator-isemail)
+- [Never share a worktree with a concurrent writer; review in a `git archive` copy](learnings.md#2026-10-29--agents-must-not-share-a-worktree-with-a-concurrent-writer)
