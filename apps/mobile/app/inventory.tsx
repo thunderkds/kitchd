@@ -1,22 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createIngredient,
-  currentStockFromMovements,
-  listIngredients,
-  listMovements,
   receiveStock,
   updateIngredient,
-  type Ingredient,
+  type CreateIngredientInput,
+  type ReceiveStockInput,
 } from '../src/api';
+import { queryErrorMessage, useIngredientRows, type IngredientRow } from '../src/queries';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
-
-type IngredientRow = Ingredient & {
-  currentStock: number | null;
-};
 
 type IngredientFormState = {
   name: string;
@@ -39,9 +36,20 @@ export default function InventoryScreen() {
   const caller = session.getUser();
   const canManage = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
-  const [ingredients, setIngredients] = useState<IngredientRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const ingredientsQuery = useIngredientRows(!!caller);
+  const ingredients = useMemo(() => ingredientsQuery.data ?? [], [ingredientsQuery.data]);
+  const loading = ingredientsQuery.isLoading;
+  const saveMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string | null; payload: CreateIngredientInput }) =>
+      id ? updateIngredient(id, payload) : createIngredient(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+  });
+  const receiveMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: ReceiveStockInput }) => receiveStock(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+  });
+  const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<IngredientRow | null>(null);
   const [form, setForm] = useState<IngredientFormState>(EMPTY_FORM);
@@ -50,38 +58,13 @@ export default function InventoryScreen() {
   const [receiveQty, setReceiveQty] = useState('');
   const [savingReceiveId, setSavingReceiveId] = useState<string | null>(null);
 
+  const error = actionError ?? queryErrorMessage(ingredientsQuery.error, 'Failed to load ingredients');
+
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
-
-    void loadIngredients();
   }, [caller, router]);
-
-  const loadIngredients = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const items = await listIngredients();
-      const rows = await Promise.all(
-        items.map(async (ingredient) => {
-          try {
-            const movements = await listMovements(ingredient.id);
-            return { ...ingredient, currentStock: currentStockFromMovements(movements) };
-          } catch {
-            return { ...ingredient, currentStock: null };
-          }
-        }),
-      );
-      setIngredients(rows);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load ingredients');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openCreate = () => {
     if (!canManage) return;
@@ -135,13 +118,8 @@ export default function InventoryScreen() {
     };
 
     try {
-      if (editing) {
-        await updateIngredient(editing.id, payload);
-      } else {
-        await createIngredient(payload);
-      }
+      await saveMutation.mutateAsync({ id: editing ? editing.id : null, payload });
       closeForm();
-      await loadIngredients();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save ingredient');
     } finally {
@@ -170,10 +148,9 @@ export default function InventoryScreen() {
     setError(null);
 
     try {
-      await receiveStock(ingredient.id, { qty });
+      await receiveMutation.mutateAsync({ id: ingredient.id, input: { qty } });
       setReceivingId(null);
       setReceiveQty('');
-      await loadIngredients();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record stock receipt');
     } finally {

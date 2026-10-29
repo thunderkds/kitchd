@@ -235,6 +235,18 @@ export interface PendingInvite {
   createdAt: string;
 }
 
+// Carries the HTTP status so callers (the query retry policy) can tell a 401/403/404 from a
+// transient failure. The message is exactly what `request()` has always thrown.
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -261,7 +273,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!res.ok) {
-    throw new Error(data?.message ?? `Request failed (${res.status})`);
+    throw new ApiError(data?.message ?? `Request failed (${res.status})`, res.status);
   }
 
   return data as T;

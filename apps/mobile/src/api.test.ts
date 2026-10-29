@@ -6,6 +6,8 @@ const mockSecureStore = require('./testing/memorySecureStore').createMemorySecur
 
 jest.mock('expo-secure-store', () => mockSecureStore)
 jest.mock('react-native', () => ({
+  // storage.ts imports queryClient, which subscribes to AppState for focus refetching.
+  AppState: { addEventListener: () => ({ remove: () => undefined }) },
   Platform: {
     OS: 'ios',
   },
@@ -131,5 +133,29 @@ describe('request(): 401 handling (M012 F1)', () => {
 
     await expect(api.listTasks()).resolves.toEqual([{ id: 't1' }])
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer token-123')
+  })
+})
+
+describe('request(): error status (M004 AC3)', () => {
+  it.each([401, 403, 404, 500])('attaches status %i to the thrown error and keeps the message', async (status) => {
+    const { api, storage } = loadModules()
+    await storage.sessionReady
+    globalThis.fetch = jest.fn().mockResolvedValue(mockResponse(status, { message: 'nope' }))
+
+    await expect(api.listTasks()).rejects.toMatchObject({ message: 'nope', status })
+  })
+
+  it('attaches the status when the error body is not JSON, with the generic message unchanged', async () => {
+    const { api, storage } = loadModules()
+    await storage.sessionReady
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new Error('not json')
+      },
+    })
+
+    await expect(api.listTasks()).rejects.toMatchObject({ message: 'Request failed (502)', status: 502 })
   })
 })

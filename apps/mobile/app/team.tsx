@@ -1,46 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { listMembers, type TeamMember } from '../src/api';
+import { queryErrorMessage, useMembers } from '../src/queries';
 import { session } from '../src/session';
 
 export default function TeamScreen() {
   const router = useRouter();
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const signedIn = !!session.getUser();
+  const membersQuery = useMembers(signedIn);
+  const members = membersQuery.data ?? [];
+  const loading = membersQuery.isLoading;
+  const error = queryErrorMessage(membersQuery.error, 'Failed to load team');
 
   useEffect(() => {
-    if (!session.getUser()) {
+    if (!signedIn) {
       router.replace('/');
-      return;
     }
-
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    listMembers()
-      .then((items) => {
-        if (!cancelled) {
-          setMembers(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load team');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
+  }, [router, signedIn]);
 
   return (
     <View style={styles.screen}>

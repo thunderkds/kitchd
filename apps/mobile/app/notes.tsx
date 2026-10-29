@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { createNote, deleteNote, listNotes, updateNote, type Note, type NoteScope } from '../src/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createNote, deleteNote, updateNote, type Note, type NoteScope } from '../src/api';
+import { queryErrorMessage, useNotes } from '../src/queries';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const NOTE_SCOPES: NoteScope[] = ['mine', 'team'];
@@ -20,9 +23,12 @@ export default function NotesScreen() {
 
   const [scope, setScope] = useState<NoteScope>('team');
   const [tagQuery, setTagQuery] = useState('');
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const notesQuery = useNotes({ scope, tag: tagQuery.trim() || undefined }, !!caller);
+  const notes = useMemo(() => notesQuery.data ?? [], [notesQuery.data]);
+  // Also "loading" while the previous filter's notes are shown as placeholder for the new filter.
+  const loading = notesQuery.isLoading || notesQuery.isPlaceholderData;
+  const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
@@ -33,37 +39,50 @@ export default function NotesScreen() {
     return [...notes].sort((a, b) => Number(b.pinned) - Number(a.pinned));
   }, [notes]);
 
+  const error = actionError ?? queryErrorMessage(notesQuery.error, 'Failed to load notes');
+
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
+  }, [caller, router]);
 
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
+  const createMutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notes.all }),
+  });
 
-    listNotes({ scope, tag: tagQuery.trim() || undefined })
-      .then((items) => {
-        if (!cancelled) {
-          setNotes(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load notes');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+  const pinMutation = useMutation({
+    mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => updateNote(id, { pinned }),
+    onMutate: async ({ id, pinned }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notes.all });
+      const previous = queryClient.getQueriesData<Note[]>({ queryKey: queryKeys.notes.all });
+      queryClient.setQueriesData<Note[]>({ queryKey: queryKeys.notes.all }, (current) =>
+        current?.map((item) => (item.id === id ? { ...item, pinned } : item)),
+      );
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.notes.all }),
+  });
 
-    return () => {
-      cancelled = true;
-    };
-  }, [caller, scope, tagQuery, router]);
+  const deleteMutation = useMutation({
+    mutationFn: deleteNote,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notes.all });
+      const previous = queryClient.getQueriesData<Note[]>({ queryKey: queryKeys.notes.all });
+      queryClient.setQueriesData<Note[]>({ queryKey: queryKeys.notes.all }, (current) =>
+        current?.filter((item) => item.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.notes.all }),
+  });
 
   const openForm = () => {
     setNewTitle('');
@@ -77,11 +96,6 @@ export default function NotesScreen() {
     setNewTitle('');
     setNewBody('');
     setNewTags('');
-  };
-
-  const refresh = async () => {
-    const items = await listNotes({ scope, tag: tagQuery.trim() || undefined });
-    setNotes(items);
   };
 
   const handleCreate = async () => {
@@ -99,12 +113,11 @@ export default function NotesScreen() {
     setError(null);
 
     try {
-      const created = await createNote({
+      await createMutation.mutateAsync({
         title: newTitle.trim() || undefined,
         body: newBody.trim(),
         tags,
       });
-      setNotes((current) => [created, ...current]);
       closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create note');
@@ -115,20 +128,12 @@ export default function NotesScreen() {
 
   const togglePin = async (note: Note) => {
     const nextPinned = !note.pinned;
-    const previous = notes;
     setSavingId(note.id);
     setError(null);
-    setNotes((current) =>
-      current
-        .map((item) => (item.id === note.id ? { ...item, pinned: nextPinned } : item))
-        .sort((a, b) => Number(b.pinned) - Number(a.pinned)),
-    );
 
     try {
-      const updated = await updateNote(note.id, { pinned: nextPinned });
-      setNotes((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      await pinMutation.mutateAsync({ id: note.id, pinned: nextPinned });
     } catch (err) {
-      setNotes(previous);
       setError(err instanceof Error ? err.message : 'Failed to update note');
     } finally {
       setSavingId(null);
@@ -136,15 +141,12 @@ export default function NotesScreen() {
   };
 
   const removeNote = async (note: Note) => {
-    const previous = notes;
     setSavingId(note.id);
     setError(null);
-    setNotes((current) => current.filter((item) => item.id !== note.id));
 
     try {
-      await deleteNote(note.id);
+      await deleteMutation.mutateAsync(note.id);
     } catch (err) {
-      setNotes(previous);
       setError(err instanceof Error ? err.message : 'Failed to delete note');
     } finally {
       setSavingId(null);

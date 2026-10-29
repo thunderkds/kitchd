@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { createAnnouncement, listAnnouncements, type Announcement } from '../src/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createAnnouncement } from '../src/api';
+import { queryErrorMessage, useAnnouncements } from '../src/queries';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const BROADCAST_ROLES = ['OWNER', 'CHEF'] as const;
@@ -11,36 +14,25 @@ export default function AnnouncementsScreen() {
   const caller = session.getUser();
   const canBroadcast = !!caller && BROADCAST_ROLES.includes(caller.role as (typeof BROADCAST_ROLES)[number]);
 
-  const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const announcementsQuery = useAnnouncements(!!caller);
+  const announcements = announcementsQuery.data ?? null;
+  const broadcastMutation = useMutation({
+    mutationFn: createAnnouncement,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.announcements.all }),
+  });
+  const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const error = actionError ?? queryErrorMessage(announcementsQuery.error, 'Failed to load announcements');
+
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
-
-    let cancelled = false;
-
-    listAnnouncements()
-      .then((items) => {
-        if (!cancelled) {
-          setAnnouncements(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load announcements');
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
   }, [caller, router]);
 
   const openForm = () => {
@@ -70,8 +62,7 @@ export default function AnnouncementsScreen() {
     setError(null);
 
     try {
-      const created = await createAnnouncement({ title: cleanTitle, body: cleanBody });
-      setAnnouncements((current) => [created, ...(current ?? [])]);
+      await broadcastMutation.mutateAsync({ title: cleanTitle, body: cleanBody });
       closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to broadcast announcement');
