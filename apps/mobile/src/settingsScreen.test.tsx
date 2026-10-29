@@ -38,6 +38,8 @@ const userWith = (role: StoredUser['role'], themePreference?: StoredUser['themeP
 
 function renderScreen() {
   const client = createQueryClient()
+  // A finished mutation keeps a 5-minute gc timer that client.clear() does not cancel, which holds jest open.
+  client.setDefaultOptions({ ...client.getDefaultOptions(), mutations: { gcTime: Infinity } })
   clients.push(client)
   const store = createThemeStore()
   const view = render(
