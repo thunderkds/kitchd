@@ -499,3 +499,15 @@ export function confirmTaskCompletion(id: string): Promise<CompletionResult> {
     method: 'POST',
   });
 }
+
+// M017
+export function updateMemberRole(id: string, role: UserRole): Promise<TeamMember> {
+  return request<TeamMember>(`/users/${id}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
+}
+
+export function removeMember(id: string): Promise<TeamMember> {
+  return request<TeamMember>(`/users/${id}`, { method: 'DELETE' });
+}

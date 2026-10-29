@@ -134,6 +134,17 @@ export default function HomeScreen() {
         </Pressable>
 
         {message && <Text style={styles.note}>{message}</Text>}
+
+        {/* M017 / T043: signup creates a NEW org, so an invitee must go to invite acceptance
+            instead. Works signed-out and without the deep link (token pasted manually). */}
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="I have an invite"
+          style={styles.linkButton}
+          onPress={() => router.push('/invite/accept')}
+        >
+          <Text style={styles.linkButtonText}>I have an invite</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -221,5 +232,15 @@ const styles = StyleSheet.create({
     color: '#8f9db4',
     fontSize: 13,
     lineHeight: 18,
+  },
+  linkButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  linkButtonText: {
+    color: '#86a0ff',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

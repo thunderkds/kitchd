@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   currentStockFromMovements,
   fetchAssignableUsers,
@@ -11,9 +11,12 @@ import {
   listPendingInvites,
   listRecipes,
   listTasks,
+  removeMember,
+  updateMemberRole,
   type Ingredient,
   type NoteScope,
 } from './api';
+import type { UserRole } from '@kitchenos/shared';
 import { queryKeys } from './queryKeys';
 
 export type IngredientRow = Ingredient & {
@@ -90,4 +93,21 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
   }
 
   return error instanceof Error ? error.message : fallback;
+}
+
+// M017
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, role }: { id: string; role: UserRole }) => updateMemberRole(id, role),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.members.all }),
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => removeMember(id),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.members.all }),
+  });
 }
