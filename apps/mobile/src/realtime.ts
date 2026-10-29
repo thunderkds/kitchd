@@ -16,6 +16,10 @@ const EVENT_INVALIDATIONS: Record<string, ReadonlyArray<readonly unknown[]>> = {
 };
 
 let socket: Socket | null = null;
+// True once a socket has connected for the current session. A later `connect` (a new socket after
+// backgrounding, or socket.io's own reconnect) must catch up on events the server never replays;
+// the first connect after start or login has nothing to catch up on.
+let hasConnected = false;
 let stop: (() => void) | null = null;
 
 function disconnect(): void {
@@ -44,6 +48,13 @@ function connect(): void {
     auth: (callback) => callback({ token: session.getToken() ?? '' }),
   });
 
+  next.on('connect', () => {
+    if (hasConnected) {
+      void queryClient.invalidateQueries();
+    }
+    hasConnected = true;
+  });
+
   for (const [event, keys] of Object.entries(EVENT_INVALIDATIONS)) {
     next.on(event, () => {
       for (const queryKey of keys) {
@@ -63,17 +74,23 @@ export function startRealtime(): () => void {
   }
 
   const appStateSubscription = AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      // Repeated 'active' events must not stack sockets.
-      if (!socket) {
-        connect();
-      }
+    // Only `background` closes the socket. iOS reports `inactive` for Control Center, the
+    // notification shade and the app-switcher peek, and dropping the connection for those churns it.
+    if (state === 'background') {
+      disconnect();
       return;
     }
 
-    disconnect();
+    // `active` (or `inactive` -> `active`) reconnects only when there is no socket.
+    if (state === 'active' && !socket) {
+      connect();
+    }
   });
-  const unsubscribeSession = onSessionChange(connect);
+  const unsubscribeSession = onSessionChange(() => {
+    // Login or logout: a different session, so its first connect is a first connect again.
+    hasConnected = false;
+    connect();
+  });
 
   connect();
 
@@ -81,6 +98,7 @@ export function startRealtime(): () => void {
     appStateSubscription.remove();
     unsubscribeSession();
     disconnect();
+    hasConnected = false;
     stop = null;
   };
 

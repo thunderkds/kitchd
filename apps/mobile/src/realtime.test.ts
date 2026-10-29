@@ -264,12 +264,34 @@ describe('AppState and logout (M009 AC3)', () => {
     expect(mockIo).toHaveBeenCalledTimes(1)
   })
 
-  it('also disconnects on inactive (iOS app switcher / call overlay is not foreground)', async () => {
+  it('keeps the connection on inactive (Control Center, notification shade, app switcher peek)', async () => {
     const { realtime } = await signedIn()
     realtime.startRealtime()
     const socket = lastSocket()
 
     setAppState('inactive')
+
+    expect(socket.disconnect).not.toHaveBeenCalled()
+    expect(socket.removeAllListeners).not.toHaveBeenCalled()
+  })
+
+  it('inactive -> active does not open a new socket', async () => {
+    const { realtime } = await signedIn()
+    realtime.startRealtime()
+
+    setAppState('inactive')
+    setAppState('active')
+
+    expect(mockIo).toHaveBeenCalledTimes(1)
+  })
+
+  it('inactive -> background still disconnects', async () => {
+    const { realtime } = await signedIn()
+    realtime.startRealtime()
+    const socket = lastSocket()
+
+    setAppState('inactive')
+    setAppState('background')
 
     expect(socket.disconnect).toHaveBeenCalled()
   })
@@ -362,5 +384,56 @@ describe('AppState and logout (M009 AC3)', () => {
     await storage.persistSession('token-b', user)
     setAppState('active')
     expect(mockIo).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('catch-up on reconnect (events missed while backgrounded are not replayed)', () => {
+  async function started() {
+    const modules = await signedIn()
+    const spy = jest.spyOn(modules.queryClient, 'invalidateQueries')
+    modules.realtime.startRealtime()
+    const connected = () => lastSocket().handlers['connect']?.()
+    return { ...modules, spy, connected }
+  }
+
+  it('does not invalidate on the first connect after start', async () => {
+    const { spy, connected } = await started()
+
+    connected()
+
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('invalidates everything once on the connect after a background -> active cycle', async () => {
+    const { spy, connected } = await started()
+    connected()
+    setAppState('background')
+    setAppState('active')
+
+    connected()
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith()
+  })
+
+  it('invalidates on a socket.io automatic reconnect (second connect on the same socket)', async () => {
+    const { spy, connected } = await started()
+    connected()
+
+    connected()
+
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not invalidate on the first connect after login, even after an earlier session connected', async () => {
+    const { spy, connected, storage } = await started()
+    connected()
+    await storage.clearSession()
+
+    await storage.persistSession('token-b', user)
+    spy.mockClear()
+    connected()
+
+    expect(spy).not.toHaveBeenCalled()
   })
 })
