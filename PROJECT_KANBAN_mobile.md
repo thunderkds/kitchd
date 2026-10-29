@@ -26,13 +26,13 @@
 **Wave A — pay down the M000 debt (must clear before new features)**
 
 **Wave B — close the stack gap**
-- [ ] **M004** — Adopt the decided server-state stack: `apps/mobile/src/api.ts` is 478 lines of hand-rolled `fetch`; the roadmap locked TanStack Query. Decide keep-vs-adopt explicitly (DDR), then apply. | frontend-developer | C3 | Risk: Medium | P1 | ⚠️ guide not yet written | 🔄 In Progress (worktree ../kitchd-M004, branch task/M004)
+- [ ] **M004** — Adopt the decided server-state stack: `apps/mobile/src/api.ts` is 478 lines of hand-rolled `fetch`; the roadmap locked TanStack Query. Decide keep-vs-adopt explicitly (DDR), then apply. | frontend-developer | C3 | Risk: Medium | P1 | ⚠️ guide not yet written | 👀 Ready for Review (task/M004 872322c+c56e9f8)
 - [ ] **M005** — Forms + validation: React Hook Form + Zod on mobile create/edit screens (none present today). | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
 
 **Wave C — remaining parity screens**
-- [ ] **M006** — Settings screen + theme switcher (`PATCH /users/me/theme`); mobile has no theme handling at all, so the T025/T026 theme system is web-only. | mobile-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M006.md` | Linear HUN-100
-- [ ] **M007** — Comments + @mentions (T015) on mobile — no consumer exists. | mobile-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M007.md` | Linear HUN-101
-- [ ] **M008** — Notification centre (T016 bell/unread/mark-read) on mobile — no consumer exists. | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M008.md` | Linear HUN-102
+- [ ] **M006** — Settings screen + theme switcher (`PATCH /users/me/theme`); mobile has no theme handling at all, so the T025/T026 theme system is web-only. | mobile-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M006.md` | Linear HUN-100 | 🔄 In Progress (worktree ../kitchd-M006, branch task/M006)
+- [ ] **M007** — Comments + @mentions (T015) on mobile — no consumer exists. | mobile-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M007.md` | Linear HUN-101 | 🔄 In Progress (worktree ../kitchd-M007, branch task/M007)
+- [ ] **M008** — Notification centre (T016 bell/unread/mark-read) on mobile — no consumer exists. | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M008.md` | Linear HUN-102 | 🔄 In Progress (worktree ../kitchd-M008, branch task/M008)
 - [ ] **M009** — Socket.IO realtime (T017) on mobile, including background/foreground reconnect (flagged as a risk in the roadmap). | mobile-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_M009.md` | Linear HUN-103
 
 **Wave D — native quality pass (Roadmap Phase 4)**
@@ -41,10 +41,10 @@
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
 - [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) + M012 P3 residuals (`storage.ts:75` error-object log, no redirect after 401) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
-- [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M014.md` | Linear HUN-109
-- [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M015.md` | Linear HUN-110
-- [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M016.md` | Linear HUN-111
-- [ ] **M017** — Team management (change role / remove member) + an "I have an invite" entry on the login screen — M011 gap + reachability | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M017.md` | Linear HUN-112
+- [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M014.md` | Linear HUN-109 | 🔄 In Progress (worktree ../kitchd-M014, branch task/M014)
+- [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M015.md` | Linear HUN-110 | 🔄 In Progress (worktree ../kitchd-M015, branch task/M015)
+- [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M016.md` | Linear HUN-111 | 🔄 In Progress (worktree ../kitchd-M016, branch task/M016)
+- [ ] **M017** — Team management (change role / remove member) + an "I have an invite" entry on the login screen — M011 gap + reachability | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M017.md` | Linear HUN-112 | 🔄 In Progress (worktree ../kitchd-M017, branch task/M017)
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
