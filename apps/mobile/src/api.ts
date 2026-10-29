@@ -550,3 +550,31 @@ export function listExpiringSoon(days?: number): Promise<ExpiringSoonBatch[]> {
   const query = days ? `?days=${days}` : '';
   return request<ExpiringSoonBatch[]>(`/inventory/alerts/expiring${query}`);
 }
+
+// M014
+export type Shift = 'MORNING' | 'EVENING';
+
+export interface ShiftLog {
+  id: string;
+  kitchenId: string;
+  authorId: string;
+  shift: Shift;
+  body: string;
+  createdAt: string;
+}
+
+export interface CreateShiftLogInput {
+  shift: Shift;
+  body: string;
+}
+
+export function listShiftLogs(): Promise<ShiftLog[]> {
+  return request<ShiftLog[]>('/shift-logs');
+}
+
+export function createShiftLog(input: CreateShiftLogInput): Promise<ShiftLog> {
+  return request<ShiftLog>('/shift-logs', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}

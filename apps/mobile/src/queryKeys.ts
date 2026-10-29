@@ -43,6 +43,11 @@ export const queryKeys = {
     lowStock: () => ['alerts', 'lowStock'] as const,
     expiring: () => ['alerts', 'expiring'] as const,
   },
+  // M014
+  shiftLogs: {
+    all: ['shiftLogs'] as const,
+    list: () => ['shiftLogs', 'list'] as const,
+  },
 };
 
 // M016

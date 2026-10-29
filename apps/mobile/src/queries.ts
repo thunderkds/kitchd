@@ -113,3 +113,10 @@ export function useExpiringSoon(enabled = true) {
   // Arrow wrapper so react-query's context arg is never mistaken for the `days` parameter.
   return useQuery({ queryKey: queryKeys.alerts.expiring(), queryFn: () => listExpiringSoon(), enabled });
 }
+
+// M014
+import { listShiftLogs } from './api';
+
+export function useShiftLogs(enabled = true) {
+  return useQuery({ queryKey: queryKeys.shiftLogs.list(), queryFn: listShiftLogs, enabled });
+}
