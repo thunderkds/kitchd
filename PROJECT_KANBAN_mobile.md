@@ -12,6 +12,7 @@
 > Task line format: **Mxxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Done
+- [x] **M010** — FlashList on tasks/inventory/recipes/notes/shift-logs/notifications/team, `ScreenFrame` (safe area + keyboard avoidance), forms in a stable list header; expo-image + Reanimated cut | mobile-developer | C2 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M010.md` | Review: `tasks/TASK_REVIEW_M010.md` | Linear HUN-104 | Done: 2026-10-29 (device check pending)
 - [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
 - [x] **M005** — Forms: React Hook Form + Zod on 9 screens, rules mirror the API DTOs, zero calls on invalid submit; fixed blank-cost-as-0 and edit-threshold-null | mobile-developer | Review: `tasks/TASK_REVIEW_M005.md` | Linear HUN-99 | Done: 2026-10-29 (device check pending)
 - [x] **M009** — Socket.IO realtime: JWT per handshake, background-only disconnect, reconnect catch-up, connect_error recovery; native clients unaffected by gateway CORS (verified live) | mobile-developer | Review: `tasks/TASK_REVIEW_M009.md` | Linear HUN-103 | Done: 2026-10-29 (device check pending)
@@ -40,7 +41,6 @@
 **Wave C — remaining parity screens**
 
 **Wave D — native quality pass (Roadmap Phase 4)**
-- [ ] **M010** — FlashList on list-heavy screens (tasks/inventory/recipes/notes), `expo-image`, keyboard + safe-area handling, Reanimated only where it earns it. | frontend-developer | C2 | Risk: Low | P2 | ⚠️ guide not yet written | 🔄 In Progress (worktree ../kitchd-M010, branch task/M010)
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
