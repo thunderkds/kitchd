@@ -578,3 +578,28 @@ export function createShiftLog(input: CreateShiftLogInput): Promise<ShiftLog> {
     body: JSON.stringify(input),
   });
 }
+
+// M008
+export type NotificationType = 'MENTION' | 'LOW_STOCK' | 'TASK_ASSIGNED';
+
+export interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  body: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationFeed {
+  notifications: NotificationItem[];
+  unreadCount: number;
+}
+
+export function fetchNotifications(): Promise<NotificationFeed> {
+  return request<NotificationFeed>('/notifications');
+}
+
+// The controller takes no body: it marks every unread notification of the caller as read.
+export function markNotificationsRead(): Promise<{ unreadCount: number }> {
+  return request<{ unreadCount: number }>('/notifications/mark-read', { method: 'POST' });
+}

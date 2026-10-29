@@ -48,6 +48,11 @@ export const queryKeys = {
     all: ['shiftLogs'] as const,
     list: () => ['shiftLogs', 'list'] as const,
   },
+  // M008
+  notifications: {
+    all: ['notifications'] as const,
+    feed: () => ['notifications', 'feed'] as const,
+  },
 };
 
 // M016

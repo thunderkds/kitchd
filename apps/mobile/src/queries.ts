@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   currentStockFromMovements,
   fetchAssignableUsers,
+  fetchNotifications,
   listAnnouncements,
   listExpiringSoon,
   listGuidelines,
@@ -119,4 +120,9 @@ import { listShiftLogs } from './api';
 
 export function useShiftLogs(enabled = true) {
   return useQuery({ queryKey: queryKeys.shiftLogs.list(), queryFn: listShiftLogs, enabled });
+}
+
+// M008
+export function useNotifications(enabled = true) {
+  return useQuery({ queryKey: queryKeys.notifications.feed(), queryFn: fetchNotifications, enabled });
 }

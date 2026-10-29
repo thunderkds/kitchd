@@ -4,10 +4,12 @@ import { clearSession } from '../src/storage';
 import { session } from '../src/session';
 import { signOut } from '../src/signOut';
 import { AlertWidgets } from '../src/components/AlertWidgets';
+import { useNotifications } from '../src/queries';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const user = session.getUser();
+  const unreadCount = useNotifications(!!user).data?.unreadCount ?? 0;
 
   if (!user) {
     router.replace('/');
@@ -53,6 +55,14 @@ export default function DashboardScreen() {
         </Pressable>
         <Pressable style={styles.secondaryButton} onPress={() => router.push('/shift-logs')}>
           <Text style={styles.secondaryButtonText}>Open shift log</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryButton} onPress={() => router.push('/notifications')}>
+          <Text style={styles.secondaryButtonText}>Open notifications</Text>
+          {unreadCount > 0 && (
+            <View style={styles.badge} testID="notifications-unread-badge">
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
         </Pressable>
         <Pressable style={styles.primaryButton} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
           <Text style={styles.primaryButtonText}>Sign out</Text>
@@ -115,6 +125,23 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#f4f7ff',
     fontSize: 16,
+    fontWeight: '800',
+  },
+  badge: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 11,
+    backgroundColor: '#ff6b6b',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 12,
     fontWeight: '800',
   },
   primaryButton: {
