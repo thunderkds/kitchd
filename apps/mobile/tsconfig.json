@@ -8,7 +8,14 @@
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "jest"
+    ]
   },
-  "include": ["app", "src", "expo-env.d.ts"]
+  "include": [
+    "app",
+    "src",
+    "expo-env.d.ts"
+  ]
 }
