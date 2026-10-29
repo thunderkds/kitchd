@@ -579,6 +579,39 @@ export function createShiftLog(input: CreateShiftLogInput): Promise<ShiftLog> {
   });
 }
 
+// M007 — comments (GET/POST /comments, DELETE /comments/:id). Entity types mirror the API's entity-type.ts.
+export type CommentEntityType = LinkedEntityType;
+
+export interface CommentItem {
+  id: string;
+  entityType: CommentEntityType;
+  entityId: string;
+  authorId: string;
+  body: string;
+  mentions: string[];
+  parentId: string | null;
+  createdAt: string;
+}
+
+export interface CreateCommentInput {
+  entityType: CommentEntityType;
+  entityId: string;
+  body: string;
+  parentId?: string;
+}
+
+export function listComments(entityType: CommentEntityType, entityId: string): Promise<CommentItem[]> {
+  const params = new URLSearchParams({ entityType, entityId });
+  return request<CommentItem[]>(`/comments?${params.toString()}`);
+}
+
+export function createComment(input: CreateCommentInput): Promise<CommentItem> {
+  return request<CommentItem>('/comments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 // M008
 export type NotificationType = 'MENTION' | 'LOW_STOCK' | 'TASK_ASSIGNED';
 
@@ -602,4 +635,8 @@ export function fetchNotifications(): Promise<NotificationFeed> {
 // The controller takes no body: it marks every unread notification of the caller as read.
 export function markNotificationsRead(): Promise<{ unreadCount: number }> {
   return request<{ unreadCount: number }>('/notifications/mark-read', { method: 'POST' });
+}
+
+export function deleteComment(id: string): Promise<{ id: string }> {
+  return request<{ id: string }>(`/comments/${id}`, { method: 'DELETE' });
 }

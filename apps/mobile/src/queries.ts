@@ -126,3 +126,15 @@ export function useShiftLogs(enabled = true) {
 export function useNotifications(enabled = true) {
   return useQuery({ queryKey: queryKeys.notifications.feed(), queryFn: fetchNotifications, enabled });
 }
+
+// M007
+import { listComments, type CommentEntityType } from './api';
+import { commentKeys } from './queryKeys';
+
+export function useComments(entityType: CommentEntityType, entityId: string, enabled = true) {
+  return useQuery({
+    queryKey: commentKeys.list(entityType, entityId),
+    queryFn: () => listComments(entityType, entityId),
+    enabled,
+  });
+}

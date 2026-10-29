@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   confirmTaskCompletion,
@@ -22,6 +22,7 @@ import {
   type Task,
   type TaskStatus,
 } from '../../src/api';
+import { CommentsSection } from '../../src/commentsSection';
 import { session } from '../../src/session';
 
 type PendingCompletion = {
@@ -410,6 +411,7 @@ export default function TaskDetailScreen() {
 
   return (
     <View style={styles.screen}>
+      <ScrollView keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <View style={styles.headerCopy}>
@@ -471,6 +473,8 @@ export default function TaskDetailScreen() {
                 )}
               </View>
             )}
+
+            <CommentsSection entityType="task" entityId={task.id} />
           </>
         )}
 
@@ -556,6 +560,7 @@ export default function TaskDetailScreen() {
           </View>
         )}
       </View>
+      </ScrollView>
 
       {pendingCompletion && (
         <View style={styles.overlay}>
