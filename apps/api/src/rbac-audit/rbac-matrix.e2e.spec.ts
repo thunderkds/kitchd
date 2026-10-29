@@ -6,6 +6,9 @@ import { PrismaService } from '../prisma/prisma.service';
 
 // T019 — RBAC enforcement audit across all CRUD (FR-018, US-010).
 //
+// T050: the /users routes (invites, roster, role change, removal, assignable,
+// theme) are now covered by the 'Users module matrix' block below.
+//
 // Scope correction (2026-07-05, Supervisor): audits only the 4 modules
 // that exist today — Inventory, Recipes, Guidelines, Tasks (including the
 // T011 task-completion sub-resource). Notes/Announcements/ShiftLog/
@@ -792,6 +795,179 @@ describe('RBAC matrix audit (e2e)', () => {
   });
 
   // =========================================================================
+  // T050 — Matrix: Users (team management + invites). Only Owner (and Admin)
+  // may manage the roster/invites; Chef additionally reads GET /users/assignable
+  // (T040 assignee picker, id/email only). PATCH /users/me/theme is
+  // self-service for every authenticated role. Admin is listed in the
+  // decorators but cannot currently be created via any code path (see
+  // memory/learnings.md 2026-07-06 Admin-role-unreachable finding), so it is
+  // not exercised here — same precedent as the Announcements block.
+  // Destructive routes get a fresh target per allowed assertion.
+  // POST /users/invite/accept is public (token-gated) and out of the matrix.
+  // =========================================================================
+  describe('Users module matrix', () => {
+    const bearer = (token: string) => `Bearer ${token}`;
+
+    async function createInvite(ownerToken: string) {
+      const res = await request(app.getHttpServer())
+        .post('/users/invite')
+        .set('Authorization', bearer(ownerToken))
+        .send({ email: uniqueEmail('pending'), role: 'STAFF' })
+        .expect(201);
+      return res.body as { id: string };
+    }
+
+    it('POST /users/invite is 201 for Owner, 403 for Chef/Staff/Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+
+      await request(app.getHttpServer())
+        .post('/users/invite')
+        .set('Authorization', bearer(owner.accessToken))
+        .send({ email: uniqueEmail('invitee'), role: 'STAFF' })
+        .expect(201);
+
+      for (const denied of [chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .post('/users/invite')
+          .set('Authorization', bearer(denied.accessToken))
+          .send({ email: uniqueEmail('invitee'), role: 'STAFF' })
+          .expect(403);
+      }
+    });
+
+    it('GET /users/invites is 200 for Owner, 403 for Chef/Staff/Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+
+      await request(app.getHttpServer())
+        .get('/users/invites')
+        .set('Authorization', bearer(owner.accessToken))
+        .expect(200);
+
+      for (const denied of [chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .get('/users/invites')
+          .set('Authorization', bearer(denied.accessToken))
+          .expect(403);
+      }
+    });
+
+    it('DELETE /users/invites/:id is 200 for Owner, 403 for Chef/Staff/Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+
+      // Denied callers are rejected by the guard before the invite is touched,
+      // so one target serves all three; Owner then revokes it.
+      const invite = await createInvite(owner.accessToken);
+      for (const denied of [chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .delete(`/users/invites/${invite.id}`)
+          .set('Authorization', bearer(denied.accessToken))
+          .expect(403);
+      }
+
+      await request(app.getHttpServer())
+        .delete(`/users/invites/${invite.id}`)
+        .set('Authorization', bearer(owner.accessToken))
+        .expect(200);
+    });
+
+    it('GET /users/assignable is 200 for Owner+Chef, 403 for Staff+Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+
+      for (const allowed of [owner, chef]) {
+        await request(app.getHttpServer())
+          .get('/users/assignable')
+          .set('Authorization', bearer(allowed.accessToken))
+          .expect(200);
+      }
+      for (const denied of [staff, viewer]) {
+        await request(app.getHttpServer())
+          .get('/users/assignable')
+          .set('Authorization', bearer(denied.accessToken))
+          .expect(403);
+      }
+    });
+
+    it('GET /users is 200 for Owner, 403 for Chef/Staff/Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+
+      await request(app.getHttpServer())
+        .get('/users')
+        .set('Authorization', bearer(owner.accessToken))
+        .expect(200);
+
+      for (const denied of [chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .get('/users')
+          .set('Authorization', bearer(denied.accessToken))
+          .expect(403);
+      }
+    });
+
+    it('PATCH /users/:id/role is 200 for Owner, 403 for Chef/Staff/Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      const target = await inviteAndAccept(owner.accessToken, 'STAFF');
+
+      for (const denied of [chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .patch(`/users/${target.user.id}/role`)
+          .set('Authorization', bearer(denied.accessToken))
+          .send({ role: 'VIEWER' })
+          .expect(403);
+      }
+
+      await request(app.getHttpServer())
+        .patch(`/users/${target.user.id}/role`)
+        .set('Authorization', bearer(owner.accessToken))
+        .send({ role: 'VIEWER' })
+        .expect(200);
+    });
+
+    it('DELETE /users/:id is 200 for Owner, 403 for Chef/Staff/Viewer', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+      const target = await inviteAndAccept(owner.accessToken, 'STAFF');
+
+      for (const denied of [chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .delete(`/users/${target.user.id}`)
+          .set('Authorization', bearer(denied.accessToken))
+          .expect(403);
+      }
+
+      await request(app.getHttpServer())
+        .delete(`/users/${target.user.id}`)
+        .set('Authorization', bearer(owner.accessToken))
+        .expect(200);
+    });
+
+    it('PATCH /users/me/theme is 200 for all 4 roles (self-service, no @Roles)', async () => {
+      const { owner, chef, staff, viewer } = await buildRoleSet();
+
+      for (const actor of [owner, chef, staff, viewer]) {
+        await request(app.getHttpServer())
+          .patch('/users/me/theme')
+          .set('Authorization', bearer(actor.accessToken))
+          .send({ theme: 'dark_neon' })
+          .expect(200);
+      }
+    });
+
+    it('Edge case: an Owner of another Kitchen gets 404 (not 403, not 200) on PATCH /users/:id/role and DELETE /users/:id', async () => {
+      const kitchenA = await buildRoleSet();
+      const kitchenB = await buildRoleSet();
+
+      await request(app.getHttpServer())
+        .patch(`/users/${kitchenA.staff.user.id}/role`)
+        .set('Authorization', bearer(kitchenB.owner.accessToken))
+        .send({ role: 'VIEWER' })
+        .expect(404);
+      await request(app.getHttpServer())
+        .delete(`/users/${kitchenA.staff.user.id}`)
+        .set('Authorization', bearer(kitchenB.owner.accessToken))
+        .expect(404);
+    });
+  });
+
+  // =========================================================================
   // AC3: unauthenticated calls are rejected on every module (401, not 403)
   // =========================================================================
   it('unauthenticated request is 401 on every in-scope module', async () => {
@@ -803,8 +979,13 @@ describe('RBAC matrix audit (e2e)', () => {
       '/notes',
       '/announcements',
       '/shift-logs',
+      '/users',
     ]) {
       await request(app.getHttpServer()).get(path).expect(401);
     }
+    await request(app.getHttpServer())
+      .patch('/users/me/theme')
+      .send({ theme: 'dark_neon' })
+      .expect(401);
   });
 });
