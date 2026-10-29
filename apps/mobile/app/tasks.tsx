@@ -1,8 +1,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   confirmTaskCompletion,
   createTask,
@@ -11,7 +13,6 @@ import {
   previewTaskCompletion,
   updateTaskStatus,
   type CompletionPreview,
-  type CreateTaskInput,
   type Task,
   type TaskStatus,
 } from '../src/api';
@@ -25,14 +26,11 @@ import {
 } from '../src/queries';
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
+import { FieldError, FormTextInput } from '../src/components/FormFields';
+import { createTaskSchema, type CreateTaskFormValues, type CreateTaskRequest } from '../src/schemas/task';
 import { session } from '../src/session';
 
 type CreateMode = 'plain' | 'recipe' | 'guideline';
-
-type CreateTaskRequest =
-  | { mode: 'plain'; input: CreateTaskInput }
-  | { mode: 'recipe'; recipeId: string }
-  | { mode: 'guideline'; guidelineId: string };
 
 type PendingCompletion = {
   taskId: string;
@@ -52,12 +50,14 @@ const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = {
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
 
-function toIsoFromDateInput(value: string): string | null {
-  if (!value) return null;
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString();
-}
+const EMPTY_CREATE_FORM: CreateTaskFormValues = {
+  mode: 'plain',
+  title: '',
+  dueDate: '',
+  assigneeId: '',
+  recipeId: '',
+  guidelineId: '',
+};
 
 function formatDate(iso: string | null): string {
   if (!iso) return 'No due date';
@@ -97,12 +97,22 @@ export default function TasksScreen() {
   const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(null);
   const [confirmingCompletion, setConfirmingCompletion] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [createMode, setCreateMode] = useState<CreateMode>('plain');
-  const [createTitle, setCreateTitle] = useState('');
-  const [createAssigneeId, setCreateAssigneeId] = useState('');
-  const [createDueDate, setCreateDueDate] = useState('');
-  const [selectedRecipeId, setSelectedRecipeId] = useState('');
-  const [selectedGuidelineId, setSelectedGuidelineId] = useState('');
+  const {
+    control: createControl,
+    handleSubmit: handleCreateSubmit,
+    reset: resetCreateForm,
+    watch: watchCreate,
+    setValue: setCreateValue,
+    clearErrors: clearCreateErrors,
+    formState: { errors: createErrors },
+  } = useForm<CreateTaskFormValues, undefined, CreateTaskRequest>({
+    defaultValues: EMPTY_CREATE_FORM,
+    resolver: zodResolver(createTaskSchema),
+  });
+  const createMode = watchCreate('mode');
+  const createAssigneeId = watchCreate('assigneeId');
+  const selectedRecipeId = watchCreate('recipeId');
+  const selectedGuidelineId = watchCreate('guidelineId');
   const [createError, setCreateError] = useState<string | null>(null);
 
   const grouped = useMemo(() => ({
@@ -206,12 +216,7 @@ export default function TasksScreen() {
   const openCreate = () => {
     if (!canCreate) return;
     setCreateOpen(true);
-    setCreateMode('plain');
-    setCreateTitle('');
-    setCreateAssigneeId('');
-    setCreateDueDate('');
-    setSelectedRecipeId('');
-    setSelectedGuidelineId('');
+    resetCreateForm(EMPTY_CREATE_FORM);
     setCreateError(null);
   };
 
@@ -220,50 +225,18 @@ export default function TasksScreen() {
     setCreateError(null);
   };
 
-  const handleCreate = async () => {
+  const handleCreate = handleCreateSubmit(async (request) => {
     if (!canCreate) return;
 
     setCreateError(null);
 
     try {
-      let request: CreateTaskRequest;
-
-      if (createMode === 'plain') {
-        const title = createTitle.trim();
-        if (!title) {
-          setCreateError('Title is required');
-          return;
-        }
-
-        const dueAt = toIsoFromDateInput(createDueDate);
-        request = {
-          mode: 'plain',
-          input: {
-            title,
-            ...(createAssigneeId ? { assigneeId: createAssigneeId } : {}),
-            ...(dueAt ? { dueAt } : {}),
-          },
-        };
-      } else if (createMode === 'recipe') {
-        if (!selectedRecipeId) {
-          setCreateError('Select a recipe');
-          return;
-        }
-        request = { mode: 'recipe', recipeId: selectedRecipeId };
-      } else {
-        if (!selectedGuidelineId) {
-          setCreateError('Select a guideline');
-          return;
-        }
-        request = { mode: 'guideline', guidelineId: selectedGuidelineId };
-      }
-
       await createMutation.mutateAsync(request);
       closeCreate();
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Failed to create task');
     }
-  };
+  });
 
   const moveTask = async (task: Task) => {
     const next = NEXT_STATUS[task.status];
@@ -357,7 +330,8 @@ export default function TasksScreen() {
                   key={mode}
                   style={[styles.segmentButton, createMode === mode && styles.segmentButtonActive]}
                   onPress={() => {
-                    setCreateMode(mode);
+                    setCreateValue('mode', mode);
+                    clearCreateErrors();
                     setCreateError(null);
                   }}
                 >
@@ -370,27 +344,27 @@ export default function TasksScreen() {
 
             {createMode === 'plain' && (
               <>
-                <TextInput
+                <FormTextInput
+                  control={createControl}
+                  name="title"
                   style={styles.input}
                   placeholder="Task title"
                   placeholderTextColor="#6f7c92"
-                  value={createTitle}
-                  onChangeText={setCreateTitle}
                 />
-                <TextInput
+                <FormTextInput
+                  control={createControl}
+                  name="dueDate"
                   style={styles.input}
                   placeholder="Due date YYYY-MM-DD"
                   placeholderTextColor="#6f7c92"
-                  value={createDueDate}
-                  onChangeText={setCreateDueDate}
                   autoCapitalize="none"
                 />
-                <TextInput
+                <FormTextInput
+                  control={createControl}
+                  name="assigneeId"
                   style={styles.input}
                   placeholder="Assignee ID (optional)"
                   placeholderTextColor="#6f7c92"
-                  value={createAssigneeId}
-                  onChangeText={setCreateAssigneeId}
                   autoCapitalize="none"
                 />
                 {assignableUsers.length > 0 && (
@@ -399,7 +373,7 @@ export default function TasksScreen() {
                       <Pressable
                         key={member.id}
                         style={[styles.selectorButton, createAssigneeId === member.id && styles.selectorButtonActive]}
-                        onPress={() => setCreateAssigneeId(member.id)}
+                        onPress={() => setCreateValue('assigneeId', member.id)}
                       >
                         <Text style={[styles.selectorButtonText, createAssigneeId === member.id && styles.selectorButtonTextActive]}>
                           {member.email}
@@ -420,7 +394,7 @@ export default function TasksScreen() {
                     <Pressable
                       key={recipe.id}
                       style={[styles.selectorButton, selectedRecipeId === recipe.id && styles.selectorButtonActive]}
-                      onPress={() => setSelectedRecipeId(recipe.id)}
+                      onPress={() => setCreateValue('recipeId', recipe.id, { shouldValidate: !!createErrors.recipeId })}
                     >
                       <Text style={[styles.selectorButtonText, selectedRecipeId === recipe.id && styles.selectorButtonTextActive]}>
                         {recipe.name}
@@ -428,6 +402,7 @@ export default function TasksScreen() {
                     </Pressable>
                   ))
                 )}
+                <FieldError message={createErrors.recipeId?.message} />
               </View>
             )}
 
@@ -440,7 +415,7 @@ export default function TasksScreen() {
                     <Pressable
                       key={guideline.id}
                       style={[styles.selectorButton, selectedGuidelineId === guideline.id && styles.selectorButtonActive]}
-                      onPress={() => setSelectedGuidelineId(guideline.id)}
+                      onPress={() => setCreateValue('guidelineId', guideline.id, { shouldValidate: !!createErrors.guidelineId })}
                     >
                       <Text style={[styles.selectorButtonText, selectedGuidelineId === guideline.id && styles.selectorButtonTextActive]}>
                         {guideline.title}
@@ -448,6 +423,7 @@ export default function TasksScreen() {
                     </Pressable>
                   ))
                 )}
+                <FieldError message={createErrors.guidelineId?.message} />
               </View>
             )}
 

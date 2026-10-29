@@ -1,29 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createIngredient,
   receiveStock,
   updateIngredient,
-  type CreateIngredientInput,
   type ReceiveStockInput,
 } from '../src/api';
+import { FormTextInput } from '../src/components/FormFields';
+import {
+  ingredientSchema,
+  receiveStockSchema,
+  type IngredientFormValues,
+  type IngredientPayload,
+  type ReceiveStockFormValues,
+} from '../src/schemas/ingredient';
 import { queryLoadError, useIngredientRows, type IngredientRow } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
 
-type IngredientFormState = {
-  name: string;
-  unit: string;
-  costPerUnit: string;
-  category: string;
-  minThreshold: string;
-};
-
-const EMPTY_FORM: IngredientFormState = {
+const EMPTY_FORM: IngredientFormValues = {
   name: '',
   unit: '',
   costPerUnit: '',
@@ -41,7 +42,7 @@ export default function InventoryScreen() {
   const ingredients = useMemo(() => ingredientsQuery.data ?? [], [ingredientsQuery.data]);
   const loading = ingredientsQuery.isLoading;
   const saveMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string | null; payload: CreateIngredientInput }) =>
+    mutationFn: ({ id, payload }: { id: string | null; payload: IngredientPayload }) =>
       id ? updateIngredient(id, payload) : createIngredient(payload),
     // Stock and thresholds drive the dashboard low-stock / expiring widgets too.
     onSuccess: () =>
@@ -62,10 +63,33 @@ export default function InventoryScreen() {
   const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<IngredientRow | null>(null);
-  const [form, setForm] = useState<IngredientFormState>(EMPTY_FORM);
+  // Create and edit have different outputs for a blank threshold (key omitted vs explicit null), so the
+  // resolver follows whether an ingredient is being edited.
+  const {
+    control: ingredientControl,
+    handleSubmit: handleIngredientSubmit,
+    reset: resetIngredientForm,
+  } = useForm<IngredientFormValues, undefined, IngredientPayload>({
+    defaultValues: EMPTY_FORM,
+    resolver: (values, context, options) =>
+      (
+        zodResolver(ingredientSchema(editing ? 'edit' : 'create')) as unknown as Resolver<
+          IngredientFormValues,
+          undefined,
+          IngredientPayload
+        >
+      )(values, context, options),
+  });
   const [savingForm, setSavingForm] = useState(false);
   const [receivingId, setReceivingId] = useState<string | null>(null);
-  const [receiveQty, setReceiveQty] = useState('');
+  const {
+    control: receiveControl,
+    handleSubmit: handleReceiveSubmit,
+    reset: resetReceiveForm,
+  } = useForm<ReceiveStockFormValues, undefined, ReceiveStockInput>({
+    defaultValues: { qty: '' },
+    resolver: zodResolver(receiveStockSchema),
+  });
   const [savingReceiveId, setSavingReceiveId] = useState<string | null>(null);
 
   const error = actionError ?? queryLoadError(ingredientsQuery, 'Failed to load ingredients');
@@ -79,14 +103,14 @@ export default function InventoryScreen() {
   const openCreate = () => {
     if (!canManage) return;
     setEditing(null);
-    setForm(EMPTY_FORM);
+    resetIngredientForm(EMPTY_FORM);
     setFormOpen(true);
   };
 
   const openEdit = (ingredient: IngredientRow) => {
     if (!canManage) return;
     setEditing(ingredient);
-    setForm({
+    resetIngredientForm({
       name: ingredient.name,
       unit: ingredient.unit,
       costPerUnit: String(ingredient.costPerUnit),
@@ -99,33 +123,14 @@ export default function InventoryScreen() {
   const closeForm = () => {
     setFormOpen(false);
     setEditing(null);
-    setForm(EMPTY_FORM);
+    resetIngredientForm(EMPTY_FORM);
   };
 
-  const submitForm = async () => {
+  const submitForm = handleIngredientSubmit(async (payload) => {
     if (!canManage) return;
-
-    const name = form.name.trim();
-    const unit = form.unit.trim();
-    const costPerUnit = Number(form.costPerUnit);
-    const category = form.category.trim();
-    const minThreshold = form.minThreshold.trim();
-
-    if (!name || !unit || Number.isNaN(costPerUnit)) {
-      setError('Name, unit, and cost are required');
-      return;
-    }
 
     setSavingForm(true);
     setError(null);
-
-    const payload = {
-      name,
-      unit,
-      costPerUnit,
-      ...(category ? { category } : {}),
-      ...(minThreshold ? { minThreshold: Number(minThreshold) } : {}),
-    };
 
     try {
       await saveMutation.mutateAsync({ id: editing ? editing.id : null, payload });
@@ -135,38 +140,33 @@ export default function InventoryScreen() {
     } finally {
       setSavingForm(false);
     }
-  };
+  });
 
   const startReceive = (id: string) => {
     setReceivingId(id);
-    setReceiveQty('');
+    resetReceiveForm({ qty: '' });
   };
 
   const cancelReceive = () => {
     setReceivingId(null);
-    setReceiveQty('');
+    resetReceiveForm({ qty: '' });
   };
 
-  const submitReceive = async (ingredient: IngredientRow) => {
-    const qty = Number(receiveQty);
-    if (!qty || qty <= 0) {
-      setError('Enter a quantity greater than zero');
-      return;
-    }
+  const submitReceive = (ingredient: IngredientRow) =>
+    handleReceiveSubmit(async (input) => {
+      setSavingReceiveId(ingredient.id);
+      setError(null);
 
-    setSavingReceiveId(ingredient.id);
-    setError(null);
-
-    try {
-      await receiveMutation.mutateAsync({ id: ingredient.id, input: { qty } });
-      setReceivingId(null);
-      setReceiveQty('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to record stock receipt');
-    } finally {
-      setSavingReceiveId(null);
-    }
-  };
+      try {
+        await receiveMutation.mutateAsync({ id: ingredient.id, input });
+        setReceivingId(null);
+        resetReceiveForm({ qty: '' });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to record stock receipt');
+      } finally {
+        setSavingReceiveId(null);
+      }
+    });
 
   if (!caller) {
     return null;
@@ -198,42 +198,30 @@ export default function InventoryScreen() {
         {formOpen && canManage && (
           <View style={styles.formCard}>
             <Text style={styles.sectionTitle}>{editing ? 'Edit ingredient' : 'Add ingredient'}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              placeholderTextColor="#6f7c92"
-              value={form.name}
-              onChangeText={(value) => setForm((current) => ({ ...current, name: value }))}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Unit"
-              placeholderTextColor="#6f7c92"
-              value={form.unit}
-              onChangeText={(value) => setForm((current) => ({ ...current, unit: value }))}
-            />
-            <TextInput
+            <FormTextInput control={ingredientControl} name="name" style={styles.input} placeholder="Name" placeholderTextColor="#6f7c92" />
+            <FormTextInput control={ingredientControl} name="unit" style={styles.input} placeholder="Unit" placeholderTextColor="#6f7c92" />
+            <FormTextInput
+              control={ingredientControl}
+              name="costPerUnit"
               style={styles.input}
               placeholder="Cost per unit"
               placeholderTextColor="#6f7c92"
-              value={form.costPerUnit}
               keyboardType="decimal-pad"
-              onChangeText={(value) => setForm((current) => ({ ...current, costPerUnit: value }))}
             />
-            <TextInput
+            <FormTextInput
+              control={ingredientControl}
+              name="category"
               style={styles.input}
               placeholder="Category"
               placeholderTextColor="#6f7c92"
-              value={form.category}
-              onChangeText={(value) => setForm((current) => ({ ...current, category: value }))}
             />
-            <TextInput
+            <FormTextInput
+              control={ingredientControl}
+              name="minThreshold"
               style={styles.input}
               placeholder="Low-stock threshold"
               placeholderTextColor="#6f7c92"
-              value={form.minThreshold}
               keyboardType="decimal-pad"
-              onChangeText={(value) => setForm((current) => ({ ...current, minThreshold: value }))}
             />
             <View style={styles.rowActions}>
               <Pressable style={styles.primaryButton} disabled={savingForm} onPress={submitForm}>
@@ -267,19 +255,19 @@ export default function InventoryScreen() {
             {canManage ? (
               receivingId === ingredient.id ? (
                 <View style={styles.receivePanel}>
-                  <TextInput
+                  <FormTextInput
+                    control={receiveControl}
+                    name="qty"
                     style={styles.input}
                     placeholder="Receive qty"
                     placeholderTextColor="#6f7c92"
-                    value={receiveQty}
                     keyboardType="decimal-pad"
-                    onChangeText={setReceiveQty}
                   />
                   <View style={styles.rowActions}>
                     <Pressable
                       style={styles.primaryButton}
                       disabled={savingReceiveId === ingredient.id}
-                      onPress={() => submitReceive(ingredient)}
+                      onPress={submitReceive(ingredient)}
                     >
                       <Text style={styles.primaryButtonText}>
                         {savingReceiveId === ingredient.id ? 'Saving...' : 'Confirm'}

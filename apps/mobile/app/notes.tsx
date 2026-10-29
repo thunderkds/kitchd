@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { createNote, deleteNote, updateNote, type Note, type NoteScope } from '../src/api';
+import { FormTextInput } from '../src/components/FormFields';
+import { noteSchema, type NoteFormValues, type NotePayload } from '../src/schemas/note';
 import { queryLoadError, useNotes } from '../src/queries';
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
@@ -31,9 +35,10 @@ export default function NotesScreen() {
   const loading = notesQuery.isLoading || notesQuery.isPlaceholderData;
   const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newBody, setNewBody] = useState('');
-  const [newTags, setNewTags] = useState('');
+  const { control, handleSubmit, reset } = useForm<NoteFormValues, undefined, NotePayload>({
+    defaultValues: { title: '', body: '', tags: '' },
+    resolver: zodResolver(noteSchema),
+  });
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const sortedNotes = useMemo(() => {
@@ -92,46 +97,28 @@ export default function NotesScreen() {
   });
 
   const openForm = () => {
-    setNewTitle('');
-    setNewBody('');
-    setNewTags('');
+    reset();
     setFormOpen(true);
   };
 
   const closeForm = () => {
     setFormOpen(false);
-    setNewTitle('');
-    setNewBody('');
-    setNewTags('');
+    reset();
   };
 
-  const handleCreate = async () => {
-    if (!newBody.trim()) {
-      setError('Note body is required');
-      return;
-    }
-
-    const tags = newTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
+  const handleCreate = handleSubmit(async (note) => {
     setSavingId('create');
     setError(null);
 
     try {
-      await createMutation.mutateAsync({
-        title: newTitle.trim() || undefined,
-        body: newBody.trim(),
-        tags,
-      });
+      await createMutation.mutateAsync(note);
       closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create note');
     } finally {
       setSavingId(null);
     }
-  };
+  });
 
   const togglePin = async (note: Note) => {
     const nextPinned = !note.pinned;
@@ -212,27 +199,27 @@ export default function NotesScreen() {
         {formOpen && (
           <View style={styles.formCard}>
             <Text style={styles.sectionTitle}>Create note</Text>
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="title"
               style={styles.input}
               placeholder="Title (optional)"
               placeholderTextColor="#6f7c92"
-              value={newTitle}
-              onChangeText={setNewTitle}
             />
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="body"
               style={styles.multiLineInput}
               placeholder="Write a note..."
               placeholderTextColor="#6f7c92"
               multiline
-              value={newBody}
-              onChangeText={setNewBody}
             />
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="tags"
               style={styles.input}
               placeholder="Tags, comma separated"
               placeholderTextColor="#6f7c92"
-              value={newTags}
-              onChangeText={setNewTags}
               autoCapitalize="none"
               autoCorrect={false}
             />
