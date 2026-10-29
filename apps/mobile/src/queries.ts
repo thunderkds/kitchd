@@ -91,3 +91,15 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
 
   return error instanceof Error ? error.message : fallback;
 }
+
+// M007
+import { listComments, type CommentEntityType } from './api';
+import { commentKeys } from './queryKeys';
+
+export function useComments(entityType: CommentEntityType, entityId: string, enabled = true) {
+  return useQuery({
+    queryKey: commentKeys.list(entityType, entityId),
+    queryFn: () => listComments(entityType, entityId),
+    enabled,
+  });
+}

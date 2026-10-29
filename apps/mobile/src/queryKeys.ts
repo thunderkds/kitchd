@@ -38,3 +38,9 @@ export const queryKeys = {
     list: () => ['invites', 'list'] as const,
   },
 };
+
+// M007
+export const commentKeys = {
+  all: ['comments'] as const,
+  list: (entityType: string, entityId: string) => ['comments', entityType, entityId] as const,
+};

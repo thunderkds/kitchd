@@ -499,3 +499,40 @@ export function confirmTaskCompletion(id: string): Promise<CompletionResult> {
     method: 'POST',
   });
 }
+
+// M007 — comments (GET/POST /comments, DELETE /comments/:id). Entity types mirror the API's entity-type.ts.
+export type CommentEntityType = LinkedEntityType;
+
+export interface CommentItem {
+  id: string;
+  entityType: CommentEntityType;
+  entityId: string;
+  authorId: string;
+  body: string;
+  mentions: string[];
+  parentId: string | null;
+  createdAt: string;
+}
+
+export interface CreateCommentInput {
+  entityType: CommentEntityType;
+  entityId: string;
+  body: string;
+  parentId?: string;
+}
+
+export function listComments(entityType: CommentEntityType, entityId: string): Promise<CommentItem[]> {
+  const params = new URLSearchParams({ entityType, entityId });
+  return request<CommentItem[]>(`/comments?${params.toString()}`);
+}
+
+export function createComment(input: CreateCommentInput): Promise<CommentItem> {
+  return request<CommentItem>('/comments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteComment(id: string): Promise<{ id: string }> {
+  return request<{ id: string }>(`/comments/${id}`, { method: 'DELETE' });
+}
