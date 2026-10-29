@@ -30,7 +30,28 @@ describe('theme mapping (M006 AC3)', () => {
   it('maps each stored preference to its own palette', () => {
     expect(resolvePalette('simple')).toBe(PALETTES.simple)
     expect(resolvePalette('dark-neon')).toBe(PALETTES['dark-neon'])
-    expect(PALETTES.simple.background).not.toBe(PALETTES['dark-neon'].background)
+  })
+
+  it('simple is exactly the look the screens hard-coded before M006 (no visual change for default users)', () => {
+    expect(PALETTES.simple).toEqual({
+      background: '#0d1016',
+      surface: '#171c26',
+      text: '#f4f7ff',
+      muted: '#9ca9bf',
+      accent: '#6b8cff',
+      accentSoft: '#86a0ff',
+      danger: '#ff8c8c',
+      border: '#273044',
+    })
+  })
+
+  it('dark-neon keeps the dark base and swaps only the accent family (web dark_neon accent #d51944)', () => {
+    const { accent, accentSoft, ...base } = PALETTES['dark-neon']
+    const { accent: simpleAccent, accentSoft: simpleSoft, ...simpleBase } = PALETTES.simple
+    expect(base).toEqual(simpleBase)
+    expect(accent).toBe('#d51944')
+    expect(accent).not.toBe(simpleAccent)
+    expect(accentSoft).not.toBe(simpleSoft)
   })
 
   it('falls back to the default palette for a missing or unknown preference', () => {
@@ -40,10 +61,10 @@ describe('theme mapping (M006 AC3)', () => {
     expect(resolvePalette('sepia')).toBe(PALETTES.simple)
   })
 
-  it('gives every palette the six colour roles', () => {
+  it('gives every palette the same colour roles', () => {
     for (const palette of Object.values(PALETTES)) {
       expect(Object.keys(palette).sort()).toEqual(
-        ['accent', 'background', 'border', 'danger', 'muted', 'surface', 'text'].sort(),
+        ['accent', 'accentSoft', 'background', 'border', 'danger', 'muted', 'surface', 'text'].sort(),
       )
     }
   })

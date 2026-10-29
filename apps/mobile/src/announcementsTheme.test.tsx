@@ -29,9 +29,9 @@ afterEach(() => {
 })
 
 it.each([
-  ['simple', '#f6f7fb'],
-  ['dark-neon', '#0d1016'],
-] as const)('announcements list screen uses the %s palette (M006 AC3)', async (themePreference, background) => {
+  ['simple', '#0d1016', '#86a0ff'],
+  ['dark-neon', '#0d1016', '#ff6b8b'],
+] as const)('announcements list screen uses the %s palette (M006 AC3): background %s, kicker %s', async (themePreference, background, kicker) => {
   mockUser = { id: 'u1', email: 'a@b.c', organizationId: 'o', kitchenId: 'k', role: 'STAFF', themePreference }
   mocked.listAnnouncements.mockResolvedValue([])
   render(
@@ -41,5 +41,6 @@ it.each([
   )
 
   expect(flat(screen.getByTestId('announcements-screen').props.style).backgroundColor).toBe(background)
+  expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
   await screen.findByText('Announcements')
 })

@@ -88,16 +88,15 @@ describe('SettingsScreen theme (M006 AC2)', () => {
     mocked.updateTheme.mockResolvedValue({ id: 'u1', email: 'u1@example.com', themePreference: 'dark_neon' })
     renderScreen()
     await kitchenNameInput()
-    const before = screen.getByTestId('settings-screen').props.style
     const flat = (style: unknown) => Object.assign({}, ...[style].flat(5).filter(Boolean))
-    expect(flat(before).backgroundColor).toBe('#f6f7fb')
+    expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe('#86a0ff')
 
     fireEvent.press(screen.getByRole('radio', { name: 'Dark Neon' }))
 
     await waitFor(() => expect(selected('Dark Neon')).toBe(true))
     expect(mocked.updateTheme).toHaveBeenCalledWith('dark-neon')
     expect(mockUser?.themePreference).toBe('dark-neon')
-    expect(flat(screen.getByTestId('settings-screen').props.style).backgroundColor).toBe('#0d1016')
+    expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe('#ff6b8b')
   })
 
   it('on failure shows the error and keeps the old value', async () => {

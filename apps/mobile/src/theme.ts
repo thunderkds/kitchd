@@ -3,13 +3,15 @@ import type { ThemePreferenceId } from '@kitchenos/shared';
 import { session } from './session';
 
 // Minimal palette only (M006): the web's full CSS-token system is deliberately not reproduced.
-// `border` is the one extra role: cards need an edge that reads on both a light and a dark surface.
+// `border` and `accentSoft` are the two roles beyond the guide's six: cards need an edge, and the
+// legacy screens use a lighter accent for kickers than for buttons.
 export interface Palette {
   background: string;
   surface: string;
   text: string;
   muted: string;
   accent: string;
+  accentSoft: string;
   danger: string;
   border: string;
 }
@@ -17,29 +19,32 @@ export interface Palette {
 export const DEFAULT_THEME: ThemePreferenceId = 'simple';
 
 export const PALETTES: Record<ThemePreferenceId, Palette> = {
+  // Exactly the colours the screens hard-coded before M006, so a default user sees no change.
   simple: {
-    background: '#f6f7fb',
-    surface: '#ffffff',
-    text: '#14192b',
-    muted: '#5b6478',
-    accent: '#3d5afe',
-    danger: '#c62828',
-    border: '#d8dcea',
-  },
-  // The look the mobile screens shipped with.
-  'dark-neon': {
     background: '#0d1016',
     surface: '#171c26',
     text: '#f4f7ff',
     muted: '#9ca9bf',
     accent: '#6b8cff',
+    accentSoft: '#86a0ff',
+    danger: '#ff8c8c',
+    border: '#273044',
+  },
+  // Same dark base, neon accent family of the web's dark_neon theme (--knos-accent #d51944).
+  'dark-neon': {
+    background: '#0d1016',
+    surface: '#171c26',
+    text: '#f4f7ff',
+    muted: '#9ca9bf',
+    accent: '#d51944',
+    accentSoft: '#ff6b8b',
     danger: '#ff8c8c',
     border: '#273044',
   },
 };
 
 export const THEME_OPTIONS: { id: ThemePreferenceId; label: string; description: string }[] = [
-  { id: 'simple', label: 'Simple', description: "KitchenOS's original light theme." },
+  { id: 'simple', label: 'Simple', description: "KitchenOS's original look." },
   { id: 'dark-neon', label: 'Dark Neon', description: 'A high-contrast dark theme with a neon accent.' },
 ];
 

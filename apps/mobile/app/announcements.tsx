@@ -82,20 +82,20 @@ export default function AnnouncementsScreen() {
       <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={[styles.kicker, { color: palette.accent }]}>KitchenOS mobile</Text>
+            <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
             <Text style={[styles.title, { color: palette.text }]}>Announcements</Text>
           </View>
-          <Pressable style={[styles.backButton, { backgroundColor: palette.background, borderColor: palette.border }]} onPress={() => router.back()}>
-            <Text style={[styles.backButtonText, { color: palette.text }]}>Back</Text>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Back</Text>
           </Pressable>
         </View>
 
-        <Text style={[styles.note, { color: palette.muted }]}>
+        <Text style={styles.note}>
           Read the kitchen history, and broadcast new announcements if your role allows it.
         </Text>
 
         {canBroadcast && (
-          <Pressable style={styles.primaryButton} onPress={openForm}>
+          <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={openForm}>
             <Text style={styles.primaryButtonText}>New announcement</Text>
           </Pressable>
         )}
@@ -122,7 +122,7 @@ export default function AnnouncementsScreen() {
               <Pressable style={styles.secondaryButton} onPress={closeForm}>
                 <Text style={styles.secondaryButtonText}>Cancel</Text>
               </Pressable>
-              <Pressable style={styles.primaryButton} disabled={saving} onPress={handleBroadcast}>
+              <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} disabled={saving} onPress={handleBroadcast}>
                 <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Broadcast'}</Text>
               </Pressable>
             </View>
@@ -130,15 +130,15 @@ export default function AnnouncementsScreen() {
         )}
 
         {error && <Text style={[styles.error, { color: palette.danger }]}>{error}</Text>}
-        {announcements === null && !error && <Text style={[styles.note, { color: palette.muted }]}>Loading announcements...</Text>}
-        {announcements !== null && announcements.length === 0 && <Text style={[styles.note, { color: palette.muted }]}>No announcements yet.</Text>}
+        {announcements === null && !error && <Text style={styles.note}>Loading announcements...</Text>}
+        {announcements !== null && announcements.length === 0 && <Text style={styles.note}>No announcements yet.</Text>}
 
         {announcements !== null && announcements.length > 0 && (
           <View style={styles.list}>
             {announcements.map((announcement) => (
-              <View key={announcement.id} style={[styles.listRow, { borderTopColor: palette.border }]}>
+              <View key={announcement.id} style={styles.listRow}>
                 <Text style={[styles.listTitle, { color: palette.text }]}>{announcement.title}</Text>
-                <Text style={[styles.bodyText, { color: palette.text }]}>{announcement.body}</Text>
+                <Text style={styles.bodyText}>{announcement.body}</Text>
                 <Text style={[styles.meta, { color: palette.muted }]}>Read by {announcement.readBy.length}</Text>
               </View>
             ))}

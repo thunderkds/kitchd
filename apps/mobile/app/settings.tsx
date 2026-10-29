@@ -73,7 +73,7 @@ export default function SettingsScreen() {
       <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={[styles.kicker, { color: palette.accent }]}>KitchenOS mobile</Text>
+            <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
             <Text style={[styles.title, { color: palette.text }]}>Settings</Text>
           </View>
           <Pressable
