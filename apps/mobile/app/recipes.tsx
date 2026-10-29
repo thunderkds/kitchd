@@ -3,8 +3,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createRecipe, getRecipe, updateRecipe, type Recipe, type RecipeInput } from '../src/api';
-import { queryErrorMessage, useIngredients, useRecipes } from '../src/queries';
-import { queryKeys } from '../src/queryKeys';
+import { queryErrorMessage, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
+import { queryKeys, recipeVersionKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
@@ -24,6 +24,12 @@ function toSteps(text: string): string[] {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+}
+
+function formatVersionDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Invalid date';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function initialRows(recipe?: Recipe | null): RecipeRowInput[] {
@@ -49,10 +55,16 @@ export default function RecipesScreen() {
   const saveMutation = useMutation({
     mutationFn: ({ id, input }: { id: string | null; input: RecipeInput }) =>
       id ? updateRecipe(id, input) : createRecipe(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all }),
+    // M016: an edit writes a new RecipeVersion, so the open recipe's version history must refetch.
+    onSuccess: (_saved, { id }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all }),
+        id ? queryClient.invalidateQueries({ queryKey: recipeVersionKeys.list(id) }) : undefined,
+      ]),
   });
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<ViewMode>('list');
+  const versionsQuery = useRecipeVersions(selected?.id ?? null, !!caller && mode === 'detail');
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [actionError, setError] = useState<string | null>(null);
@@ -236,6 +248,31 @@ export default function RecipesScreen() {
           )}
 
           <Text style={styles.total}>Total cost: {selected.costComputed.toFixed(2)}</Text>
+
+          <Text style={styles.sectionTitle}>Recipe version history</Text>
+          {versionsQuery.isLoading && <Text style={styles.note}>Loading version history...</Text>}
+          {versionsQuery.isError && (
+            <Text style={styles.error}>
+              {queryErrorMessage(versionsQuery.error, 'Failed to load recipe versions')}
+            </Text>
+          )}
+          {versionsQuery.data && versionsQuery.data.length === 0 && (
+            <Text style={styles.note}>No saved versions yet.</Text>
+          )}
+          {versionsQuery.data?.map((entry) => (
+            <View key={entry.id} style={styles.ingredientLine}>
+              <Text style={styles.ingredientName}>
+                Version {entry.version} · {formatVersionDate(entry.createdAt)}
+              </Text>
+              <Text style={styles.ingredientMeta}>
+                {entry.servings != null ? `${entry.servings} servings · ` : ''}Cost snapshot:{' '}
+                {entry.costComputedAtSnapshot.toFixed(2)}
+              </Text>
+              <Text style={styles.ingredientMeta}>
+                {entry.steps.length} steps · {entry.ingredientsSnapshot.length} ingredients
+              </Text>
+            </View>
+          ))}
 
           {canWrite && (
             <Pressable style={styles.secondaryButton} onPress={() => openEdit(selected)}>
