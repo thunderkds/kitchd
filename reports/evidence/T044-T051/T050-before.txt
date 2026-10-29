@@ -1,0 +1,4 @@
+2026-10-29T05:13:55Z
+$ grep -c "/users" apps/api/src/rbac-audit/rbac-matrix.e2e.spec.ts (excluding the invite/accept fixture helper)
+68:      .post('/users/invite')
+78:      .post('/users/invite/accept')

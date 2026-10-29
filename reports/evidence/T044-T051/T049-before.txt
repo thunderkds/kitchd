@@ -1,0 +1,3 @@
+2026-10-29T05:13:55Z
+$ grep -n "if (trimmed === '') return" apps/web/src/features/inventory/IngredientFormDialog.tsx
+60:    if (trimmed === '') return undefined;

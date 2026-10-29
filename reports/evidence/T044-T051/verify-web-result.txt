@@ -1,0 +1,19 @@
+2026-10-29T07:21:15.893Z fixtures: owner verify-owner-1793258475601@kitchenos.dev chef verify-chef-1793258475601@kitchenos.dev
+2026-10-29T07:21:21.082Z RESULTS {
+  "T044_empty_submit_alert_in_dialog": "Shift log body is required.",
+  "T044_created_entry_visible": true,
+  "T045_expiring_item_on_dashboard": true,
+  "T046_download": {
+    "file": "ingredients.csv",
+    "header": "id,name,unit,costPerUnit,category,allergens,supplierId,minThreshold",
+    "containsIngredient": true
+  },
+  "T049_before_threshold": 5,
+  "T049_after_threshold": null,
+  "T047_versions_text": "Recipe version history Version 2 · Oct 29, 2026 4 servings · Cost snapshot: $2.00 1 steps · 1 ingredients Version 1 · Oct 29, 2026 2 servings · Cost snapshot: $2.00 1 steps · 1 ingredients",
+  "T048_loaded_name": "Verify Kitchen 1793258475601",
+  "T048_api_name_after": "Renamed Kitchen 1793258475601",
+  "mobile375_shift-logs_overflow_px": 0,
+  "mobile375_dashboard_overflow_px": 0,
+  "mobile375_settings_overflow_px": 0
+}

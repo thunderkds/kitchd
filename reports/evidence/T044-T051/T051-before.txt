@@ -1,0 +1,8 @@
+2026-10-29T07:17:49Z
+$ node dbg.cjs (headless chromium → http://localhost:8767/shift-logs, print body text)
+console debug [vite] connecting...
+console debug [vite] connected.
+http://localhost:8767/shift-logs
+
+--- vite log:
+2:16:19 PM [vite] (client) [Unhandled error] SyntaxError: The requested module '/@fs/home/hungnguyenhuu/workspace/pets/hungnguyen111/kitchd/packages/shared/dist/index.js' does not provide an export named 'createSessionStore'

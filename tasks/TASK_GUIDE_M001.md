@@ -116,15 +116,15 @@ echo "M001 VERIFICATION: pass"
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done — see Test Plan for what "a test" means on an infra task] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC7 lockfile-drift failure + AC8 mobile-not-built] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally contain the word "pass" here — the merge gate scans this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [expect 199/199 web] |
-| **UI: Visual regression** | ☐ N/A | Pure infrastructure task — no UI component. Justification: no file under `apps/*/src` renders differently; AC requires the existing suite stay green. |
-| **UI: Design-system compliance** | ☐ N/A | Same justification. |
-| **UI: Responsiveness** | ☐ N/A | Same justification. |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☒ pass | `scripts/verify-build.sh` (clean rm -rf node_modules → frozen install → `NODE_ENV=production` build of shared/api/web → artefact checks → no `apps/mobile/dist` → web tests) wired as CI job `verify-build` in `.github/workflows/ci.yml` — pass |
+| Verification command run | ☒ pass | Supervisor, 2026-10-29T07:08Z, fresh worktree at `feat/m001-pnpm-workspace`: `bash scripts/verify-build.sh` → `Test Files 36 passed (36) / Tests 221 passed (221)` … `M001 VERIFICATION: pass`, exit 0. Re-run by the fix agent after `35abcdd` in a throwaway worktree: 230/230 web, `M001 VERIFICATION: pass` — pass |
+| Negative cases hold | ☒ pass | AC7: hand-edited `apps/web/package.json` react → `18.0.0`, `pnpm install --frozen-lockfile` → `ERR_PNPM_OUTDATED_LOCKFILE … not up to date with <ROOT>/apps/web/package.json`, exit 1, reverted. AC8: `no apps/mobile/dist` after root build; `grep mobile render.yaml` → none. AC1: no `package-lock.json`, root `package.json` has no `workspaces`. AC2: `apps/web/package.json:15 "@kitchenos/shared": "workspace:*"` — pass |
+| verify | ☒ pass | Stage 5: whole stack run from the pnpm workspace — API `node dist/src/main` + `vite` dev — and the T044–T049 headless-browser run passed end to end (`reports/evidence/T044-T051/verify-web-result.txt`). Live Render deploy NOT executed: services/secrets don't exist (same human blocker as T023) — deploy path is *configured and reviewed, not executed*. AC5 CI run not observed (`gh` not authenticated in this session). Local verification — pass |
+| Review scope bounded to the change's blast radius | ☒ pass | Reviewed `b64cde9` (CI workflows, package.json, render.yaml, verify-build.sh) + `872cc92`/`b3033f5` (API build/test harness). Found **P1**: `apps/api/src/types/prisma-client.d.ts` ambient `declare module '@prisma/client'` with `[key: string]: any` disabled all Prisma type checking (probe with a bogus `where` field compiled clean) — fixed in `35abcdd` (stub deleted, tsc then catches the probe, nothing else breaks). **P2**: `prisma-generate.cjs` hardcoded `.pnpm/prisma@5.22.0` path → `require.resolve` (`35abcdd`). **P3** (open): `deploy-staging.yml` curl line continuations flattened to single lines (still valid). Security: no secret handling changed; `--prod=false` installs devDeps in deploy only — pass |
+| Full smoke suite still green (no regression) | ☒ pass | web vitest 230/230, API jest 26 suites / 223 tests, mobile typecheck clean — pass |
+| **UI: Visual regression** | ☑ N/A | Pure infrastructure task — no UI component. Justification: no file under `apps/*/src` renders differently; AC requires the existing suite stay green. |
+| **UI: Design-system compliance** | ☑ N/A | Same justification. |
+| **UI: Responsiveness** | ☑ N/A | Same justification. |
 
 ---
 
