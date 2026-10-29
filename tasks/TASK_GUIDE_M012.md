@@ -53,6 +53,7 @@
 | 4 | Test: invite-accept with param `token=abc`, typing `x` → input value `abcx` (component test with `@testing-library/react-native` if already available; otherwise extract the state logic into a tiny hook/helper and test that — do not add a heavy dependency without recording why) | F4 |
 | 5 | `pnpm --filter @kitchenos/mobile typecheck` passes with `expo-env.d.ts` stubs removed | F5 |
 | 6 | All mobile tests, web vitest and web build still pass | no regression |
+| 7 | Hydration race (found by M003): a `persistSession`/adapter write that lands before the initial `SecureStore.getItemAsync('session')` resolves is NOT overwritten by the older stored blob (`apps/mobile/src/storage.ts:60`). Turn the existing `it.failing` in `src/storage.test.ts` into a passing `it` | M003 finding |
 
 ---
 

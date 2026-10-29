@@ -13,6 +13,7 @@
 
 ### Done
 - [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
+- [x] **M003** — Mobile test foundation: jest-expo runner (+ `@react-native/jest-preset` ~0.86.2, `jest.setup.js` fetch stub so jest exits 0), 50 tests over `storage.ts`/`session.ts`/shared session; mutation-checked (3 mutants killed); found hydration race → M012 AC7 | qa-expert | C2 | Risk: Medium | P0 | Review: `tasks/TASK_REVIEW_M003.md` | Linear HUN-97 | Done: 2026-10-29
 - [x] **M002** — Retro code + security review of the RN migration: 0 P0, 0 P1, 6 P2 (→ M012/M003), 7 P3 (→ M013); 5 focus questions answered; security verdict PASS with follow-ups | Supervisor | C2 | Risk: High | P0 | Review: `tasks/TASK_REVIEW_M002.md` | Linear HUN-96 | Done: 2026-10-29
 - [x] **M001** — Monorepo committed to pnpm workspaces; clean-tree `scripts/verify-build.sh` passes; Stage 4 found and fixed a P1 (ambient Prisma client stub disabled all API type checking, `35abcdd`) | common-infrastructure | C2 | Risk: High | P0 | Evidence: `tasks/TASK_GUIDE_M001.md` | Live Render deploy still blocked (below) | Linear HUN-95 | Done: 2026-10-29
 
@@ -22,7 +23,6 @@
 ### Todo
 
 **Wave A — pay down the M000 debt (must clear before new features)**
-- [ ] **M003** — Test foundation for `apps/mobile`: pick and wire a runner (jest-expo vs vitest — `apps/api` is jest, `apps/web` is vitest, so neither default is automatic), then cover `src/session.ts`, `src/storage.ts`, and `packages/shared/src/session.ts`. Zero tests exist in `apps/mobile` today. | qa-expert | C2 | Risk: Medium | P0 | ⚠️ guide not yet written
 
 **Wave B — close the stack gap**
 - [ ] **M004** — Adopt the decided server-state stack: `apps/mobile/src/api.ts` is 478 lines of hand-rolled `fetch`; the roadmap locked TanStack Query. Decide keep-vs-adopt explicitly (DDR), then apply. | frontend-developer | C3 | Risk: Medium | P1 | ⚠️ guide not yet written
