@@ -2,9 +2,8 @@
 
 > Sibling of `tasks/TASK_GUIDE_M002.md`. Filled by the Supervisor, 2026-10-29. Reviewer: independent read-only agent (no implementer involvement); scope `58e5179..f95e26a` for `apps/mobile`, `packages/shared`, `apps/web/src/routes`, `apps/web/src/features/team/api.ts`, read at HEAD.
 
-## Auto decisions
+## Decisions (normal mode — user granted merge/push authority; not `[auto]`)
 
-Mode: auto
 1. P2 findings F1–F5 are fixed in a new task M012 (test-first on the M003 runner) instead of inside M002 — RULE: `tasks/TASK_GUIDE_M002.md` § Acceptance Criteria row 4 "P2/P3 findings are listed as follow-up rows (not fixed here)"
 2. P3 findings F7–F13 grouped into one backlog row M013, not executed this session — SAFER OPTION: no P0/P1, keep scope surgical ⚠ decided for you — please review
 3. `apiBase` http/localhost fallback (F2) is P2 today but must be P1 before the first EAS/release build — FACT: `apps/mobile/src/apiBase.ts:3` falls back to `http://localhost:3000` with no `__DEV__` guard

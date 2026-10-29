@@ -2,9 +2,8 @@
 
 > Sibling of `tasks/TASK_GUIDE_T050.md`. Filled by the Supervisor at Stage 4/5 (2026-10-29).
 
-## Auto decisions
+## Decisions (normal mode — user granted merge/push authority; not `[auto]`)
 
-Mode: auto
 1. Stage 4 review by an independent reviewer agent; P0/P1 fixed before Done, P2s fixed where cheap, P3s recorded — RULE: `.claude/skills/code-review/SKILL.md` § Phase 4
 2. Stage 5 verify done with a scripted headless-Chromium run against the live stack instead of easy-ui-mcp (its port 8766 is held by another process; web served on :8767) — SAFER OPTION: real browser against real API beats skipping UI verify ⚠ decided for you — please review
 Checks: tests — pass; reviews code-review — pass; real run `node reports/evidence/T044-T051/verify-web.cjs` — printed the RESULTS block in `reports/evidence/T044-T051/verify-web-result.txt`
