@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   currentStockFromMovements,
   fetchAssignableUsers,
@@ -15,9 +15,12 @@ import {
   listRecipes,
   listRecipeVersions,
   listTasks,
+  removeMember,
+  updateMemberRole,
   type Ingredient,
   type NoteScope,
 } from './api';
+import type { UserRole } from '@kitchenos/shared';
 import { queryKeys, recipeVersionKeys } from './queryKeys';
 
 export type IngredientRow = Ingredient & {
@@ -136,5 +139,22 @@ export function useComments(entityType: CommentEntityType, entityId: string, ena
     queryKey: commentKeys.list(entityType, entityId),
     queryFn: () => listComments(entityType, entityId),
     enabled,
+  });
+}
+
+// M017
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, role }: { id: string; role: UserRole }) => updateMemberRole(id, role),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.members.all }),
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => removeMember(id),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.members.all }),
   });
 }
