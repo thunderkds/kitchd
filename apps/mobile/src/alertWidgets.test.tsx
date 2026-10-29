@@ -22,6 +22,18 @@ function renderWith(ui: React.ReactElement) {
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
 }
 
+const flat = (style: unknown) => Object.assign({}, ...[style].flat(5).filter(Boolean))
+
+// Walk up from a row's label to the Pressable that carries the row background.
+function rowBackground(label: string): unknown {
+  let node = screen.getByText(label).parent
+  while (node && !flat(node.props.style).backgroundColor) node = node.parent
+  return flat(node?.props.style).backgroundColor
+}
+
+const CRITICAL_BG = 'rgba(255, 99, 99, 0.14)'
+const WARNING_BG = 'rgba(255, 193, 77, 0.12)'
+
 const lowStock = (over: Partial<api.LowStockIngredient> = {}): api.LowStockIngredient => ({
   id: 'ing-1',
   name: 'Flour',
@@ -59,6 +71,30 @@ describe('LowStockWidget (M015 AC1, AC3, AC5)', () => {
     expect(await screen.findByText('Flour')).toBeTruthy()
     expect(screen.getByText('4 kg (min 10)')).toBeTruthy()
     expect(screen.queryByText('Loading…')).toBeNull()
+  })
+
+  it('styles a row critical at or below half the threshold and warning above it', async () => {
+    mocked.listLowStock.mockResolvedValue([
+      lowStock({ id: 'a', name: 'Half', currentStock: 5 }),
+      lowStock({ id: 'b', name: 'Above half', currentStock: 6 }),
+      lowStock({ id: 'c', name: 'Empty', currentStock: 0 }),
+    ])
+    renderWith(<LowStockWidget />)
+    await screen.findByText('Half')
+
+    expect(rowBackground('Half')).toBe(CRITICAL_BG)
+    expect(flat(screen.getByText('Half').props.style).color).toBe('#ff8a8a')
+    expect(rowBackground('Empty')).toBe(CRITICAL_BG)
+    expect(rowBackground('Above half')).toBe(WARNING_BG)
+    expect(flat(screen.getByText('Above half').props.style).color).toBe('#ffc14d')
+  })
+
+  it('treats a null threshold as a warning, never critical', async () => {
+    mocked.listLowStock.mockResolvedValue([lowStock({ minThreshold: null, currentStock: 0 })])
+    renderWith(<LowStockWidget />)
+    await screen.findByText('Flour')
+
+    expect(rowBackground('Flour')).toBe(WARNING_BG)
   })
 
   it('shows the empty state', async () => {

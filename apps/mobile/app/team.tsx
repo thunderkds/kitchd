@@ -20,9 +20,11 @@ export default function TeamScreen() {
   const updateRole = useUpdateMemberRole();
   const remove = useRemoveMember();
   const [actionError, setActionError] = useState<string | null>(null);
+  // One mutation at a time: a second tap while a request is in flight would race the first.
+  const busy = updateRole.isPending || remove.isPending;
 
   const changeRole = (member: TeamMember, role: UserRole) => {
-    if (role === member.role) {
+    if (role === member.role || busy) {
       return;
     }
     setActionError(null);
@@ -114,7 +116,8 @@ export default function TeamScreen() {
                     key={role}
                     accessibilityRole="button"
                     accessibilityLabel={`Set role of ${member.email} to ${role}`}
-                    accessibilityState={{ selected: role === member.role }}
+                    accessibilityState={{ selected: role === member.role, disabled: busy }}
+                    disabled={busy}
                     style={[styles.roleChip, role === member.role && styles.roleChipActive]}
                     onPress={() => changeRole(member, role)}
                   >
@@ -124,6 +127,8 @@ export default function TeamScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${member.email}`}
+                  accessibilityState={{ disabled: busy }}
+                  disabled={busy}
                   style={styles.removeButton}
                   onPress={() => confirmRemove(member)}
                 >

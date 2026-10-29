@@ -24,7 +24,7 @@ const clients: ReturnType<typeof createQueryClient>[] = []
 function renderScreen() {
   const client = createQueryClient()
   // A mutation's default 5 min gc timer outlives client.clear() and keeps jest from exiting.
-  client.setDefaultOptions({ ...client.getDefaultOptions(), mutations: { gcTime: 0 } })
+  client.setDefaultOptions({ ...client.getDefaultOptions(), mutations: { gcTime: Infinity } })
   clients.push(client)
   return render(
     <QueryClientProvider client={client}>
@@ -220,5 +220,97 @@ describe('TeamScreen remove (M017 AC2)', () => {
 
     expect(await screen.findByText('Cannot remove an Owner/Admin')).toBeTruthy()
     expect(screen.getByText('chef@example.com')).toBeTruthy()
+  })
+})
+
+describe('TeamScreen double-submit guard (M017 review P2)', () => {
+  const deferred = <T,>() => {
+    let resolve!: (value: T) => void
+    const promise = new Promise<T>((res) => {
+      resolve = res
+    })
+    return { promise, resolve }
+  }
+
+  it('ignores a second role chip press while a role change is pending', async () => {
+    mocked.listMembers.mockResolvedValue(roster)
+    const pending = deferred<api.TeamMember>()
+    mocked.updateMemberRole.mockReturnValue(pending.promise)
+    renderScreen()
+    await screen.findByText('chef@example.com')
+
+    fireEvent.press(screen.getByLabelText('Set role of chef@example.com to VIEWER'))
+    await waitFor(() => expect(mocked.updateMemberRole).toHaveBeenCalledTimes(1))
+
+    const second = screen.getByLabelText('Set role of staff@example.com to VIEWER')
+    expect(second.props.accessibilityState.disabled).toBe(true)
+    fireEvent.press(second)
+    fireEvent.press(screen.getByLabelText('Set role of chef@example.com to STAFF'))
+
+    expect(mocked.updateMemberRole).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      pending.resolve(m('chef', 'VIEWER'))
+    })
+  })
+
+  it('disables Remove while a role change is pending', async () => {
+    mocked.listMembers.mockResolvedValue(roster)
+    const pending = deferred<api.TeamMember>()
+    mocked.updateMemberRole.mockReturnValue(pending.promise)
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    renderScreen()
+    await screen.findByText('chef@example.com')
+
+    fireEvent.press(screen.getByLabelText('Set role of chef@example.com to VIEWER'))
+    await waitFor(() => expect(mocked.updateMemberRole).toHaveBeenCalledTimes(1))
+
+    const remove = screen.getByLabelText('Remove staff@example.com')
+    expect(remove.props.accessibilityState.disabled).toBe(true)
+    fireEvent.press(remove)
+    expect(alertSpy).not.toHaveBeenCalled()
+
+    await act(async () => {
+      pending.resolve(m('chef', 'VIEWER'))
+    })
+  })
+
+  it('disables the role chips while a removal is pending', async () => {
+    mocked.listMembers.mockResolvedValue(roster)
+    const pending = deferred<api.TeamMember>()
+    mocked.removeMember.mockReturnValue(pending.promise)
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    renderScreen()
+    await screen.findByText('chef@example.com')
+
+    fireEvent.press(screen.getByLabelText('Remove chef@example.com'))
+    const destructive = (alertSpy.mock.calls[0][2] ?? []).find((b) => b.style === 'destructive')
+    await act(async () => {
+      destructive?.onPress?.()
+    })
+    await waitFor(() => expect(mocked.removeMember).toHaveBeenCalledTimes(1))
+
+    const chip = screen.getByLabelText('Set role of staff@example.com to VIEWER')
+    expect(chip.props.accessibilityState.disabled).toBe(true)
+    fireEvent.press(chip)
+    expect(mocked.updateMemberRole).not.toHaveBeenCalled()
+
+    await act(async () => {
+      pending.resolve({ ...m('chef', 'CHEF'), isActive: false })
+    })
+  })
+
+  it('re-enables the controls once the mutation settles', async () => {
+    mocked.listMembers.mockResolvedValue(roster)
+    mocked.updateMemberRole.mockResolvedValue(m('chef', 'VIEWER'))
+    renderScreen()
+    await screen.findByText('chef@example.com')
+
+    fireEvent.press(screen.getByLabelText('Set role of chef@example.com to VIEWER'))
+    await waitFor(() => expect(mocked.updateMemberRole).toHaveBeenCalledTimes(1))
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Remove staff@example.com').props.accessibilityState.disabled).toBe(false),
+    )
   })
 })

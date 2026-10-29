@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { renderHook } from '@testing-library/react-native'
 import DashboardScreen from '../app/dashboard'
 import NotificationsScreen from '../app/notifications'
@@ -152,6 +152,50 @@ describe('M008 AC3: mark-read', () => {
     fireEvent.press(await screen.findByText('Mark all as read'))
 
     expect(await screen.findByText('Server down')).toBeTruthy()
+  })
+
+  it('clears the error once a later mark-read succeeds (review P2)', async () => {
+    mocked.fetchNotifications
+      .mockResolvedValueOnce({ notifications: [notification({})], unreadCount: 1 })
+      .mockResolvedValue({ notifications: [notification({ read: true })], unreadCount: 0 })
+    mocked.markNotificationsRead.mockRejectedValueOnce(new Error('Server down')).mockResolvedValue({ unreadCount: 0 })
+    wrap(<NotificationsScreen />)
+
+    fireEvent.press(await screen.findByText('Mark all as read'))
+    expect(await screen.findByText('Server down')).toBeTruthy()
+
+    fireEvent.press(screen.getByText('Mark all as read'))
+
+    await waitFor(() => expect(mocked.markNotificationsRead).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.queryByText('Server down')).toBeNull())
+    await waitFor(() => expect(screen.getByTestId('notification-n1-state').props.children).toBe('Read'))
+  })
+
+  it('clears the error when a later refetch succeeds', async () => {
+    mocked.fetchNotifications.mockResolvedValue({ notifications: [notification({})], unreadCount: 1 })
+    mocked.markNotificationsRead.mockRejectedValue(new Error('Server down'))
+    const { client } = wrap(<NotificationsScreen />)
+
+    fireEvent.press(await screen.findByText('Mark all as read'))
+    expect(await screen.findByText('Server down')).toBeTruthy()
+
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: queryKeys.notifications.all })
+    })
+
+    await waitFor(() => expect(screen.queryByText('Server down')).toBeNull())
+  })
+
+  it('keeps the error while nothing has succeeded since the failure', async () => {
+    mocked.fetchNotifications.mockResolvedValue({ notifications: [notification({})], unreadCount: 1 })
+    mocked.markNotificationsRead.mockRejectedValue(new Error('Server down'))
+    const { client } = wrap(<NotificationsScreen />)
+
+    fireEvent.press(await screen.findByText('Mark all as read'))
+    expect(await screen.findByText('Server down')).toBeTruthy()
+    await waitFor(() => expect(client.isMutating()).toBe(0))
+
+    expect(screen.getByText('Server down')).toBeTruthy()
   })
 })
 

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { clearSession } from '../src/storage';
 import { session } from '../src/session';
@@ -19,7 +19,12 @@ export default function DashboardScreen() {
   }
 
   return (
-    <View testID="dashboard-screen" style={[styles.screen, { backgroundColor: palette.background }]}>
+    <ScrollView
+      testID="dashboard-screen"
+      style={[styles.screen, { backgroundColor: palette.background }]}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
         <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
         <Text style={[styles.title, { color: palette.text }]}>Dashboard landing</Text>
@@ -73,16 +78,19 @@ export default function DashboardScreen() {
           <Text style={styles.primaryButtonText}>Sign out</Text>
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,

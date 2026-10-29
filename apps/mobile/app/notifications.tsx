@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { markNotificationsRead } from '../src/api';
-import { queryErrorMessage, useNotifications } from '../src/queries';
+import { queryLoadError, useNotifications } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
@@ -26,13 +26,32 @@ export default function NotificationsScreen() {
   const queryClient = useQueryClient();
   const notificationsQuery = useNotifications(!!caller);
   const feed = notificationsQuery.data ?? null;
+  const [actionError, setError] = useState<string | null>(null);
   const markReadMutation = useMutation({
     mutationFn: () => markNotificationsRead(),
+    // A new attempt supersedes the previous failure.
+    onMutate: () => setError(null),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all }),
   });
-  const [actionError, setError] = useState<string | null>(null);
 
-  const error = actionError ?? queryErrorMessage(notificationsQuery.error, 'Failed to load notifications');
+  const error = actionError ?? queryLoadError(notificationsQuery, 'Failed to load notifications');
+
+  // A later successful fetch means the server is reachable again, so a stale mark-read failure goes away.
+  // Subscribed to the cache rather than derived from render state: a refetch that returns identical data
+  // can finish without re-rendering this screen or changing dataUpdatedAt.
+  useEffect(
+    () =>
+      queryClient.getQueryCache().subscribe((event) => {
+        if (
+          event.type === 'updated' &&
+          event.action.type === 'success' &&
+          event.query.queryKey[0] === queryKeys.notifications.all[0]
+        ) {
+          setError(null);
+        }
+      }),
+    [queryClient],
+  );
 
   useEffect(() => {
     if (!caller) {
@@ -42,7 +61,6 @@ export default function NotificationsScreen() {
 
   const handleMarkRead = async () => {
     if (markReadMutation.isPending) return;
-    setError(null);
 
     try {
       await markReadMutation.mutateAsync();
