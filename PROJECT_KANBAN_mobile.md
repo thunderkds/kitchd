@@ -13,6 +13,7 @@
 
 ### Done
 - [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
+- [x] **M009** — Socket.IO realtime: JWT per handshake, background-only disconnect, reconnect catch-up, connect_error recovery; native clients unaffected by gateway CORS (verified live) | mobile-developer | Review: `tasks/TASK_REVIEW_M009.md` | Linear HUN-103 | Done: 2026-10-29 (device check pending)
 - [x] **M004** — TanStack Query on mobile (8 screens, retry policy, foreground refetch, cache cleared on every session change, guarded rollbacks, 401 redirect) | mobile-developer | Review: `tasks/TASK_REVIEW_M004.md` | Linear HUN-98 | Done: 2026-10-29 (device check pending)
 - [x] **M006** — Settings: theme preference (simple = legacy look) + CHEF kitchen rename; fixed dark_neon login mapping | mobile-developer | Review: `tasks/TASK_REVIEW_M006.md` | Linear HUN-100 | Done: 2026-10-29 (device check pending)
 - [x] **M007** — Comments on task detail (post, own-delete, VIEWER read-only) | mobile-developer | Review: `tasks/TASK_REVIEW_M007.md` | Linear HUN-101 | Done: 2026-10-29 (device check pending)
@@ -37,7 +38,6 @@
 - [ ] **M005** — Forms + validation: React Hook Form + Zod on mobile create/edit screens (none present today). | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written | 👀 Ready for Review (task/M005 c974be4)
 
 **Wave C — remaining parity screens**
-- [ ] **M009** — Socket.IO realtime (T017) on mobile, including background/foreground reconnect (flagged as a risk in the roadmap). | mobile-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_M009.md` | Linear HUN-103 | 👀 In Review (task/M009 c2214d1)
 
 **Wave D — native quality pass (Roadmap Phase 4)**
 - [ ] **M010** — FlashList on list-heavy screens (tasks/inventory/recipes/notes), `expo-image`, keyboard + safe-area handling, Reanimated only where it earns it. | frontend-developer | C2 | Risk: Low | P2 | ⚠️ guide not yet written | 🔄 In Progress (worktree ../kitchd-M010, branch task/M010)
