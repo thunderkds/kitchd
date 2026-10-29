@@ -66,3 +66,9 @@ export const commentKeys = {
   all: ['comments'] as const,
   list: (entityType: string, entityId: string) => ['comments', entityType, entityId] as const,
 };
+
+// M006
+export const kitchenKeys = {
+  all: ['kitchen'] as const,
+  detail: (id: string) => ['kitchen', 'detail', id] as const,
+};

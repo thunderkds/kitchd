@@ -158,3 +158,15 @@ export function useRemoveMember() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.members.all }),
   });
 }
+
+// M006
+import { getKitchen } from './api';
+import { kitchenKeys } from './queryKeys';
+
+export function useKitchen(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: kitchenKeys.detail(id ?? ''),
+    queryFn: () => getKitchen(id as string),
+    enabled: enabled && !!id,
+  });
+}

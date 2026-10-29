@@ -652,3 +652,32 @@ export function updateMemberRole(id: string, role: UserRole): Promise<TeamMember
 export function removeMember(id: string): Promise<TeamMember> {
   return request<TeamMember>(`/users/${id}`, { method: 'DELETE' });
 }
+
+// M006 (imports kept in this block so the sibling-merge hunk stays at the end of the file)
+import type { ThemePreferenceId } from '@kitchenos/shared';
+import { toApiTheme } from './theme';
+
+export interface Kitchen {
+  id: string;
+  name: string;
+}
+
+export function updateTheme(
+  preference: ThemePreferenceId,
+): Promise<{ id: string; email: string; themePreference: string }> {
+  return request<{ id: string; email: string; themePreference: string }>('/users/me/theme', {
+    method: 'PATCH',
+    body: JSON.stringify({ theme: toApiTheme(preference) }),
+  });
+}
+
+export function getKitchen(id: string): Promise<Kitchen> {
+  return request<Kitchen>(`/kitchens/${id}`);
+}
+
+export function renameKitchen(id: string, name: string): Promise<Kitchen> {
+  return request<Kitchen>(`/kitchens/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+}
