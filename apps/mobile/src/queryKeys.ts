@@ -37,4 +37,9 @@ export const queryKeys = {
     all: ['invites'] as const,
     list: () => ['invites', 'list'] as const,
   },
+  // M014
+  shiftLogs: {
+    all: ['shiftLogs'] as const,
+    list: () => ['shiftLogs', 'list'] as const,
+  },
 };

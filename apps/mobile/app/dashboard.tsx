@@ -48,6 +48,9 @@ export default function DashboardScreen() {
         <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
           <Text style={styles.secondaryButtonText}>Open invites</Text>
         </Pressable>
+        <Pressable style={styles.secondaryButton} onPress={() => router.push('/shift-logs')}>
+          <Text style={styles.secondaryButtonText}>Open shift log</Text>
+        </Pressable>
         <Pressable style={styles.primaryButton} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
           <Text style={styles.primaryButtonText}>Sign out</Text>
         </Pressable>

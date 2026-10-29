@@ -91,3 +91,10 @@ export function queryErrorMessage(error: unknown, fallback: string): string | nu
 
   return error instanceof Error ? error.message : fallback;
 }
+
+// M014
+import { listShiftLogs } from './api';
+
+export function useShiftLogs(enabled = true) {
+  return useQuery({ queryKey: queryKeys.shiftLogs.list(), queryFn: listShiftLogs, enabled });
+}
