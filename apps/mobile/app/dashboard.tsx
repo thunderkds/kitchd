@@ -1,12 +1,17 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { clearSession } from '../src/storage';
 import { session } from '../src/session';
 import { signOut } from '../src/signOut';
+import { AlertWidgets } from '../src/components/AlertWidgets';
+import { useNotifications } from '../src/queries';
+import { useTheme } from '../src/theme';
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
   const user = session.getUser();
+  const unreadCount = useNotifications(!!user).data?.unreadCount ?? 0;
 
   if (!user) {
     router.replace('/');
@@ -14,15 +19,22 @@ export default function DashboardScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.kicker}>KitchenOS mobile</Text>
-        <Text style={styles.title}>Dashboard landing</Text>
+    <ScrollView
+      testID="dashboard-screen"
+      style={[styles.screen, { backgroundColor: palette.background }]}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+        <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
+        <Text style={[styles.title, { color: palette.text }]}>Dashboard landing</Text>
         <Text style={styles.body}>{user.email}</Text>
-        <Text style={styles.meta}>Role: {user.role}</Text>
+        <Text style={[styles.meta, { color: palette.muted }]}>Role: {user.role}</Text>
         <Text style={styles.note}>
           This is the mobile shell landing screen. The first live feature routes are tasks, recipes, guidelines, announcements, notes, inventory, team, and invites.
         </Text>
+
+        <AlertWidgets />
 
         <Pressable style={styles.secondaryButton} onPress={() => router.push('/tasks')}>
           <Text style={styles.secondaryButtonText}>Open tasks</Text>
@@ -48,20 +60,37 @@ export default function DashboardScreen() {
         <Pressable style={styles.secondaryButton} onPress={() => router.push('/invites')}>
           <Text style={styles.secondaryButtonText}>Open invites</Text>
         </Pressable>
-        <Pressable style={styles.primaryButton} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
+        <Pressable style={styles.secondaryButton} onPress={() => router.push('/shift-logs')}>
+          <Text style={styles.secondaryButtonText}>Open shift log</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryButton} onPress={() => router.push('/notifications')}>
+          <Text style={styles.secondaryButtonText}>Open notifications</Text>
+          {unreadCount > 0 && (
+            <View style={styles.badge} testID="notifications-unread-badge">
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </Pressable>
+        <Pressable style={styles.secondaryButton} onPress={() => router.push('/settings')}>
+          <Text style={styles.secondaryButtonText}>Open settings</Text>
+        </Pressable>
+        <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
           <Text style={styles.primaryButtonText}>Sign out</Text>
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#0d1016',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0d1016',
   },
   card: {
     gap: 14,
@@ -109,6 +138,23 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#f4f7ff',
     fontSize: 16,
+    fontWeight: '800',
+  },
+  badge: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 11,
+    backgroundColor: '#ff6b6b',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 12,
     fontWeight: '800',
   },
   primaryButton: {

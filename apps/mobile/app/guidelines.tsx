@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createGuideline,
   getGuideline,
-  listGuidelines,
   updateGuideline,
   type Guideline,
+  type GuidelineInput,
   type GuidelineType,
 } from '../src/api';
+import { queryLoadError, useGuidelines } from '../src/queries';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
@@ -29,13 +32,20 @@ export default function GuidelinesScreen() {
   const caller = session.getUser();
   const canWrite = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
-  const [guidelines, setGuidelines] = useState<Guideline[]>([]);
+  const queryClient = useQueryClient();
+  const guidelinesQuery = useGuidelines(!!caller);
+  const guidelines = useMemo(() => guidelinesQuery.data ?? [], [guidelinesQuery.data]);
+  const loading = guidelinesQuery.isLoading;
+  const saveMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string | null; payload: GuidelineInput }) =>
+      id ? updateGuideline(id, payload) : createGuideline(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.guidelines.all }),
+  });
   const [selected, setSelected] = useState<Guideline | null>(null);
   const [mode, setMode] = useState<ViewMode>('list');
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editing, setEditing] = useState<Guideline | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setError] = useState<string | null>(null);
   const [formTitle, setFormTitle] = useState('');
   const [formType, setFormType] = useState<GuidelineType>('SOP');
   const [formSteps, setFormSteps] = useState('');
@@ -43,28 +53,13 @@ export default function GuidelinesScreen() {
 
   const selectedSteps = useMemo(() => selected?.steps ?? [], [selected]);
 
+  const error = actionError ?? queryLoadError(guidelinesQuery, 'Failed to load guidelines');
+
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
-
-    void refresh();
   }, [caller, router]);
-
-  const refresh = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const items = await listGuidelines();
-      setGuidelines(items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load guidelines');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openDetail = async (guideline: Guideline) => {
     setError(null);
@@ -122,12 +117,10 @@ export default function GuidelinesScreen() {
 
     try {
       if (formMode === 'edit' && editing) {
-        const updated = await updateGuideline(editing.id, payload);
-        setGuidelines((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        const updated = await saveMutation.mutateAsync({ id: editing.id, payload });
         setSelected((current) => (current && current.id === updated.id ? updated : current));
       } else {
-        const created = await createGuideline(payload);
-        setGuidelines((current) => [created, ...current]);
+        await saveMutation.mutateAsync({ id: null, payload });
       }
       closeForm();
     } catch (err) {

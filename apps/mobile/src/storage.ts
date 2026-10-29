@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import type { SessionStorageAdapter, StoredUser } from '@kitchenos/shared';
 import { Platform } from 'react-native';
+import { queryClient } from './queryClient';
 
 const ACCESS_TOKEN_STORAGE_KEY = 'accessToken';
 const AUTH_USER_STORAGE_KEY = 'authUser';
@@ -159,6 +160,8 @@ export function createSessionStorage(): SessionStorageAdapter {
 }
 
 export async function persistSession(token: string, user: StoredUser): Promise<void> {
+  // A new session means a possibly different user: drop whatever the previous one had cached.
+  queryClient.clear();
   const serializedUser = JSON.stringify(user);
 
   if (webStorage) {
@@ -181,6 +184,10 @@ export async function persistSession(token: string, user: StoredUser): Promise<v
 }
 
 export async function clearSession(): Promise<void> {
+  // Every logout path (sign-out button, 401 in request()) ends here. Clear the cache first so it
+  // is dropped even if wiping the stored session below throws.
+  queryClient.clear();
+
   if (webStorage) {
     webStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
     webStorage.removeItem(AUTH_USER_STORAGE_KEY);

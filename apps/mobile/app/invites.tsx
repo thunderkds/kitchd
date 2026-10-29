@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { inviteMember, listPendingInvites, revokeInvite, type PendingInvite } from '../src/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { inviteMember, revokeInvite, type PendingInvite } from '../src/api';
+import { queryLoadError, usePendingInvites } from '../src/queries';
+import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import type { UserRole } from '@kitchenos/shared';
 
@@ -14,47 +18,46 @@ export default function InvitesScreen() {
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('STAFF');
-  const [invites, setInvites] = useState<PendingInvite[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const invitesQuery = usePendingInvites(!!caller && canManage);
+  const invites = invitesQuery.data ?? [];
+  const loading = invitesQuery.isLoading;
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const error = actionError ?? queryLoadError(invitesQuery, 'Failed to load invites');
 
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
+  }, [caller, router]);
 
-    if (!canManage) {
-      return;
-    }
+  const inviteMutation = useMutation({
+    mutationFn: ({ email: inviteEmail, role: inviteRole }: { email: string; role: UserRole }) =>
+      inviteMember(inviteEmail, inviteRole),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invites.all }),
+  });
 
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    listPendingInvites()
-      .then((items) => {
-        if (!cancelled) {
-          setInvites(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load invites');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canManage, caller, router]);
+  const revokeMutation = useMutation({
+    mutationFn: (id: string) => revokeInvite(id),
+    onMutate: async (id) => {
+      const tokenAtStart = sessionTokenAtStart();
+      await queryClient.cancelQueries({ queryKey: queryKeys.invites.all });
+      const previous = queryClient.getQueryData<PendingInvite[]>(queryKeys.invites.list());
+      queryClient.setQueryData<PendingInvite[]>(queryKeys.invites.list(), (current) =>
+        current?.filter((item) => item.id !== id),
+      );
+      return { previous, tokenAtStart };
+    },
+    onError: (_error, _id, context) => {
+      if (context) {
+        restoreIfSessionUnchanged(queryClient, queryKeys.invites.list(), context.previous, context.tokenAtStart);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.invites.all }),
+  });
 
   const handleInvite = async () => {
     if (!canManage || !email.trim()) {
@@ -66,8 +69,7 @@ export default function InvitesScreen() {
     setMessage(null);
 
     try {
-      const created = await inviteMember(email.trim(), role);
-      setInvites((prev) => [created, ...prev]);
+      const created = await inviteMutation.mutateAsync({ email: email.trim(), role });
       setEmail('');
       setRole('STAFF');
       setMessage(`Invite created for ${created.email}`);
@@ -85,14 +87,11 @@ export default function InvitesScreen() {
 
     setError(null);
     setMessage(null);
-    const previous = invites;
-    setInvites((prev) => prev.filter((item) => item.id !== invite.id));
 
     try {
-      await revokeInvite(invite.id);
+      await revokeMutation.mutateAsync(invite.id);
       setMessage(`Revoked ${invite.email}`);
     } catch (err) {
-      setInvites(previous);
       setError(err instanceof Error ? err.message : 'Failed to revoke invite');
     }
   };

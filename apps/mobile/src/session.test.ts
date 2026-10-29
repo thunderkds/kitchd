@@ -4,6 +4,8 @@ const mockSecureStore = require('./testing/memorySecureStore').createMemorySecur
 
 jest.mock('expo-secure-store', () => mockSecureStore)
 jest.mock('react-native', () => ({
+  // storage.ts imports queryClient, which subscribes to AppState for focus refetching.
+  AppState: { addEventListener: () => ({ remove: () => undefined }) },
   Platform: {
     OS: 'ios',
   },
@@ -48,6 +50,21 @@ describe('toStoredUser', () => {
         kitchenId: 'kitchen-1',
         role: 'CHEF',
         themePreference: 'dark-neon',
+      }),
+    ).toEqual(chef)
+  })
+
+  it('accepts the API snake_case value (dark_neon) as dark-neon (M006: the API sends the Prisma enum)', () => {
+    const { toStoredUser } = loadModules()
+
+    expect(
+      toStoredUser({
+        id: 'user-1',
+        email: 'chef@example.com',
+        organizationId: 'org-1',
+        kitchenId: 'kitchen-1',
+        role: 'CHEF',
+        themePreference: 'dark_neon',
       }),
     ).toEqual(chef)
   })

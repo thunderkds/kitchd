@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  createRecipe,
-  getRecipe,
-  listIngredients,
-  listRecipes,
-  updateRecipe,
-  type Ingredient,
-  type Recipe,
-  type RecipeInput,
-} from '../src/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createRecipe, getRecipe, updateRecipe, type Recipe, type RecipeInput } from '../src/api';
+import { queryErrorMessage, queryLoadError, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
+import { queryKeys, recipeVersionKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
@@ -32,6 +26,12 @@ function toSteps(text: string): string[] {
     .filter((line) => line.length > 0);
 }
 
+function formatVersionDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Invalid date';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function initialRows(recipe?: Recipe | null): RecipeRowInput[] {
   if (recipe && recipe.ingredients.length > 0) {
     return recipe.ingredients.map((line) => ({ ingredientId: line.ingredientId, qty: String(line.qty) }));
@@ -45,14 +45,29 @@ export default function RecipesScreen() {
   const caller = session.getUser();
   const canWrite = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const queryClient = useQueryClient();
+  const recipesQuery = useRecipes(!!caller);
+  const recipes = useMemo(() => recipesQuery.data ?? [], [recipesQuery.data]);
+  const loading = recipesQuery.isLoading;
+  // Non-fatal: if the ingredient picker data fails to load the form still opens with an empty picker.
+  const ingredientsQuery = useIngredients(!!caller && canWrite);
+  const ingredients = useMemo(() => ingredientsQuery.data ?? [], [ingredientsQuery.data]);
+  const saveMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string | null; input: RecipeInput }) =>
+      id ? updateRecipe(id, input) : createRecipe(input),
+    // M016: an edit writes a new RecipeVersion, so the open recipe's version history must refetch.
+    onSuccess: (_saved, { id }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all }),
+        id ? queryClient.invalidateQueries({ queryKey: recipeVersionKeys.list(id) }) : undefined,
+      ]),
+  });
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<ViewMode>('list');
+  const versionsQuery = useRecipeVersions(selected?.id ?? null, !!caller && mode === 'detail');
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editing, setEditing] = useState<Recipe | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setError] = useState<string | null>(null);
   const [formName, setFormName] = useState('');
   const [formServings, setFormServings] = useState('');
   const [formSteps, setFormSteps] = useState('');
@@ -60,36 +75,13 @@ export default function RecipesScreen() {
   const [activeRow, setActiveRow] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const error = actionError ?? queryLoadError(recipesQuery, 'Failed to load recipes');
+
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
-
-    void refresh();
-    if (canWrite) {
-      listIngredients()
-        .then(setIngredients)
-        .catch(() => {
-          // Non-fatal: the form can still open later with an empty picker state.
-        });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [caller, canWrite, router]);
-
-  const refresh = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const items = await listRecipes();
-      setRecipes(items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load recipes');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [caller, router]);
 
   const ingredientById = useMemo(() => new Map(ingredients.map((item) => [item.id, item])), [ingredients]);
 
@@ -180,12 +172,10 @@ export default function RecipesScreen() {
 
     try {
       if (formMode === 'edit' && editing) {
-        const updated = await updateRecipe(editing.id, input);
-        setRecipes((current) => current.map((recipe) => (recipe.id === updated.id ? updated : recipe)));
+        const updated = await saveMutation.mutateAsync({ id: editing.id, input });
         setSelected((current) => (current && current.id === updated.id ? updated : current));
       } else {
-        const created = await createRecipe(input);
-        setRecipes((current) => [created, ...current]);
+        await saveMutation.mutateAsync({ id: null, input });
       }
       closeForm();
     } catch (err) {
@@ -258,6 +248,31 @@ export default function RecipesScreen() {
           )}
 
           <Text style={styles.total}>Total cost: {selected.costComputed.toFixed(2)}</Text>
+
+          <Text style={styles.sectionTitle}>Recipe version history</Text>
+          {versionsQuery.isLoading && <Text style={styles.note}>Loading version history...</Text>}
+          {versionsQuery.isError && (
+            <Text style={styles.error}>
+              {queryErrorMessage(versionsQuery.error, 'Failed to load recipe versions')}
+            </Text>
+          )}
+          {versionsQuery.data && versionsQuery.data.length === 0 && (
+            <Text style={styles.note}>No saved versions yet.</Text>
+          )}
+          {versionsQuery.data?.map((entry) => (
+            <View key={entry.id} style={styles.ingredientLine}>
+              <Text style={styles.ingredientName}>
+                Version {entry.version} · {formatVersionDate(entry.createdAt)}
+              </Text>
+              <Text style={styles.ingredientMeta}>
+                {entry.servings != null ? `${entry.servings} servings · ` : ''}Cost snapshot:{' '}
+                {entry.costComputedAtSnapshot.toFixed(2)}
+              </Text>
+              <Text style={styles.ingredientMeta}>
+                {entry.steps.length} steps · {entry.ingredientsSnapshot.length} ingredients
+              </Text>
+            </View>
+          ))}
 
           {canWrite && (
             <Pressable style={styles.secondaryButton} onPress={() => openEdit(selected)}>

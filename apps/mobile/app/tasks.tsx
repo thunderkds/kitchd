@@ -2,29 +2,37 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   confirmTaskCompletion,
   createTask,
-  fetchAssignableUsers,
   generateTaskFromGuideline,
   generateTaskFromRecipe,
-  listGuidelines,
-  listIngredients,
-  listRecipes,
-  listTasks,
   previewTaskCompletion,
   updateTaskStatus,
-  type AssignableUser,
   type CompletionPreview,
-  type Guideline,
-  type Ingredient,
-  type Recipe,
+  type CreateTaskInput,
   type Task,
   type TaskStatus,
 } from '../src/api';
+import {
+  queryLoadError,
+  useAssignableUsers,
+  useGuidelines,
+  useIngredients,
+  useRecipes,
+  useTasks,
+} from '../src/queries';
+import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 
 type CreateMode = 'plain' | 'recipe' | 'guideline';
+
+type CreateTaskRequest =
+  | { mode: 'plain'; input: CreateTaskInput }
+  | { mode: 'recipe'; recipeId: string }
+  | { mode: 'guideline'; guidelineId: string };
 
 type PendingCompletion = {
   taskId: string;
@@ -71,13 +79,20 @@ export default function TasksScreen() {
   const user = session.getUser();
   const canCreate = !!user && WRITE_ROLES.includes(user.role as (typeof WRITE_ROLES)[number]);
 
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [guidelines, setGuidelines] = useState<Guideline[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const tasksQuery = useTasks(!!user);
+  const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
+  const loading = tasksQuery.isLoading;
+  // Lookup data: a failed load just leaves the labels/pickers empty, as before.
+  const recipesQuery = useRecipes(!!user);
+  const guidelinesQuery = useGuidelines(!!user);
+  const ingredientsQuery = useIngredients(!!user);
+  const assignableQuery = useAssignableUsers(!!user && canCreate);
+  const recipes = useMemo(() => recipesQuery.data ?? [], [recipesQuery.data]);
+  const guidelines = useMemo(() => guidelinesQuery.data ?? [], [guidelinesQuery.data]);
+  const ingredients = useMemo(() => ingredientsQuery.data ?? [], [ingredientsQuery.data]);
+  const assignableUsers = useMemo(() => assignableQuery.data ?? [], [assignableQuery.data]);
+  const [actionError, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(null);
   const [confirmingCompletion, setConfirmingCompletion] = useState(false);
@@ -88,7 +103,6 @@ export default function TasksScreen() {
   const [createDueDate, setCreateDueDate] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [selectedGuidelineId, setSelectedGuidelineId] = useState('');
-  const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
   const grouped = useMemo(() => ({
@@ -142,57 +156,52 @@ export default function TasksScreen() {
     return user.role === 'STAFF' && task.assigneeId === currentUserId;
   };
 
+  const error = actionError ?? queryLoadError(tasksQuery, 'Failed to load tasks');
+
   useEffect(() => {
     if (!user) {
       router.replace('/');
-      return;
     }
+  }, [router, user]);
 
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
+  const createMutation = useMutation({
+    mutationFn: (request: CreateTaskRequest): Promise<Task> => {
+      if (request.mode === 'plain') return createTask(request.input);
+      if (request.mode === 'recipe') return generateTaskFromRecipe(request.recipeId);
+      return generateTaskFromGuideline(request.guidelineId);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
 
-    listTasks()
-      .then((items) => {
-        if (!cancelled) {
-          setTasks(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load tasks');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+  const completeMutation = useMutation({
+    mutationFn: (taskId: string) => confirmTaskCompletion(taskId),
+    // Completion deducts stock, so refresh the ingredient caches and dashboard alerts along with the tasks.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.ingredients.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.alerts.all }),
+      ]),
+  });
 
-    Promise.all([
-      listRecipes(),
-      listGuidelines(),
-      listIngredients(),
-      canCreate ? fetchAssignableUsers() : Promise.resolve([] as AssignableUser[]),
-    ])
-      .then(([recipeItems, guidelineItems, ingredientItems, assignableItems]) => {
-        if (!cancelled) {
-          setRecipes(recipeItems);
-          setGuidelines(guidelineItems);
-          setIngredients(ingredientItems);
-          setAssignableUsers(assignableItems);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAssignableUsers([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canCreate, router, user]);
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: TaskStatus }) => updateTaskStatus(id, status),
+    onMutate: async ({ id, status }) => {
+      const tokenAtStart = sessionTokenAtStart();
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks.list() });
+      const previous = queryClient.getQueryData<Task[]>(queryKeys.tasks.list());
+      queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (current) =>
+        current?.map((item) => (item.id === id ? { ...item, status } : item)),
+      );
+      return { previous, tokenAtStart };
+    },
+    onError: (_error, _variables, context) => {
+      if (context) {
+        restoreIfSessionUnchanged(queryClient, queryKeys.tasks.list(), context.previous, context.tokenAtStart);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
 
   const openCreate = () => {
     if (!canCreate) return;
@@ -217,8 +226,7 @@ export default function TasksScreen() {
     setCreateError(null);
 
     try {
-      setCreating(true);
-      let created: Task;
+      let request: CreateTaskRequest;
 
       if (createMode === 'plain') {
         const title = createTitle.trim();
@@ -228,31 +236,32 @@ export default function TasksScreen() {
         }
 
         const dueAt = toIsoFromDateInput(createDueDate);
-        created = await createTask({
-          title,
-          ...(createAssigneeId ? { assigneeId: createAssigneeId } : {}),
-          ...(dueAt ? { dueAt } : {}),
-        });
+        request = {
+          mode: 'plain',
+          input: {
+            title,
+            ...(createAssigneeId ? { assigneeId: createAssigneeId } : {}),
+            ...(dueAt ? { dueAt } : {}),
+          },
+        };
       } else if (createMode === 'recipe') {
         if (!selectedRecipeId) {
           setCreateError('Select a recipe');
           return;
         }
-        created = await generateTaskFromRecipe(selectedRecipeId);
+        request = { mode: 'recipe', recipeId: selectedRecipeId };
       } else {
         if (!selectedGuidelineId) {
           setCreateError('Select a guideline');
           return;
         }
-        created = await generateTaskFromGuideline(selectedGuidelineId);
+        request = { mode: 'guideline', guidelineId: selectedGuidelineId };
       }
 
-      setTasks((current) => [created, ...current]);
+      await createMutation.mutateAsync(request);
       closeCreate();
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Failed to create task');
-    } finally {
-      setCreating(false);
     }
   };
 
@@ -273,8 +282,7 @@ export default function TasksScreen() {
           return;
         }
 
-        const result = await confirmTaskCompletion(task.id);
-        setTasks((current) => current.map((item) => (item.id === task.id ? result.task : item)));
+        await completeMutation.mutateAsync(task.id);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to complete task');
       } finally {
@@ -283,14 +291,9 @@ export default function TasksScreen() {
       return;
     }
 
-    const previous = tasks;
-    setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, status: next } : item)));
-
     try {
-      const updated = await updateTaskStatus(task.id, next);
-      setTasks((current) => current.map((item) => (item.id === task.id ? updated : item)));
+      await statusMutation.mutateAsync({ id: task.id, status: next });
     } catch (err) {
-      setTasks(previous);
       setError(err instanceof Error ? err.message : 'Failed to update task');
     } finally {
       setSavingId(null);
@@ -303,8 +306,7 @@ export default function TasksScreen() {
     setError(null);
 
     try {
-      const result = await confirmTaskCompletion(pendingCompletion.taskId);
-      setTasks((current) => current.map((item) => (item.id === pendingCompletion.taskId ? result.task : item)));
+      await completeMutation.mutateAsync(pendingCompletion.taskId);
       setPendingCompletion(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete task');
@@ -452,11 +454,11 @@ export default function TasksScreen() {
             {createError && <Text style={styles.error}>{createError}</Text>}
 
             <View style={styles.rowActions}>
-              <Pressable style={styles.secondaryButton} onPress={closeCreate} disabled={creating}>
+              <Pressable style={styles.secondaryButton} onPress={closeCreate} disabled={createMutation.isPending}>
                 <Text style={styles.secondaryButtonText}>Cancel</Text>
               </Pressable>
-              <Pressable style={styles.primaryButton} onPress={handleCreate} disabled={creating}>
-                <Text style={styles.primaryButtonText}>{creating ? 'Creating...' : 'Create task'}</Text>
+              <Pressable style={styles.primaryButton} onPress={handleCreate} disabled={createMutation.isPending}>
+                <Text style={styles.primaryButtonText}>{createMutation.isPending ? 'Creating...' : 'Create task'}</Text>
               </Pressable>
             </View>
           </View>

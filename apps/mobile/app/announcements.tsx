@@ -1,46 +1,40 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { createAnnouncement, listAnnouncements, type Announcement } from '../src/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createAnnouncement } from '../src/api';
+import { queryLoadError, useAnnouncements } from '../src/queries';
+import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme } from '../src/theme';
 
 const BROADCAST_ROLES = ['OWNER', 'CHEF'] as const;
 
 export default function AnnouncementsScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
   const caller = session.getUser();
   const canBroadcast = !!caller && BROADCAST_ROLES.includes(caller.role as (typeof BROADCAST_ROLES)[number]);
 
-  const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const announcementsQuery = useAnnouncements(!!caller);
+  const announcements = announcementsQuery.data ?? null;
+  const broadcastMutation = useMutation({
+    mutationFn: createAnnouncement,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.announcements.all }),
+  });
+  const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const error = actionError ?? queryLoadError(announcementsQuery, 'Failed to load announcements');
+
   useEffect(() => {
     if (!caller) {
       router.replace('/');
-      return;
     }
-
-    let cancelled = false;
-
-    listAnnouncements()
-      .then((items) => {
-        if (!cancelled) {
-          setAnnouncements(items);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load announcements');
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
   }, [caller, router]);
 
   const openForm = () => {
@@ -70,8 +64,7 @@ export default function AnnouncementsScreen() {
     setError(null);
 
     try {
-      const created = await createAnnouncement({ title: cleanTitle, body: cleanBody });
-      setAnnouncements((current) => [created, ...(current ?? [])]);
+      await broadcastMutation.mutateAsync({ title: cleanTitle, body: cleanBody });
       closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to broadcast announcement');
@@ -85,12 +78,12 @@ export default function AnnouncementsScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
+    <View testID="announcements-screen" style={[styles.screen, { backgroundColor: palette.background }]}>
+      <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.kicker}>KitchenOS mobile</Text>
-            <Text style={styles.title}>Announcements</Text>
+            <Text style={[styles.kicker, { color: palette.accentSoft }]}>KitchenOS mobile</Text>
+            <Text style={[styles.title, { color: palette.text }]}>Announcements</Text>
           </View>
           <Pressable style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>Back</Text>
@@ -102,7 +95,7 @@ export default function AnnouncementsScreen() {
         </Text>
 
         {canBroadcast && (
-          <Pressable style={styles.primaryButton} onPress={openForm}>
+          <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={openForm}>
             <Text style={styles.primaryButtonText}>New announcement</Text>
           </Pressable>
         )}
@@ -129,14 +122,14 @@ export default function AnnouncementsScreen() {
               <Pressable style={styles.secondaryButton} onPress={closeForm}>
                 <Text style={styles.secondaryButtonText}>Cancel</Text>
               </Pressable>
-              <Pressable style={styles.primaryButton} disabled={saving} onPress={handleBroadcast}>
+              <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} disabled={saving} onPress={handleBroadcast}>
                 <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Broadcast'}</Text>
               </Pressable>
             </View>
           </View>
         )}
 
-        {error && <Text style={styles.error}>{error}</Text>}
+        {error && <Text style={[styles.error, { color: palette.danger }]}>{error}</Text>}
         {announcements === null && !error && <Text style={styles.note}>Loading announcements...</Text>}
         {announcements !== null && announcements.length === 0 && <Text style={styles.note}>No announcements yet.</Text>}
 
@@ -144,9 +137,9 @@ export default function AnnouncementsScreen() {
           <View style={styles.list}>
             {announcements.map((announcement) => (
               <View key={announcement.id} style={styles.listRow}>
-                <Text style={styles.listTitle}>{announcement.title}</Text>
+                <Text style={[styles.listTitle, { color: palette.text }]}>{announcement.title}</Text>
                 <Text style={styles.bodyText}>{announcement.body}</Text>
-                <Text style={styles.meta}>Read by {announcement.readBy.length}</Text>
+                <Text style={[styles.meta, { color: palette.muted }]}>Read by {announcement.readBy.length}</Text>
               </View>
             ))}
           </View>

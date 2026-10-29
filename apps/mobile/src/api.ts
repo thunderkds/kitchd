@@ -1,7 +1,9 @@
-import type { AuthResponseDto, UserRole } from '@kitchenos/shared';
+import type { AuthResponseDto, ThemePreferenceId, UserRole } from '@kitchenos/shared';
 import { API_BASE } from './apiBase';
+import { redirectToSignIn } from './onUnauthorized';
 import { session } from './session';
 import { clearSession } from './storage';
+import { toApiTheme } from './theme';
 
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
@@ -235,6 +237,18 @@ export interface PendingInvite {
   createdAt: string;
 }
 
+// Carries the HTTP status so callers (the query retry policy) can tell a 401/403/404 from a
+// transient failure. The message is exactly what `request()` has always thrown.
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -258,10 +272,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch (error) {
       console.warn('Failed to clear session after 401', error instanceof Error ? error.message : 'unknown error');
     }
+    redirectToSignIn();
   }
 
   if (!res.ok) {
-    throw new Error(data?.message ?? `Request failed (${res.status})`);
+    throw new ApiError(data?.message ?? `Request failed (${res.status})`, res.status);
   }
 
   return data as T;
@@ -483,5 +498,185 @@ export function previewTaskCompletion(id: string): Promise<CompletionPreview> {
 export function confirmTaskCompletion(id: string): Promise<CompletionResult> {
   return request<CompletionResult>(`/tasks/${id}/complete/confirm`, {
     method: 'POST',
+  });
+}
+
+// M016
+export interface RecipeVersion {
+  id: string;
+  recipeId: string;
+  version: number;
+  name: string;
+  steps: string[];
+  servings: number | null;
+  ingredientsSnapshot: RecipeIngredientResolved[];
+  costComputedAtSnapshot: number;
+  createdAt: string;
+}
+
+export function listRecipeVersions(id: string): Promise<RecipeVersion[]> {
+  return request<RecipeVersion[]>(`/recipes/${id}/versions`);
+}
+
+// M015 — inventory alerts. Response shapes mirror AlertsService: low-stock returns Ingredient rows
+// with the ledger-derived `currentStock` appended; expiring returns StockBatch rows with `ingredient`.
+export interface LowStockIngredient {
+  id: string;
+  name: string;
+  unit: string;
+  minThreshold: number | null;
+  currentStock: number;
+}
+
+export interface ExpiringSoonBatch {
+  id: string;
+  ingredientId: string;
+  qty: number;
+  expiryDate: string | null;
+  location: string | null;
+  createdAt: string;
+  ingredient: {
+    id: string;
+    name: string;
+    unit: string;
+  };
+}
+
+export function listLowStock(): Promise<LowStockIngredient[]> {
+  return request<LowStockIngredient[]>('/inventory/alerts/low-stock');
+}
+
+// No `days` by default: the server's window (DEFAULT_EXPIRING_SOON_DAYS = 3) is what web uses too.
+export function listExpiringSoon(days?: number): Promise<ExpiringSoonBatch[]> {
+  const query = days ? `?days=${days}` : '';
+  return request<ExpiringSoonBatch[]>(`/inventory/alerts/expiring${query}`);
+}
+
+// M014
+export type Shift = 'MORNING' | 'EVENING';
+
+export interface ShiftLog {
+  id: string;
+  kitchenId: string;
+  authorId: string;
+  shift: Shift;
+  body: string;
+  createdAt: string;
+}
+
+export interface CreateShiftLogInput {
+  shift: Shift;
+  body: string;
+}
+
+export function listShiftLogs(): Promise<ShiftLog[]> {
+  return request<ShiftLog[]>('/shift-logs');
+}
+
+export function createShiftLog(input: CreateShiftLogInput): Promise<ShiftLog> {
+  return request<ShiftLog>('/shift-logs', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+// M007 — comments (GET/POST /comments, DELETE /comments/:id). Entity types mirror the API's entity-type.ts.
+export type CommentEntityType = LinkedEntityType;
+
+export interface CommentItem {
+  id: string;
+  entityType: CommentEntityType;
+  entityId: string;
+  authorId: string;
+  body: string;
+  mentions: string[];
+  parentId: string | null;
+  createdAt: string;
+}
+
+export interface CreateCommentInput {
+  entityType: CommentEntityType;
+  entityId: string;
+  body: string;
+  parentId?: string;
+}
+
+export function listComments(entityType: CommentEntityType, entityId: string): Promise<CommentItem[]> {
+  const params = new URLSearchParams({ entityType, entityId });
+  return request<CommentItem[]>(`/comments?${params.toString()}`);
+}
+
+export function createComment(input: CreateCommentInput): Promise<CommentItem> {
+  return request<CommentItem>('/comments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+// M008
+export type NotificationType = 'MENTION' | 'LOW_STOCK' | 'TASK_ASSIGNED';
+
+export interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  body: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationFeed {
+  notifications: NotificationItem[];
+  unreadCount: number;
+}
+
+export function fetchNotifications(): Promise<NotificationFeed> {
+  return request<NotificationFeed>('/notifications');
+}
+
+// The controller takes no body: it marks every unread notification of the caller as read.
+export function markNotificationsRead(): Promise<{ unreadCount: number }> {
+  return request<{ unreadCount: number }>('/notifications/mark-read', { method: 'POST' });
+}
+
+export function deleteComment(id: string): Promise<{ id: string }> {
+  return request<{ id: string }>(`/comments/${id}`, { method: 'DELETE' });
+}
+
+// M017
+export function updateMemberRole(id: string, role: UserRole): Promise<TeamMember> {
+  return request<TeamMember>(`/users/${id}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
+}
+
+export function removeMember(id: string): Promise<TeamMember> {
+  return request<TeamMember>(`/users/${id}`, { method: 'DELETE' });
+}
+
+// M006
+
+export interface Kitchen {
+  id: string;
+  name: string;
+}
+
+export function updateTheme(
+  preference: ThemePreferenceId,
+): Promise<{ id: string; email: string; themePreference: string }> {
+  return request<{ id: string; email: string; themePreference: string }>('/users/me/theme', {
+    method: 'PATCH',
+    body: JSON.stringify({ theme: toApiTheme(preference) }),
+  });
+}
+
+export function getKitchen(id: string): Promise<Kitchen> {
+  return request<Kitchen>(`/kitchens/${id}`);
+}
+
+export function renameKitchen(id: string, name: string): Promise<Kitchen> {
+  return request<Kitchen>(`/kitchens/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
   });
 }

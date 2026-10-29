@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
+import { queryClient } from '../src/queryClient';
 import { sessionReady } from '../src/storage';
 
 function BootScreen() {
@@ -47,5 +49,9 @@ export default function RootLayout() {
     return <BootScreen />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </QueryClientProvider>
+  );
 }
