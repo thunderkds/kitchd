@@ -26,6 +26,10 @@ describe('a 401 raised inside a mounted query (M004 AC3 + AC6)', () => {
     const { queryClient } = require('./queryClient') as typeof import('./queryClient')
     const { useTasks } = require('./queries') as typeof import('./queries')
     const { session } = require('./session') as typeof import('./session')
+    // The mounted observer detaches after the 401 already cleared the cache and re-arms a 5-minute gc timer on
+    // the orphaned query, which holds jest open. An infinite gcTime means no timer is ever scheduled.
+    const defaults = queryClient.getDefaultOptions()
+    queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, gcTime: Infinity } })
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )

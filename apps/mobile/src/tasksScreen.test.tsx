@@ -29,6 +29,8 @@ const clients: ReturnType<typeof createQueryClient>[] = []
 
 function renderScreen() {
   const client = createQueryClient()
+  // A finished mutation keeps a 5-minute gc timer that client.clear() does not cancel, which holds jest open.
+  client.setDefaultOptions({ ...client.getDefaultOptions(), mutations: { gcTime: Infinity } })
   clients.push(client)
   return render(
     <QueryClientProvider client={client}>

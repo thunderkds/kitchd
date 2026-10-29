@@ -16,6 +16,8 @@ jest.mock('./session', () => ({
 }))
 jest.mock('./storage', () => ({ clearSession: jest.fn() }))
 jest.mock('./signOut', () => ({ signOut: jest.fn() }))
+// The dashboard also mounts AlertWidgets (M015); they are irrelevant to the notification badge.
+jest.mock('./components/AlertWidgets', () => ({ AlertWidgets: () => null }))
 jest.mock('./api', () => ({
   fetchNotifications: jest.fn(),
   markNotificationsRead: jest.fn(),
@@ -25,6 +27,8 @@ const mocked = api as jest.Mocked<typeof api>
 const clients: ReturnType<typeof createQueryClient>[] = []
 
 function wrap(ui: React.ReactElement, client = createQueryClient()) {
+  // A finished mutation keeps a 5-minute gc timer that client.clear() does not cancel, which holds jest open.
+  client.setDefaultOptions({ ...client.getDefaultOptions(), mutations: { gcTime: Infinity } })
   clients.push(client)
   return { client, ...render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>) }
 }
