@@ -29,22 +29,22 @@
 - [ ] **M005** — Forms + validation: React Hook Form + Zod on mobile create/edit screens (none present today). | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
 
 **Wave C — remaining parity screens**
-- [ ] **M006** — Settings screen + theme switcher (`PATCH /users/me/theme`); mobile has no theme handling at all, so the T025/T026 theme system is web-only. | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
-- [ ] **M007** — Comments + @mentions (T015) on mobile — no consumer exists. | frontend-developer | C2 | Risk: Low | P1 | ⚠️ guide not yet written
-- [ ] **M008** — Notification centre (T016 bell/unread/mark-read) on mobile — no consumer exists. | frontend-developer | C1 | Risk: Low | P1 | ⚠️ guide not yet written
-- [ ] **M009** — Socket.IO realtime (T017) on mobile, including background/foreground reconnect (flagged as a risk in the roadmap). | frontend-developer | C2 | Risk: Medium | P2 | ⚠️ guide not yet written
+- [ ] **M006** — Settings screen + theme switcher (`PATCH /users/me/theme`); mobile has no theme handling at all, so the T025/T026 theme system is web-only. | mobile-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M006.md` | Linear HUN-100
+- [ ] **M007** — Comments + @mentions (T015) on mobile — no consumer exists. | mobile-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M007.md` | Linear HUN-101
+- [ ] **M008** — Notification centre (T016 bell/unread/mark-read) on mobile — no consumer exists. | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M008.md` | Linear HUN-102
+- [ ] **M009** — Socket.IO realtime (T017) on mobile, including background/foreground reconnect (flagged as a risk in the roadmap). | mobile-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_M009.md` | Linear HUN-103
 
 **Wave D — native quality pass (Roadmap Phase 4)**
 - [ ] **M010** — FlashList on list-heavy screens (tasks/inventory/recipes/notes), `expo-image`, keyboard + safe-area handling, Reanimated only where it earns it. | frontend-developer | C2 | Risk: Low | P2 | ⚠️ guide not yet written
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
-- [ ] **M012** — Session hardening: M002 P2 findings F1–F5 (401 clears session, `apiBase` https/dev-only fallback, robust sign-out, invite token field reset, drop `expo-env.d.ts` `any` stubs) | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M012.md` | Linear HUN-107
+- [ ] **M012** — Session hardening: M002 P2 findings F1–F5 (401 clears session, `apiBase` https/dev-only fallback, robust sign-out, invite token field reset, drop `expo-env.d.ts` `any` stubs) | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M012.md` | Linear HUN-107 | 🔄 In Progress
 - [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
-- [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1
-- [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1
-- [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2
-- [ ] **M017** — Team management (change role / remove member) + an "I have an invite" entry on the login screen — M011 gap + reachability | mobile-developer | C2 | Risk: Medium | P1
+- [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M014.md` | Linear HUN-109
+- [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M015.md` | Linear HUN-110
+- [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M016.md` | Linear HUN-111
+- [ ] **M017** — Team management (change role / remove member) + an "I have an invite" entry on the login screen — M011 gap + reachability | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M017.md` | Linear HUN-112
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
