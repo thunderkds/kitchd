@@ -30,10 +30,7 @@ function ensureWritableCache() {
 
 ensureWritableCache();
 
-const prismaBin = path.resolve(
-  projectRoot,
-  '../../node_modules/.pnpm/prisma@5.22.0/node_modules/prisma/build/index.js',
-);
+const prismaBin = require.resolve('prisma/build/index.js', { paths: [projectRoot] });
 
 const result = spawnSync(
   process.execPath,
