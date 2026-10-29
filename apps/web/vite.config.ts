@@ -5,6 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  optimizeDeps: {
+    // @kitchenos/shared compiles to CommonJS (the Nest API consumes the same
+    // dist). Vite serves linked workspace packages raw over /@fs/ unless told
+    // to pre-bundle them, and the browser can't import CJS as ESM — the app
+    // never mounts. Force esbuild's CJS->ESM pre-bundle in dev.
+    include: ['@kitchenos/shared'],
+  },
   server: {
     port: 8766,
     strictPort: true,
