@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-09-07
+**Last updated**: 2026-10-29
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,6 +10,7 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
+- [ ] **T051** — Web dev server renders a blank page (`@kitchenos/shared` is CommonJS) | frontend-developer | C1 | Risk: Low | P0
 > Registered by the T042 coverage audit — see `docs/audits/backend-frontend-coverage_2026-07-28.md`. TASK_GUIDEs not yet written; each needs Stage 2 before pickup.
 - [ ] **T049** — Allow clearing a set low-stock threshold (T041 P2: clearing the input sends no key, so the old value silently persists; needs `minThreshold: null` in the payload + backend nullability) | backend-developer + frontend-developer | C1 | Risk: Low | P2 | ⚠️ guide not yet written
 - [ ] **T050** — Extend `rbac-matrix.e2e.spec.ts` to cover the `/users` routes (T040 P2: the audit built to catch role-omission gaps asserts nothing about any `/users` route) | backend-developer | C1 | Risk: Medium | P2 | ⚠️ guide not yet written

@@ -20,7 +20,10 @@
 
 ---
 
-## Bug report
+## Requirement (Bug report)
+
+**Restated intent**:
+> `pnpm dev:web` must serve a working app again: an authenticated user loading any route sees the app shell, as they did before `5904b08`.
 
 Found by the Supervisor during T044–T049 Stage 5 live verify (2026-10-29).
 
