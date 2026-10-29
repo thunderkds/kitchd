@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { createRecipe, getRecipe, updateRecipe, type Recipe, type RecipeInput } from '../src/api';
+import { FieldError, FormTextInput } from '../src/components/FormFields';
+import { recipeSchema, type RecipeFormValues, type RecipeRowValues } from '../src/schemas/recipe';
 import { queryErrorMessage, queryLoadError, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
 import { queryKeys, recipeVersionKeys } from '../src/queryKeys';
 import { session } from '../src/session';
@@ -12,19 +16,7 @@ const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
 type ViewMode = 'list' | 'detail';
 type FormMode = 'create' | 'edit';
 
-type RecipeRowInput = {
-  ingredientId: string;
-  qty: string;
-};
-
-const EMPTY_ROW: RecipeRowInput = { ingredientId: '', qty: '' };
-
-function toSteps(text: string): string[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
+const EMPTY_ROW: RecipeRowValues = { ingredientId: '', qty: '' };
 
 function formatVersionDate(value: string): string {
   const date = new Date(value);
@@ -32,7 +24,7 @@ function formatVersionDate(value: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function initialRows(recipe?: Recipe | null): RecipeRowInput[] {
+function initialRows(recipe?: Recipe | null): RecipeRowValues[] {
   if (recipe && recipe.ingredients.length > 0) {
     return recipe.ingredients.map((line) => ({ ingredientId: line.ingredientId, qty: String(line.qty) }));
   }
@@ -68,10 +60,28 @@ export default function RecipesScreen() {
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [actionError, setError] = useState<string | null>(null);
-  const [formName, setFormName] = useState('');
-  const [formServings, setFormServings] = useState('');
-  const [formSteps, setFormSteps] = useState('');
-  const [rows, setRows] = useState<RecipeRowInput[]>([{ ...EMPTY_ROW }]);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    trigger,
+    watch,
+    formState: { errors: formErrors },
+  } = useForm<RecipeFormValues, undefined, RecipeInput>({
+    defaultValues: { name: '', servings: '', steps: '', rows: [{ ...EMPTY_ROW }] },
+    resolver: zodResolver(recipeSchema),
+  });
+  const { fields: rowFields, append: appendRow, remove: removeRow } = useFieldArray({ control, name: 'rows' });
+  const rows = watch('rows');
+  const rowsKey = JSON.stringify(rows);
+  const hasRowsError = !!formErrors.rows;
+
+  // A row-level change can fix or break the "at least one complete row" rule, which no single field
+  // revalidates. Once a submit has failed, re-check it on every row edit.
+  useEffect(() => {
+    if (hasRowsError) void trigger('rows');
+  }, [hasRowsError, rowsKey, trigger]);
   const [activeRow, setActiveRow] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -87,10 +97,12 @@ export default function RecipesScreen() {
 
   const resetForm = (recipe: Recipe | null = null) => {
     setEditing(recipe);
-    setFormName(recipe?.name ?? '');
-    setFormServings(recipe?.servings != null ? String(recipe.servings) : '');
-    setFormSteps(recipe?.steps.join('\n') ?? '');
-    setRows(initialRows(recipe));
+    reset({
+      name: recipe?.name ?? '',
+      servings: recipe?.servings != null ? String(recipe.servings) : '',
+      steps: recipe?.steps.join('\n') ?? '',
+      rows: initialRows(recipe),
+    });
     setActiveRow(null);
   };
 
@@ -130,42 +142,15 @@ export default function RecipesScreen() {
     setError(null);
   };
 
-  const addRow = () => setRows((current) => [...current, { ...EMPTY_ROW }]);
-  const removeRow = (idx: number) => setRows((current) => current.filter((_, i) => i !== idx));
-  const updateRow = (idx: number, patch: Partial<RecipeRowInput>) =>
-    setRows((current) => current.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
+  const addRow = () => appendRow({ ...EMPTY_ROW });
 
   const setIngredient = (idx: number, ingredientId: string) => {
-    updateRow(idx, { ingredientId });
+    setValue(`rows.${idx}.ingredientId`, ingredientId);
     setActiveRow(null);
   };
 
-  const submitForm = async () => {
+  const submitForm = handleSubmit(async (input) => {
     if (!canWrite || saving) return;
-
-    const name = formName.trim();
-    const validRows = rows.filter((row) => row.ingredientId && row.qty.trim());
-    const parsedServings = formServings.trim() ? Number(formServings) : undefined;
-
-    if (!name) {
-      setError('Recipe name is required');
-      return;
-    }
-    if (validRows.length === 0) {
-      setError('Add at least one ingredient');
-      return;
-    }
-    if (formServings.trim() && Number.isNaN(parsedServings)) {
-      setError('Servings must be a number');
-      return;
-    }
-
-    const input: RecipeInput = {
-      name,
-      steps: toSteps(formSteps),
-      servings: parsedServings,
-      ingredients: validRows.map((row) => ({ ingredientId: row.ingredientId, qty: Number(row.qty) })),
-    };
 
     setSaving(true);
     setError(null);
@@ -183,7 +168,94 @@ export default function RecipesScreen() {
     } finally {
       setSaving(false);
     }
-  };
+  });
+
+  const rowErrors = formErrors.rows;
+  const recipeForm =
+    formMode && canWrite ? (
+      <View style={styles.formCard}>
+        <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit recipe' : 'New recipe'}</Text>
+        <FormTextInput control={control} name="name" style={styles.input} placeholder="Name" placeholderTextColor="#6f7c92" />
+        <FormTextInput
+          control={control}
+          name="servings"
+          style={styles.input}
+          placeholder="Servings"
+          placeholderTextColor="#6f7c92"
+          keyboardType="decimal-pad"
+        />
+        <FormTextInput
+          control={control}
+          name="steps"
+          style={[styles.input, styles.stepsInput]}
+          placeholder="Steps, one per line"
+          placeholderTextColor="#6f7c92"
+          multiline
+        />
+        <Text style={styles.sectionTitle}>Ingredients</Text>
+        <FieldError message={rowErrors?.message ?? rowErrors?.root?.message} />
+        {ingredients.length === 0 ? (
+          <Text style={styles.note}>No ingredients in inventory yet.</Text>
+        ) : (
+          rowFields.map((field, idx) => {
+            const selectedIngredient = ingredientById.get(rows[idx]?.ingredientId ?? '');
+            return (
+              <View key={field.id} style={styles.rowCard}>
+                <Text style={styles.rowLabel}>Ingredient {idx + 1}</Text>
+                <Pressable style={styles.pickerButton} onPress={() => setActiveRow(activeRow === idx ? null : idx)}>
+                  <Text style={styles.pickerButtonText}>
+                    {selectedIngredient ? `${selectedIngredient.name} (${selectedIngredient.unit})` : 'Choose ingredient'}
+                  </Text>
+                </Pressable>
+                {activeRow === idx && (
+                  <View style={styles.pickerList}>
+                    {ingredients.map((ingredient) => (
+                      <Pressable
+                        key={ingredient.id}
+                        style={styles.pickerOption}
+                        onPress={() => setIngredient(idx, ingredient.id)}
+                      >
+                        <Text style={styles.pickerOptionText}>
+                          {ingredient.name} ({ingredient.unit})
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+                <FormTextInput
+                  control={control}
+                  name={`rows.${idx}.qty`}
+                  style={styles.input}
+                  placeholder="Quantity"
+                  placeholderTextColor="#6f7c92"
+                  keyboardType="decimal-pad"
+                />
+                <View style={styles.rowActions}>
+                  <Pressable style={styles.secondaryButton} onPress={addRow}>
+                    <Text style={styles.secondaryButtonText}>Add row</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.secondaryButton}
+                    onPress={() => removeRow(idx)}
+                    disabled={rowFields.length === 1}
+                  >
+                    <Text style={styles.secondaryButtonText}>Remove</Text>
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })
+        )}
+        <View style={styles.rowActions}>
+          <Pressable style={styles.primaryButton} disabled={saving} onPress={submitForm}>
+            <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : 'Save recipe'}</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={closeForm}>
+            <Text style={styles.secondaryButtonText}>Cancel</Text>
+          </Pressable>
+        </View>
+      </View>
+    ) : null;
 
   if (!caller) {
     return null;
@@ -281,95 +353,7 @@ export default function RecipesScreen() {
           )}
         </View>
 
-        {formMode && canWrite && (
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit recipe' : 'New recipe'}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              placeholderTextColor="#6f7c92"
-              value={formName}
-              onChangeText={setFormName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Servings"
-              placeholderTextColor="#6f7c92"
-              keyboardType="decimal-pad"
-              value={formServings}
-              onChangeText={setFormServings}
-            />
-            <TextInput
-              style={[styles.input, styles.stepsInput]}
-              placeholder="Steps, one per line"
-              placeholderTextColor="#6f7c92"
-              multiline
-              value={formSteps}
-              onChangeText={setFormSteps}
-            />
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            {ingredients.length === 0 ? (
-              <Text style={styles.note}>No ingredients in inventory yet.</Text>
-            ) : (
-              rows.map((row, idx) => {
-                const selectedIngredient = ingredientById.get(row.ingredientId);
-                return (
-                  <View key={idx} style={styles.rowCard}>
-                    <Text style={styles.rowLabel}>Ingredient {idx + 1}</Text>
-                    <Pressable style={styles.pickerButton} onPress={() => setActiveRow(activeRow === idx ? null : idx)}>
-                      <Text style={styles.pickerButtonText}>
-                        {selectedIngredient ? `${selectedIngredient.name} (${selectedIngredient.unit})` : 'Choose ingredient'}
-                      </Text>
-                    </Pressable>
-                    {activeRow === idx && (
-                      <View style={styles.pickerList}>
-                        {ingredients.map((ingredient) => (
-                          <Pressable
-                            key={ingredient.id}
-                            style={styles.pickerOption}
-                            onPress={() => setIngredient(idx, ingredient.id)}
-                          >
-                            <Text style={styles.pickerOptionText}>
-                              {ingredient.name} ({ingredient.unit})
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    )}
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Quantity"
-                      placeholderTextColor="#6f7c92"
-                      keyboardType="decimal-pad"
-                      value={row.qty}
-                      onChangeText={(value) => updateRow(idx, { qty: value })}
-                    />
-                    <View style={styles.rowActions}>
-                      <Pressable style={styles.secondaryButton} onPress={addRow}>
-                        <Text style={styles.secondaryButtonText}>Add row</Text>
-                      </Pressable>
-                      <Pressable
-                        style={styles.secondaryButton}
-                        onPress={() => removeRow(idx)}
-                        disabled={rows.length === 1}
-                      >
-                        <Text style={styles.secondaryButtonText}>Remove</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })
-            )}
-            <View style={styles.rowActions}>
-              <Pressable style={styles.primaryButton} disabled={saving} onPress={submitForm}>
-                <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : 'Save recipe'}</Text>
-              </Pressable>
-              <Pressable style={styles.secondaryButton} onPress={closeForm}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
+        {recipeForm}
       </View>
     );
   }
@@ -413,95 +397,7 @@ export default function RecipesScreen() {
         )}
       </View>
 
-      {formMode && canWrite && (
-        <View style={styles.formCard}>
-          <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit recipe' : 'New recipe'}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            placeholderTextColor="#6f7c92"
-            value={formName}
-            onChangeText={setFormName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Servings"
-            placeholderTextColor="#6f7c92"
-            keyboardType="decimal-pad"
-            value={formServings}
-            onChangeText={setFormServings}
-          />
-          <TextInput
-            style={[styles.input, styles.stepsInput]}
-            placeholder="Steps, one per line"
-            placeholderTextColor="#6f7c92"
-            multiline
-            value={formSteps}
-            onChangeText={setFormSteps}
-          />
-          <Text style={styles.sectionTitle}>Ingredients</Text>
-          {ingredients.length === 0 ? (
-            <Text style={styles.note}>No ingredients in inventory yet.</Text>
-          ) : (
-            rows.map((row, idx) => {
-              const selectedIngredient = ingredientById.get(row.ingredientId);
-              return (
-                <View key={idx} style={styles.rowCard}>
-                  <Text style={styles.rowLabel}>Ingredient {idx + 1}</Text>
-                  <Pressable style={styles.pickerButton} onPress={() => setActiveRow(activeRow === idx ? null : idx)}>
-                    <Text style={styles.pickerButtonText}>
-                      {selectedIngredient ? `${selectedIngredient.name} (${selectedIngredient.unit})` : 'Choose ingredient'}
-                    </Text>
-                  </Pressable>
-                  {activeRow === idx && (
-                    <View style={styles.pickerList}>
-                      {ingredients.map((ingredient) => (
-                        <Pressable
-                          key={ingredient.id}
-                          style={styles.pickerOption}
-                          onPress={() => setIngredient(idx, ingredient.id)}
-                        >
-                          <Text style={styles.pickerOptionText}>
-                            {ingredient.name} ({ingredient.unit})
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  )}
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Quantity"
-                    placeholderTextColor="#6f7c92"
-                    keyboardType="decimal-pad"
-                    value={row.qty}
-                    onChangeText={(value) => updateRow(idx, { qty: value })}
-                  />
-                  <View style={styles.rowActions}>
-                    <Pressable style={styles.secondaryButton} onPress={addRow}>
-                      <Text style={styles.secondaryButtonText}>Add row</Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.secondaryButton}
-                      onPress={() => removeRow(idx)}
-                      disabled={rows.length === 1}
-                    >
-                      <Text style={styles.secondaryButtonText}>Remove</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })
-          )}
-          <View style={styles.rowActions}>
-            <Pressable style={styles.primaryButton} disabled={saving} onPress={submitForm}>
-              <Text style={styles.primaryButtonText}>{saving ? 'Saving...' : 'Save recipe'}</Text>
-            </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={closeForm}>
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+      {recipeForm}
     </View>
   );
 }

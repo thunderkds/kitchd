@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { createAnnouncement } from '../src/api';
+import { FormTextInput } from '../src/components/FormFields';
+import {
+  announcementSchema,
+  type AnnouncementFormValues,
+  type AnnouncementPayload,
+} from '../src/schemas/announcement';
 import { queryLoadError, useAnnouncements } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
@@ -25,8 +33,10 @@ export default function AnnouncementsScreen() {
   });
   const [actionError, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const { control, handleSubmit, reset } = useForm<AnnouncementFormValues, undefined, AnnouncementPayload>({
+    defaultValues: { title: '', body: '' },
+    resolver: zodResolver(announcementSchema),
+  });
   const [saving, setSaving] = useState(false);
 
   const error = actionError ?? queryLoadError(announcementsQuery, 'Failed to load announcements');
@@ -39,39 +49,30 @@ export default function AnnouncementsScreen() {
 
   const openForm = () => {
     if (!canBroadcast) return;
-    setTitle('');
-    setBody('');
+    reset();
     setFormOpen(true);
   };
 
   const closeForm = () => {
     setFormOpen(false);
-    setTitle('');
-    setBody('');
+    reset();
   };
 
-  const handleBroadcast = async () => {
+  const handleBroadcast = handleSubmit(async (announcement) => {
     if (!canBroadcast || saving) return;
-
-    const cleanTitle = title.trim();
-    const cleanBody = body.trim();
-    if (!cleanTitle || !cleanBody) {
-      setError('Title and message are required');
-      return;
-    }
 
     setSaving(true);
     setError(null);
 
     try {
-      await broadcastMutation.mutateAsync({ title: cleanTitle, body: cleanBody });
+      await broadcastMutation.mutateAsync(announcement);
       closeForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to broadcast announcement');
     } finally {
       setSaving(false);
     }
-  };
+  });
 
   if (!caller) {
     return null;
@@ -103,20 +104,20 @@ export default function AnnouncementsScreen() {
         {formOpen && canBroadcast && (
           <View style={styles.formCard}>
             <Text style={styles.sectionTitle}>Broadcast announcement</Text>
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="title"
               style={styles.input}
               placeholder="Title"
               placeholderTextColor="#6f7c92"
-              value={title}
-              onChangeText={setTitle}
             />
-            <TextInput
+            <FormTextInput
+              control={control}
+              name="body"
               style={styles.multiLineInput}
               placeholder="Message"
               placeholderTextColor="#6f7c92"
               multiline
-              value={body}
-              onChangeText={setBody}
             />
             <View style={styles.formActions}>
               <Pressable style={styles.secondaryButton} onPress={closeForm}>

@@ -36,7 +36,8 @@ export interface CreateIngredientInput {
   unit: string;
   costPerUnit: number;
   category?: string;
-  minThreshold?: number;
+  // null only ever comes from the edit form (T049 clears the threshold); the create form omits the key.
+  minThreshold?: number | null;
 }
 
 export interface UpdateIngredientInput {
@@ -44,7 +45,8 @@ export interface UpdateIngredientInput {
   unit?: string;
   costPerUnit?: number;
   category?: string;
-  minThreshold?: number;
+  // null clears the stored threshold (T049); an absent key would be dropped by JSON.stringify.
+  minThreshold?: number | null;
 }
 
 export interface ReceiveStockInput {

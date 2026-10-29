@@ -1,33 +1,40 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useForm, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import type { AuthResponseDto, StoredUser } from '@kitchenos/shared';
 import { API_BASE } from '../src/apiBase';
+import { FormTextInput } from '../src/components/FormFields';
+import { loginSchema, signupSchema, type AuthFormValues } from '../src/schemas/auth';
 import { persistSession } from '../src/storage';
 import { session, toStoredUser } from '../src/session';
 
 type Mode = 'login' | 'signup';
 
-function buildPayload(mode: Mode, email: string, password: string, organizationName: string, kitchenName: string) {
-  if (mode === 'signup') {
-    return { email, password, organizationName, kitchenName };
-  }
+const EMPTY_FORM: AuthFormValues = { email: '', password: '', organizationName: '', kitchenName: '' };
 
-  return { email, password };
-}
+// The login schema only knows two of the form's four inputs and strips the rest from its output.
+const RESOLVERS: Record<Mode, Resolver<AuthFormValues>> = {
+  login: zodResolver(loginSchema) as unknown as Resolver<AuthFormValues>,
+  signup: zodResolver(signupSchema),
+};
 
 export default function HomeScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('signup');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [organizationName, setOrganizationName] = useState('');
-  const [kitchenName, setKitchenName] = useState('');
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(() => session.getUser());
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const signedIn = currentUser !== null;
+
+  // Login and signup share the inputs but not the rules (login must not enforce the signup password
+  // minimum), so the resolver follows the mode. The schema output is exactly the request body.
+  const { control, handleSubmit, clearErrors } = useForm<AuthFormValues>({
+    defaultValues: EMPTY_FORM,
+    resolver: (values, context, options) => RESOLVERS[mode](values, context, options),
+  });
 
   useEffect(() => {
     if (signedIn) {
@@ -35,7 +42,12 @@ export default function HomeScreen() {
     }
   }, [router, signedIn]);
 
-  const submit = async () => {
+  const changeMode = (next: Mode) => {
+    setMode(next);
+    clearErrors();
+  };
+
+  const submit = handleSubmit(async (payload) => {
     setLoading(true);
     setMessage(null);
 
@@ -43,7 +55,7 @@ export default function HomeScreen() {
       const res = await fetch(`${API_BASE}${mode === 'signup' ? '/auth/signup' : '/auth/login'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload(mode, email, password, organizationName, kitchenName)),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json()) as AuthResponseDto;
       if (!res.ok) {
@@ -59,7 +71,7 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  });
 
   if (signedIn) {
     return (
@@ -85,47 +97,31 @@ export default function HomeScreen() {
         <View style={styles.segmentRow}>
           <Pressable
             style={[styles.segmentButton, mode === 'signup' && styles.segmentButtonActive]}
-            onPress={() => setMode('signup')}
+            onPress={() => changeMode('signup')}
           >
             <Text style={[styles.segmentText, mode === 'signup' && styles.segmentTextActive]}>Sign up</Text>
           </Pressable>
           <Pressable
             style={[styles.segmentButton, mode === 'login' && styles.segmentButtonActive]}
-            onPress={() => setMode('login')}
+            onPress={() => changeMode('login')}
           >
             <Text style={[styles.segmentText, mode === 'login' && styles.segmentTextActive]}>Log in</Text>
           </Pressable>
         </View>
 
-        <TextInput
+        <FormTextInput
+          control={control}
+          name="email"
           style={styles.input}
           placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <FormTextInput control={control} name="password" style={styles.input} placeholder="Password" secureTextEntry />
         {mode === 'signup' && (
           <>
-            <TextInput
-              style={styles.input}
-              placeholder="Organization name"
-              value={organizationName}
-              onChangeText={setOrganizationName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Kitchen name"
-              value={kitchenName}
-              onChangeText={setKitchenName}
-            />
+            <FormTextInput control={control} name="organizationName" style={styles.input} placeholder="Organization name" />
+            <FormTextInput control={control} name="kitchenName" style={styles.input} placeholder="Kitchen name" />
           </>
         )}
 

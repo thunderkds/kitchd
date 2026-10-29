@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import { queryClient } from '../src/queryClient';
+import { startRealtime } from '../src/realtime';
 import { sessionReady } from '../src/storage';
 
 function BootScreen() {
@@ -33,15 +34,19 @@ export default function RootLayout() {
 
   useEffect(() => {
     let cancelled = false;
+    let stopRealtime: (() => void) | undefined;
 
     sessionReady.finally(() => {
       if (!cancelled) {
+        // Connects only if a token exists; follows login, logout and AppState from here on.
+        stopRealtime = startRealtime();
         setReady(true);
       }
     });
 
     return () => {
       cancelled = true;
+      stopRealtime?.();
     };
   }, []);
 

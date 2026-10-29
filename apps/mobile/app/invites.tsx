@@ -1,23 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { inviteMember, revokeInvite, type PendingInvite } from '../src/api';
+import { FormTextInput } from '../src/components/FormFields';
+import { INVITABLE_ROLES, inviteSchema, type InviteFormValues, type InvitePayload } from '../src/schemas/invite';
 import { queryLoadError, usePendingInvites } from '../src/queries';
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
 import type { UserRole } from '@kitchenos/shared';
 
-const ASSIGNABLE_ROLES: UserRole[] = ['CHEF', 'STAFF', 'VIEWER'];
 
 export default function InvitesScreen() {
   const router = useRouter();
   const caller = session.getUser();
   const canManage = caller?.role === 'OWNER' || caller?.role === 'ADMIN';
 
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>('STAFF');
+  const { control, handleSubmit, reset, watch, setValue } = useForm<InviteFormValues, undefined, InvitePayload>({
+    defaultValues: { email: '', role: 'STAFF' },
+    resolver: zodResolver(inviteSchema),
+  });
+  const role = watch('role');
   const queryClient = useQueryClient();
   const invitesQuery = usePendingInvites(!!caller && canManage);
   const invites = invitesQuery.data ?? [];
@@ -59,8 +65,8 @@ export default function InvitesScreen() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.invites.all }),
   });
 
-  const handleInvite = async () => {
-    if (!canManage || !email.trim()) {
+  const handleInvite = handleSubmit(async ({ email, role: inviteRole }) => {
+    if (!canManage) {
       return;
     }
 
@@ -69,16 +75,15 @@ export default function InvitesScreen() {
     setMessage(null);
 
     try {
-      const created = await inviteMutation.mutateAsync({ email: email.trim(), role });
-      setEmail('');
-      setRole('STAFF');
+      const created = await inviteMutation.mutateAsync({ email, role: inviteRole });
+      reset();
       setMessage(`Invite created for ${created.email}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send invite');
     } finally {
       setSaving(false);
     }
-  };
+  });
 
   const handleRevoke = async (invite: PendingInvite) => {
     if (!canManage) {
@@ -132,21 +137,21 @@ export default function InvitesScreen() {
           <Text style={styles.secondaryButtonText}>Open accept invite</Text>
         </Pressable>
 
-        <TextInput
+        <FormTextInput
+          control={control}
+          name="email"
           style={styles.input}
           placeholder="Invite email"
-          value={email}
-          onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
         />
 
         <View style={styles.segmentRow}>
-          {ASSIGNABLE_ROLES.map((candidate) => (
+          {INVITABLE_ROLES.map((candidate) => (
             <Pressable
               key={candidate}
               style={[styles.segmentButton, role === candidate && styles.segmentButtonActive]}
-              onPress={() => setRole(candidate)}
+              onPress={() => setValue('role', candidate)}
             >
               <Text style={[styles.segmentText, role === candidate && styles.segmentTextActive]}>{candidate}</Text>
             </Pressable>
