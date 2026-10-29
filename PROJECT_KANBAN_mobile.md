@@ -1,5 +1,5 @@
 # PROJECT_KANBAN_mobile.md — React Native / Expo scope
-**Last updated**: 2026-08-10
+**Last updated**: 2026-10-29
 **Branch**: `feat/react-native-migration` (`5904b08`)
 
 > Separate board per Hard-Stop Gate 4 — `apps/mobile` is a distinct tech scope (different runtime, different deploy target) from the `apps/web` board in `PROJECT_KANBAN.md`.
@@ -11,13 +11,17 @@
 
 > Task line format: **Mxxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
+### Done
+- [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
+- [x] **M002** — Retro code + security review of the RN migration: 0 P0, 0 P1, 6 P2 (→ M012/M003), 7 P3 (→ M013); 5 focus questions answered; security verdict PASS with follow-ups | Supervisor | C2 | Risk: High | P0 | Review: `tasks/TASK_REVIEW_M002.md` | Linear HUN-96 | Done: 2026-10-29
+- [x] **M001** — Monorepo committed to pnpm workspaces; clean-tree `scripts/verify-build.sh` passes; Stage 4 found and fixed a P1 (ambient Prisma client stub disabled all API type checking, `35abcdd`) | common-infrastructure | C2 | Risk: High | P0 | Evidence: `tasks/TASK_GUIDE_M001.md` | Live Render deploy still blocked (below) | Linear HUN-95 | Done: 2026-10-29
+
 ### Done (landed pre-pipeline — code exists, but unreviewed and untested)
 - [x] **M000** — Expo Router scaffold + 13 screens + `apps/mobile/src/{api,apiBase,session,storage}.ts` + `packages/shared/src/session.ts` shared session store; `apps/web` repointed at the shared package | unattributed | C3 | Risk: Medium | P0 | ⚠️ **No TASK_GUIDE, no tests, no code-review, no security-review** — the whole pipeline was bypassed. Verified post-push only: mobile `tsc --noEmit` clean, web `tsc -b` clean, 199/199 web tests green. | Commit `5904b08` | Done: 2026-08-10
 
 ### Todo
 
 **Wave A — pay down the M000 debt (must clear before new features)**
-- [ ] **M002** — Retro code-review + security-review of the whole `5904b08` diff, with the auth/session boundary as the focus (token now in `expo-secure-store` with an in-memory cache; `sessionReady` hydration race on cold start). | Supervisor | C2 | Risk: **High** | **P0** | ⚠️ guide not yet written
 - [ ] **M003** — Test foundation for `apps/mobile`: pick and wire a runner (jest-expo vs vitest — `apps/api` is jest, `apps/web` is vitest, so neither default is automatic), then cover `src/session.ts`, `src/storage.ts`, and `packages/shared/src/session.ts`. Zero tests exist in `apps/mobile` today. | qa-expert | C2 | Risk: Medium | P0 | ⚠️ guide not yet written
 
 **Wave B — close the stack gap**
@@ -32,13 +36,21 @@
 
 **Wave D — native quality pass (Roadmap Phase 4)**
 - [ ] **M010** — FlashList on list-heavy screens (tasks/inventory/recipes/notes), `expo-image`, keyboard + safe-area handling, Reanimated only where it earns it. | frontend-developer | C2 | Risk: Low | P2 | ⚠️ guide not yet written
-- [ ] **M011** — Mobile↔backend coverage audit, the `apps/mobile` equivalent of T042: enumerate all 58 backend routes against mobile consumers. | Supervisor | C1 | Risk: Low | P2 | ⚠️ guide not yet written
+
+
+**Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
+- [ ] **M012** — Session hardening: M002 P2 findings F1–F5 (401 clears session, `apiBase` https/dev-only fallback, robust sign-out, invite token field reset, drop `expo-env.d.ts` `any` stubs) | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M012.md` | Linear HUN-107
+- [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
+- [ ] **M014** — Shift Log screen (`GET/POST /shift-logs`) — M011 gap | mobile-developer | C1 | Risk: Low | P1
+- [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1
+- [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2
+- [ ] **M017** — Team management (change role / remove member) + an "I have an invite" entry on the login screen — M011 gap + reachability | mobile-developer | C2 | Risk: Medium | P1
+> M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
 
 ### Ready for Review
 
-- [ ] **M001** — Deploy-regression fix: `apps/web` now depends on `@kitchenos/shared` again (reversing the 2026-07-06 standalone-deploy decision) and `npm install --include=dev` was dropped from both `apps/api` and `apps/web` build scripts (that flag was the fix for Render deploy failure #1). Restore a working Render build for both services, or formally re-decide the deploy model. | common-infrastructure | C2 | Risk: **High** | **P0** | Decision: **commit to the pnpm workspace** (user, 2026-08-10) — not a revert to standalone builds | Guide: `tasks/TASK_GUIDE_M001.md` | Verified: `pnpm install --frozen-lockfile && pnpm run build` passes from a clean tree; `render.yaml` added for root-level Render builds.
 ---
 
 ## Blocked
@@ -58,5 +70,5 @@
 | 1.5 Sub-Agent Architecture | ⬜ Not started — no mobile-specific agent exists; base team may suffice |
 | 2 Planning (/plan) | 🔄 In Progress — this board is the first pass; no TASK_GUIDEs written yet |
 | 3 Execution | ⚠️ Out of order — M000 shipped code before Stages 2–4 ran |
-| 4 Review | ⬜ Not started — M002 is the retro pass |
+| 4 Review | ✅ M002 retro pass done 2026-10-29 |
 | 5 Integration & Verify | ⬜ Not started — branch pushed, no PR |
