@@ -437,3 +437,83 @@ describe('catch-up on reconnect (events missed while backgrounded are not replay
     expect(spy).not.toHaveBeenCalled()
   })
 })
+
+describe('recovery from a rejected handshake (connect_error)', () => {
+  // The gateway maps any auth failure (bad token, or a DB blip) to connect_error. socket.io does
+  // not retry that on its own, so the module must drop the dead socket and let `active` rebuild it.
+  const rejectHandshake = () => lastSocket().handlers['connect_error']?.(new Error('Unauthorized'))
+
+  it('cleans up the socket on connect_error', async () => {
+    const { realtime } = await signedIn()
+    realtime.startRealtime()
+    const socket = lastSocket()
+
+    rejectHandshake()
+
+    expect(socket.removeAllListeners).toHaveBeenCalled()
+    expect(socket.disconnect).toHaveBeenCalled()
+  })
+
+  it('does not retry inside the handler', async () => {
+    const { realtime } = await signedIn()
+    realtime.startRealtime()
+
+    rejectHandshake()
+
+    expect(mockIo).toHaveBeenCalledTimes(1)
+  })
+
+  it('creates exactly one new socket on the next active event', async () => {
+    const { realtime } = await signedIn('token-a')
+    realtime.startRealtime()
+    rejectHandshake()
+
+    setAppState('active')
+
+    expect(mockIo).toHaveBeenCalledTimes(2)
+    await expect(resolveAuth(lastSocket())).resolves.toEqual({ token: 'token-a' })
+  })
+
+  it('repeated connect_errors do not stack sockets', async () => {
+    const { realtime } = await signedIn()
+    realtime.startRealtime()
+
+    rejectHandshake()
+    setAppState('active')
+    rejectHandshake()
+    setAppState('active')
+    setAppState('active')
+
+    expect(mockIo).toHaveBeenCalledTimes(3)
+    const live = mockSockets.filter((s) => s.disconnect.mock.calls.length === 0)
+    expect(live).toHaveLength(1)
+  })
+
+  it('a stale connect_error from a replaced socket does not tear down its successor', async () => {
+    const { realtime, storage } = await signedIn('token-a')
+    realtime.startRealtime()
+    const old = lastSocket()
+    await storage.persistSession('token-b', user)
+    const successor = lastSocket()
+
+    old.handlers['connect_error']?.(new Error('Unauthorized'))
+
+    expect(successor.disconnect).not.toHaveBeenCalled()
+    setAppState('active')
+    expect(mockIo).toHaveBeenCalledTimes(2)
+  })
+
+  it('never logs the token', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const log = jest.spyOn(console, 'log').mockImplementation(() => undefined)
+    const { realtime } = await signedIn('secret-token-xyz')
+    realtime.startRealtime()
+
+    rejectHandshake()
+
+    const logged = JSON.stringify([...warn.mock.calls, ...log.mock.calls])
+    expect(logged).not.toContain('secret-token-xyz')
+    warn.mockRestore()
+    log.mockRestore()
+  })
+})

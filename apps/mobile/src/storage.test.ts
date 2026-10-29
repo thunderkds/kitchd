@@ -451,3 +451,46 @@ describe('native session storage: write racing the cold-start hydration', () => 
     expect(createSessionStorage().getItem('accessToken')).toBe('new-token')
   })
 })
+
+describe('session change listeners (M009)', () => {
+  const user = JSON.parse(userJson)
+
+  it('clearSession resolves, still runs later listeners and clears the token when a listener throws', async () => {
+    const { clearSession, createSessionStorage, onSessionChange, persistSession, sessionReady } = loadStorageModule()
+    await sessionReady
+    await persistSession('token-a', user)
+    const thrower = jest.fn(() => {
+      throw new Error('listener boom')
+    })
+    const second = jest.fn()
+    onSessionChange(thrower)
+    onSessionChange(second)
+    thrower.mockClear()
+
+    await expect(clearSession()).resolves.toBeUndefined()
+
+    expect(thrower).toHaveBeenCalledTimes(1)
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(createSessionStorage().getItem('accessToken')).toBeNull()
+    expect(mockSecureStore.data.has('session')).toBe(false)
+    expect(warnSpy).toHaveBeenCalledWith('Session change listener failed', 'listener boom')
+  })
+
+  it('persistSession resolves, still runs later listeners and stores the token when a listener throws', async () => {
+    const { createSessionStorage, onSessionChange, persistSession, sessionReady } = loadStorageModule()
+    await sessionReady
+    const thrower = jest.fn(() => {
+      throw new Error('listener boom')
+    })
+    const second = jest.fn()
+    onSessionChange(thrower)
+    onSessionChange(second)
+
+    await expect(persistSession('token-b', user)).resolves.toBeUndefined()
+
+    expect(thrower).toHaveBeenCalledTimes(1)
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(createSessionStorage().getItem('accessToken')).toBe('token-b')
+    expect(mockSecureStore.data.get('session')).toBe(blob('token-b', JSON.stringify(user)))
+  })
+})
