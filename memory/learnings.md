@@ -299,3 +299,7 @@ It rejects unicode local parts and IDN domains (`josé@example.com`, `a@münchen
 
 ### 2026-10-29 — Agents must not share a worktree with a concurrent writer
 A reviewer running tests in `kitchd-w3` while a fixer edited it saw "failures" that were the fixer's red-phase tests. Reviewers doing mutation checks now work in a `git archive <sha>` copy with `node_modules` symlinked. Also: `git stash` is shared across worktrees.
+
+### 2026-10-29 — FlashList rows: inline `renderItem` refreshes them; a focus test must force a parent re-render
+FlashList 2.0.2's `ViewHolder` memo compares `renderItem`, `item`, `extraData`; an inline `renderItem` changes identity each render, so row state (`savingId`, pin busy) shows without `extraData` — memoising `renderItem` without `extraData` would break it. Keep list-header forms as a JSX element (`ListHeaderComponent={header}`); `() => header` remounts and drops focus. A "keeps input mounted" test is vacuous unless it triggers a screen re-render (press a chip/toggle) between typings — RHF typing alone does not re-render. Mutated jest runs that remount can leave open handles; use `--forceExit` for mutation loops.
+**Files**: `apps/mobile/app/{tasks,inventory,recipes,notes,shift-logs,notifications,team}.tsx`, `apps/mobile/src/components/ScreenFrame.tsx`
