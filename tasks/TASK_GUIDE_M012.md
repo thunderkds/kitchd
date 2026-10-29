@@ -77,6 +77,7 @@ pnpm install --frozen-lockfile && pnpm --filter @kitchenos/mobile test && pnpm -
 | `apps/mobile/app/dashboard.tsx` | F3 |
 | `apps/mobile/app/invite/accept.tsx` | F4 |
 | `apps/mobile/expo-env.d.ts` (+ any files with surfaced type errors) | F5 |
+| `apps/mobile/src/storage.ts` | AC7 hydration race |
 | `apps/mobile/src/*.test.ts(x)` | tests |
 
 ## Files Must NOT Touch
