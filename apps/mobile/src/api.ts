@@ -1,6 +1,7 @@
 import type { AuthResponseDto, UserRole } from '@kitchenos/shared';
 import { API_BASE } from './apiBase';
 import { session } from './session';
+import { clearSession } from './storage';
 
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
@@ -251,6 +252,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   const data = await res.json().catch(() => null);
+  if (res.status === 401) {
+    try {
+      await clearSession();
+    } catch (error) {
+      console.warn('Failed to clear session after 401', error);
+    }
+  }
+
   if (!res.ok) {
     throw new Error(data?.message ?? `Request failed (${res.status})`);
   }

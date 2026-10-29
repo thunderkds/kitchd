@@ -348,7 +348,7 @@ describe('native session storage: atomic write + failure path (80a0bcf)', () => 
 describe('native session storage: write racing the cold-start hydration', () => {
   // storage.ts hydration assigns `nativeSessionState = {...}` from the stored blob when the read
   // resolves, clobbering anything persistSession wrote while the read was still in flight.
-  it.failing('persistSession before hydration finishes is not overwritten by the older stored session', async () => {
+  it('persistSession before hydration finishes is not overwritten by the older stored session', async () => {
     mockSecureStore.data.set('session', blob('old-token', userJson))
     const readAtCallTime = mockSecureStore.getItemAsync.getMockImplementation()!
     let releaseRead!: () => void
@@ -362,6 +362,42 @@ describe('native session storage: write racing the cold-start hydration', () => 
 
     await persistSession('new-token', JSON.parse(userJson))
     releaseRead()
+    await sessionReady
+
+    expect(createSessionStorage().getItem('accessToken')).toBe('new-token')
+  })
+
+  function holdFirstRead() {
+    const readAtCallTime = mockSecureStore.getItemAsync.getMockImplementation()!
+    let release!: () => void
+    mockSecureStore.getItemAsync.mockImplementationOnce((key: string) => {
+      const staleValue = readAtCallTime(key)
+      return new Promise((resolve) => {
+        release = () => resolve(staleValue)
+      })
+    })
+    return () => release()
+  }
+
+  it('clearSession before hydration finishes is not undone by the older stored session', async () => {
+    mockSecureStore.data.set('session', blob('old-token', userJson))
+    const release = holdFirstRead()
+    const { createSessionStorage, clearSession, sessionReady } = loadStorageModule()
+
+    await clearSession()
+    release()
+    await sessionReady
+
+    expect(createSessionStorage().getItem('accessToken')).toBeNull()
+  })
+
+  it('an adapter setItem before hydration finishes is not overwritten by the older stored session', async () => {
+    mockSecureStore.data.set('session', blob('old-token', userJson))
+    const release = holdFirstRead()
+    const { createSessionStorage, sessionReady } = loadStorageModule()
+
+    createSessionStorage().setItem('accessToken', 'new-token')
+    release()
     await sessionReady
 
     expect(createSessionStorage().getItem('accessToken')).toBe('new-token')

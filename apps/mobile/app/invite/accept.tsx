@@ -4,11 +4,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { acceptInvite } from '../../src/api';
 import { persistSession } from '../../src/storage';
 import { toStoredUser } from '../../src/session';
+import { inviteTokenFromParam } from '../../src/inviteToken';
 
 export default function AcceptInviteScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const initialToken = Array.isArray(params.token) ? params.token[0] : params.token;
+  const initialToken = inviteTokenFromParam(params.token);
 
   const [token, setToken] = useState(initialToken ?? '');
   const [password, setPassword] = useState('');
@@ -16,11 +17,12 @@ export default function AcceptInviteScreen() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Depend on the route param only: depending on `token` would reset the field on every keystroke.
   useEffect(() => {
-    if (initialToken && initialToken !== token) {
+    if (initialToken) {
       setToken(initialToken);
     }
-  }, [initialToken, token]);
+  }, [initialToken]);
 
   const submit = async () => {
     const trimmedToken = token.trim();

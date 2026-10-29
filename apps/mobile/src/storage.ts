@@ -21,6 +21,9 @@ function defaultNativeSessionState(): NativeSessionState {
 }
 
 let nativeSessionState = defaultNativeSessionState();
+// Bumped on every in-memory write. Hydration compares it to detect a write that landed while
+// the initial SecureStore read was in flight, so the older stored blob cannot overwrite it.
+let nativeWriteVersion = 0;
 let nativeHydration: Promise<void> | null = null;
 
 function createWebStorage(): SessionStorageAdapter | null {
@@ -53,7 +56,12 @@ function persistNativeSessionState(): Promise<void> {
 function loadNativeStorage(): Promise<void> {
   if (!nativeHydration) {
     nativeHydration = (async () => {
+      const versionAtStart = nativeWriteVersion;
       const rawState = await SecureStore.getItemAsync(NATIVE_SESSION_STORAGE_KEY);
+      if (nativeWriteVersion !== versionAtStart) {
+        return;
+      }
+
       if (rawState) {
         try {
           const parsed = JSON.parse(rawState) as Partial<NativeSessionState>;
@@ -73,6 +81,10 @@ function loadNativeStorage(): Promise<void> {
         SecureStore.getItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
         SecureStore.getItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
       ]);
+
+      if (nativeWriteVersion !== versionAtStart) {
+        return;
+      }
 
       if (legacyAccessToken || legacyAuthUser) {
         nativeSessionState = {
@@ -112,6 +124,7 @@ function createNativeStorage(): SessionStorageAdapter {
       return null;
     },
     setItem(key: string, value: string) {
+      nativeWriteVersion += 1;
       if (key === ACCESS_TOKEN_STORAGE_KEY) {
         nativeSessionState.accessToken = value;
       } else if (key === AUTH_USER_STORAGE_KEY) {
@@ -123,6 +136,7 @@ function createNativeStorage(): SessionStorageAdapter {
       });
     },
     removeItem(key: string) {
+      nativeWriteVersion += 1;
       if (key === ACCESS_TOKEN_STORAGE_KEY) {
         nativeSessionState.accessToken = null;
       } else if (key === AUTH_USER_STORAGE_KEY) {
@@ -153,6 +167,7 @@ export async function persistSession(token: string, user: StoredUser): Promise<v
     return;
   }
 
+  nativeWriteVersion += 1;
   nativeSessionState = {
     accessToken: token,
     authUser: serializedUser,
@@ -172,6 +187,7 @@ export async function clearSession(): Promise<void> {
     return;
   }
 
+  nativeWriteVersion += 1;
   nativeSessionState = defaultNativeSessionState();
   await SecureStore.deleteItemAsync(NATIVE_SESSION_STORAGE_KEY);
   await Promise.all([
