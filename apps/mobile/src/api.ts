@@ -252,11 +252,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   const data = await res.json().catch(() => null);
-  if (res.status === 401) {
+  if (res.status === 401 && session.getToken() === token) {
     try {
       await clearSession();
     } catch (error) {
-      console.warn('Failed to clear session after 401', error);
+      console.warn('Failed to clear session after 401', error instanceof Error ? error.message : 'unknown error');
     }
   }
 

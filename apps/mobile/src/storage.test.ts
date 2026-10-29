@@ -367,6 +367,52 @@ describe('native session storage: write racing the cold-start hydration', () => 
     expect(createSessionStorage().getItem('accessToken')).toBe('new-token')
   })
 
+  // No `session` blob, only legacy keys, so hydration reaches the second (legacy) read.
+  function holdLegacyReads() {
+    const readAtCallTime = mockSecureStore.getItemAsync.getMockImplementation()!
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => (release = resolve))
+    mockSecureStore.getItemAsync.mockImplementation(async (key: string) => {
+      const value = readAtCallTime(key) // value as of call time
+      if (key === 'accessToken' || key === 'authUser') {
+        await gate
+      }
+      return value
+    })
+    return () => release()
+  }
+
+  it('persistSession during the legacy-key read is not overwritten by the legacy state', async () => {
+    mockSecureStore.data.set('accessToken', 'legacy-token')
+    mockSecureStore.data.set('authUser', userJson)
+    const release = holdLegacyReads()
+    const { createSessionStorage, persistSession, sessionReady } = loadStorageModule()
+    await flush() // hydration has passed the blob read and is waiting on the legacy keys
+
+    await persistSession('new-token', JSON.parse(userJson))
+    release()
+    await sessionReady
+
+    expect(createSessionStorage().getItem('accessToken')).toBe('new-token')
+    expect(mockSecureStore.data.get('session')).toBe(blob('new-token', userJson))
+  })
+
+  it('clearSession during the legacy-key read does not resurrect the legacy state', async () => {
+    mockSecureStore.data.set('accessToken', 'legacy-token')
+    mockSecureStore.data.set('authUser', userJson)
+    const release = holdLegacyReads()
+    const { createSessionStorage, clearSession, sessionReady } = loadStorageModule()
+    await flush()
+
+    await clearSession()
+    release()
+    await sessionReady
+
+    expect(createSessionStorage().getItem('accessToken')).toBeNull()
+    expect(createSessionStorage().getItem('authUser')).toBeNull()
+    expect(mockSecureStore.data.has('session')).toBe(false)
+  })
+
   function holdFirstRead() {
     const readAtCallTime = mockSecureStore.getItemAsync.getMockImplementation()!
     let release!: () => void

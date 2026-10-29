@@ -8,6 +8,15 @@ function devApiBase(platform: string): string {
   return 'http://localhost:3000';
 }
 
+function isHttpsUrlWithHost(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname !== '';
+  } catch {
+    return false;
+  }
+}
+
 export function resolveApiBase(env: string | undefined, isDev: boolean, platform: string): string {
   const configured = env?.trim();
 
@@ -19,7 +28,7 @@ export function resolveApiBase(env: string | undefined, isDev: boolean, platform
     throw new Error('EXPO_PUBLIC_API_BASE_URL must be set for non-development builds');
   }
 
-  if (!configured.startsWith('https://')) {
+  if (!isHttpsUrlWithHost(configured)) {
     throw new Error('EXPO_PUBLIC_API_BASE_URL must be an https:// URL for non-development builds');
   }
 

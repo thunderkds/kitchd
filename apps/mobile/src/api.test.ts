@@ -103,6 +103,25 @@ describe('request(): 401 handling (M012 F1)', () => {
     warnSpy.mockRestore()
   })
 
+  it('does not wipe a newer session when a stale request (sent with the old token) gets a 401', async () => {
+    const { api, session, storage } = loadModules()
+    await storage.sessionReady
+    await storage.persistSession('OLD', user)
+
+    let resolveFetch!: (res: unknown) => void
+    globalThis.fetch = jest.fn().mockReturnValue(new Promise((resolve) => (resolveFetch = resolve)))
+    const pending = api.listTasks()
+    const assertion = expect(pending).rejects.toThrow('Unauthorized')
+
+    await storage.clearSession()
+    await storage.persistSession('NEW', user)
+    resolveFetch(mockResponse(401, { message: 'Unauthorized' }))
+    await assertion
+
+    expect(session.getToken()).toBe('NEW')
+    expect(JSON.parse(mockSecureStore.data.get('session')!).accessToken).toBe('NEW')
+  })
+
   it('sends the bearer token and returns the body on success', async () => {
     const { api, storage } = loadModules()
     await storage.sessionReady
