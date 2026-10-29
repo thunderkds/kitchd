@@ -45,6 +45,7 @@
 - [ ] **M015** — Dashboard low-stock + expiring-soon widgets (`/inventory/alerts/*`) — M011 gap | mobile-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_M015.md` | Linear HUN-110 | 👀 Ready for Review (integrated on integ/wave2; review fixes in progress)
 - [ ] **M016** — Recipe version history (`GET /recipes/:id/versions`) — M011 gap | mobile-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M016.md` | Linear HUN-111 | 👀 Ready for Review (integrated on integ/wave2; review fixes in progress)
 - [ ] **M017** — Team management (change role / remove member) + an "I have an invite" entry on the login screen — M011 gap + reachability | mobile-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_M017.md` | Linear HUN-112 | 👀 Ready for Review (integrated on integ/wave2; review fixes in progress)
+- [ ] **M018** — Roll the M006 theme palette out to the remaining 9 hard-coded screens (tasks, recipes, guidelines, notes, inventory, team, invites, login, boot) so Dark Neon is not a mixed UI; reply composer for comments (web parity, M007 cut) | mobile-developer | C2 | Risk: Low | P3 | backlog — from Wave 2 review
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress

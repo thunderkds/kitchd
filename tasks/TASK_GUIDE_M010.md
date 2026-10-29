@@ -22,7 +22,7 @@
 
 ## Dependencies & Reachability
 
-**Depends on**: M004 (screens are on `useQuery` — migrate the render layer on top), M005 (forms)
+**Depends on**: M004 (screens are on `useQuery` — migrate the render layer on top), M005 (forms), Wave 2 (M006–M017; dashboard already got a `ScrollView` in the Wave 2 review fix)
 **Entry point**: `app/{tasks,inventory,recipes,notes}.tsx`, `app/_layout.tsx` (SafeAreaProvider)
 **Consumer**: every mobile user
 
@@ -32,7 +32,7 @@
 
 | # | Criterion (testable) | Traces to |
 |---|----------------------|-----------|
-| 1 | `@shopify/flash-list` (Expo-compatible version via `expo install`) renders the 4 list screens; `keyExtractor` uses entity ids; `estimatedItemSize` set where the installed version requires it | FlashList |
+| 1 | `@shopify/flash-list` (Expo-compatible version via `expo install`) renders the 4 list screens **plus the Wave 2 lists that currently cannot scroll: `app/shift-logs.tsx`, `app/notifications.tsx`, `app/team.tsx` roster (Wave 2 review P2)**; `keyExtractor` uses entity ids; `estimatedItemSize` set where the installed version requires it | FlashList |
 | 2 | `react-native-safe-area-context` `SafeAreaProvider` at the root (if Expo Router doesn't already provide it — check), screens use safe-area insets/`SafeAreaView` consistently | safe area |
 | 3 | Screens with forms wrap content in `KeyboardAvoidingView` (behavior `padding` on iOS, `height` on Android) or a `ScrollView` with `keyboardShouldPersistTaps="handled"` | keyboard |
 | 4 | Component tests: each migrated list renders its items and empty state from mocked query data (FlashList mocked if it can't measure under jest) | test-first |
