@@ -780,7 +780,7 @@ const createStyles = (palette: Palette) =>
       fontWeight: '700',
     },
     selectorButtonTextActive: {
-      color: '#ffffff',
+      color: palette.text,
     },
     rowActions: {
       flexDirection: 'row',

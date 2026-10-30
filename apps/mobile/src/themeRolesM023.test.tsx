@@ -6,6 +6,7 @@ import type { StoredUser } from '@kitchenos/shared'
 import AnnouncementsScreen from '../app/announcements'
 import DashboardScreen from '../app/dashboard'
 import ShiftLogsScreen from '../app/shift-logs'
+import TasksScreen from '../app/tasks'
 import { AlertWidgets } from './components/AlertWidgets'
 import { FieldError } from './components/FormFields'
 import { ScreenFrame } from './components/ScreenFrame'
@@ -38,6 +39,7 @@ jest.mock('./session', () => ({
     setUser: (user: StoredUser) => {
       mockUser = user
     },
+    getToken: () => 'token',
   },
 }))
 jest.mock('./api', () => ({
@@ -48,6 +50,11 @@ jest.mock('./api', () => ({
   createShiftLog: jest.fn(),
   listLowStock: jest.fn(),
   listExpiringSoon: jest.fn(),
+  listTasks: jest.fn(),
+  listRecipes: jest.fn(),
+  listGuidelines: jest.fn(),
+  listIngredients: jest.fn(),
+  fetchAssignableUsers: jest.fn(),
 }))
 
 const mocked = api as jest.Mocked<typeof api>
@@ -119,12 +126,9 @@ describe('palette roles (M023 AC1)', () => {
 
 describe('no leftover colour literals (M023 AC2)', () => {
   // Every '#rrggbb' in a non-test mobile source must be listed here with a reason, or it fails the test.
-  // theme.ts is the one place palette values live. The two '#ffffff' are the label of the selected row of
-  // a selector: white on the raised panel, not on an accent fill, so onAccent (dark on Graphite) would be wrong.
+  // theme.ts is the one place palette values live.
   const ALLOWED: Record<string, Record<string, number>> = {
     'src/theme.ts': { '*': Infinity },
-    'app/tasks.tsx': { '#ffffff': 1 },
-    'app/task/[taskId].tsx': { '#ffffff': 1 },
   }
 
   function sources(dir: string): string[] {
@@ -226,6 +230,23 @@ describe.each(THEMES)('%s palette applied to screens (M023 AC3, AC4, AC5)', (the
     )
 
     expect(StyleSheet.flatten(screen.UNSAFE_getByType(SafeAreaView).props.style).backgroundColor).toBe(p.background)
+  })
+
+  it('tasks: the selected assignee is a raised panel with palette.text label (no pure white)', async () => {
+    mockUser = asUser('CHEF', themePreference)
+    mocked.listTasks.mockResolvedValue([])
+    mocked.listRecipes.mockResolvedValue([])
+    mocked.listGuidelines.mockResolvedValue([])
+    mocked.listIngredients.mockResolvedValue([])
+    mocked.fetchAssignableUsers.mockResolvedValue([{ id: 'u2', email: 'cook@example.com' }])
+    renderWithQuery(<TasksScreen />)
+
+    fireEvent.press(await screen.findByText('New task'))
+    const chip = await screen.findByText('cook@example.com')
+    expect(flat(chip.props.style).color).toBe(p.textSecondary)
+    fireEvent.press(chip)
+    expect(flat(screen.getByText('cook@example.com').props.style).color).toBe(p.text)
+    expect(styleOf(screen.getByText('cook@example.com'), 'backgroundColor')).toBe(p.raised)
   })
 
   it('shift log: the selected shift is a raised panel, the composer a sunken input', async () => {
