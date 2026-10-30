@@ -45,10 +45,13 @@
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
-- [ ] **M018** — Roll the M006 theme palette out to the remaining 9 hard-coded screens (tasks, recipes, guidelines, notes, inventory, team, invites, login, boot) so Dark Neon is not a mixed UI; reply composer for comments (web parity, M007 cut) | mobile-developer | C2 | Risk: Low | P3 | backlog — from Wave 2 review
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
+- [ ] **M018** — Theme palette rollout group A: tasks, task detail, recipes, guidelines, notes, inventory | mobile-developer | C2 | Risk: Low | P3 | Guide: `tasks/TASK_GUIDE_M018.md` | Started: 2026-10-30
+- [ ] **M019** — Comment replies (single level, web parity) + themed comments section (M007 cut, split from M018) | mobile-developer | C1 | Risk: Low | P3 | Guide: `tasks/TASK_GUIDE_M019.md` | Started: 2026-10-30
+- [ ] **M020** — Theme palette rollout group B: team, invites, login, invite accept (+ web notice wording), notifications, shift log, boot | mobile-developer | C2 | Risk: Low | P3 | Guide: `tasks/TASK_GUIDE_M020.md` | Started: 2026-10-30
+- [ ] **M021** — M013 follow-ups: login landing mid-logout keeps its saved session; trim BEFORE capture | mobile-developer | C1 | Risk: Medium | P3 | Guide: `tasks/TASK_GUIDE_M021.md` | Started: 2026-10-30
 
 ### Ready for Review
 
