@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { ExpiringSoonBatch, LowStockIngredient } from '../api';
 import { queryErrorMessage, useExpiringSoon, useLowStock } from '../queries';
+import { useTheme, type Palette } from '../theme';
 
 // M015 — dashboard alert widgets (parity with web LowStockWidget / ExpiringSoonWidget). Each widget
 // owns its query, so a failure in one renders only in that widget and never blanks the dashboard.
@@ -12,6 +13,11 @@ function formatExpiryDate(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Invalid date';
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function useAlertStyles() {
+  const { palette } = useTheme();
+  return useMemo(() => createStyles(palette), [palette]);
 }
 
 type WidgetShellProps = {
@@ -24,6 +30,7 @@ type WidgetShellProps = {
 };
 
 function WidgetShell({ title, loading, error, empty, emptyText, children }: WidgetShellProps) {
+  const styles = useAlertStyles();
   return (
     <View style={styles.widget}>
       <Text style={styles.widgetTitle}>{title}</Text>
@@ -37,6 +44,7 @@ function WidgetShell({ title, loading, error, empty, emptyText, children }: Widg
 
 export function LowStockWidget() {
   const router = useRouter();
+  const styles = useAlertStyles();
   const query = useLowStock();
   const items: LowStockIngredient[] = query.data ?? [];
 
@@ -70,6 +78,7 @@ export function LowStockWidget() {
 
 export function ExpiringSoonWidget() {
   const router = useRouter();
+  const styles = useAlertStyles();
   const query = useExpiringSoon();
   const batches: ExpiringSoonBatch[] = query.data ?? [];
 
@@ -109,26 +118,26 @@ export function AlertWidgets() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   widget: {
     gap: 8,
     borderRadius: 16,
     padding: 14,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   widgetTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
   muted: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 13,
   },
   error: {
-    color: '#ff8a8a',
+    color: palette.danger,
     fontSize: 13,
   },
   row: {
@@ -153,9 +162,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   warningText: {
-    color: '#ffc14d',
+    color: palette.warning,
   },
   criticalText: {
-    color: '#ff8a8a',
+    color: palette.danger,
   },
 });

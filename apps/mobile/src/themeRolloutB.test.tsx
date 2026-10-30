@@ -167,7 +167,7 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
     // Title and button share the text "Accept invite"; the button is the second.
     expect(styleOf(screen.getAllByText('Accept invite')[1], 'backgroundColor')).toBe(accent)
     expect(flat(screen.getAllByText('Accept invite')[1].props.style).color).toBe(ON_ACCENT[themePreference])
-    expect(flat(screen.getByText(/Paste the invite token/).props.style).color).toBe('#ccd5e6')
+    expect(flat(screen.getByText(/Paste the invite token/).props.style).color).toBe(PALETTES[themePreference].textSecondary)
   })
 
   it('notifications screen: kicker and mark-all-read button', async () => {

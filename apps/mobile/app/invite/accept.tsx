@@ -79,7 +79,7 @@ export default function AcceptInviteScreen() {
             name="token"
             style={styles.input}
             placeholder="Invite token"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -88,7 +88,7 @@ export default function AcceptInviteScreen() {
             name="password"
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             secureTextEntry
           />
 
@@ -140,12 +140,12 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     lineHeight: 34,
   },
   body: {
-    color: '#ccd5e6',
+    color: palette.textSecondary,
     fontSize: 15,
     lineHeight: 22,
   },
   notice: {
-    color: '#ffd28a',
+    color: palette.warning,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -154,9 +154,9 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     color: palette.text,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   primaryButton: {
     alignItems: 'center',
@@ -174,8 +174,8 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
+    borderColor: palette.inputBorder,
+    backgroundColor: palette.inputBackground,
   },
   secondaryButtonText: {
     color: palette.text,
@@ -183,7 +183,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     fontWeight: '800',
   },
   success: {
-    color: '#93e0a6',
+    color: palette.success,
     fontSize: 13,
     lineHeight: 18,
   },

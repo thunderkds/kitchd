@@ -202,14 +202,14 @@ export default function InventoryScreen() {
       {formOpen && canManage && (
         <View style={styles.formCard}>
           <Text style={styles.sectionTitle}>{editing ? 'Edit ingredient' : 'Add ingredient'}</Text>
-          <FormTextInput control={ingredientControl} name="name" style={styles.input} placeholder="Name" placeholderTextColor="#6f7c92" />
-          <FormTextInput control={ingredientControl} name="unit" style={styles.input} placeholder="Unit" placeholderTextColor="#6f7c92" />
+          <FormTextInput control={ingredientControl} name="name" style={styles.input} placeholder="Name" placeholderTextColor={palette.hint} />
+          <FormTextInput control={ingredientControl} name="unit" style={styles.input} placeholder="Unit" placeholderTextColor={palette.hint} />
           <FormTextInput
             control={ingredientControl}
             name="costPerUnit"
             style={styles.input}
             placeholder="Cost per unit"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             keyboardType="decimal-pad"
           />
           <FormTextInput
@@ -217,14 +217,14 @@ export default function InventoryScreen() {
             name="category"
             style={styles.input}
             placeholder="Category"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
           />
           <FormTextInput
             control={ingredientControl}
             name="minThreshold"
             style={styles.input}
             placeholder="Low-stock threshold"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             keyboardType="decimal-pad"
           />
           <View style={styles.rowActions}>
@@ -274,7 +274,7 @@ export default function InventoryScreen() {
                     name="qty"
                     style={styles.input}
                     placeholder="Receive qty"
-                    placeholderTextColor="#6f7c92"
+                    placeholderTextColor={palette.hint}
                     keyboardType="decimal-pad"
                   />
                   <View style={styles.rowActions}>
@@ -339,7 +339,7 @@ const createStyles = (palette: Palette) =>
       lineHeight: 34,
     },
     note: {
-      color: '#8f9db4',
+      color: palette.hint,
       fontSize: 13,
       lineHeight: 18,
     },
@@ -357,24 +357,24 @@ const createStyles = (palette: Palette) =>
       gap: 10,
       borderRadius: 20,
       padding: 16,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     input: {
       borderRadius: 16,
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: palette.text,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     ingredientRow: {
       gap: 12,
       paddingVertical: 12,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     ingredientIdentity: {
       gap: 2,
@@ -401,9 +401,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 14,
       paddingHorizontal: 14,
       paddingVertical: 10,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     backButtonText: {
       color: palette.text,
@@ -416,8 +416,8 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 14,
       paddingVertical: 12,
       borderWidth: 1,
-      borderColor: '#2d374b',
-      backgroundColor: '#101521',
+      borderColor: palette.inputBorder,
+      backgroundColor: palette.inputBackground,
     },
     secondaryButtonText: {
       color: palette.text,

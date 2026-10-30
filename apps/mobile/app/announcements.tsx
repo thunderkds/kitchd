@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,7 +14,7 @@ import {
 import { queryLoadError, useAnnouncements } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
-import { useTheme } from '../src/theme';
+import { useTheme, type Palette } from '../src/theme';
 import { ScreenFrame } from '../src/components/ScreenFrame';
 
 const BROADCAST_ROLES = ['OWNER', 'CHEF'] as const;
@@ -22,6 +22,7 @@ const BROADCAST_ROLES = ['OWNER', 'CHEF'] as const;
 export default function AnnouncementsScreen() {
   const router = useRouter();
   const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canBroadcast = !!caller && BROADCAST_ROLES.includes(caller.role as (typeof BROADCAST_ROLES)[number]);
 
@@ -111,14 +112,14 @@ export default function AnnouncementsScreen() {
                 name="title"
                 style={styles.input}
                 placeholder="Title"
-                placeholderTextColor="#6f7c92"
+                placeholderTextColor={palette.hint}
               />
               <FormTextInput
                 control={control}
                 name="body"
                 style={styles.multiLineInput}
                 placeholder="Message"
-                placeholderTextColor="#6f7c92"
+                placeholderTextColor={palette.hint}
                 multiline
               />
               <View style={styles.formActions}>
@@ -153,10 +154,10 @@ export default function AnnouncementsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
   },
   content: {
     flexGrow: 1,
@@ -167,9 +168,9 @@ const styles = StyleSheet.create({
     gap: 14,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   headerRow: {
     flexDirection: 'row',
@@ -178,30 +179,30 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
   },
   note: {
-    color: '#8f9db4',
+    color: palette.hint,
     fontSize: 13,
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
   sectionTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -212,20 +213,20 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#222b3a',
+    borderTopColor: palette.divider,
   },
   listTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 15,
     fontWeight: '700',
   },
   bodyText: {
-    color: '#ccd5e6',
+    color: palette.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
     textTransform: 'uppercase',
   },
@@ -233,29 +234,29 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
+    color: palette.text,
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   multiLineInput: {
     minHeight: 128,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
+    color: palette.text,
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
     textAlignVertical: 'top',
   },
   formCard: {
     gap: 12,
     padding: 16,
     borderRadius: 20,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   formActions: {
     flexDirection: 'row',
@@ -267,11 +268,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
+    borderColor: palette.inputBorder,
+    backgroundColor: palette.inputBackground,
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     fontSize: 16,
@@ -290,12 +291,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },

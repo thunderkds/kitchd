@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
 import { clearSession } from '../src/storage';
@@ -6,11 +7,12 @@ import { signOut } from '../src/signOut';
 import { AlertWidgets } from '../src/components/AlertWidgets';
 import { ScreenFrame } from '../src/components/ScreenFrame';
 import { useNotifications } from '../src/queries';
-import { useTheme } from '../src/theme';
+import { useTheme, type Palette } from '../src/theme';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const user = session.getUser();
   const unreadCount = useNotifications(!!user).data?.unreadCount ?? 0;
 
@@ -85,10 +87,10 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
   },
   content: {
     flexGrow: 1,
@@ -99,34 +101,34 @@ const styles = StyleSheet.create({
     gap: 14,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
   },
   body: {
-    color: '#ccd5e6',
+    color: palette.textSecondary,
     fontSize: 16,
     lineHeight: 24,
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 14,
   },
   note: {
-    color: '#8f9db4',
+    color: palette.hint,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -135,11 +137,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
+    borderColor: palette.inputBorder,
+    backgroundColor: palette.inputBackground,
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -153,10 +155,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 11,
-    backgroundColor: '#ff6b6b',
+    backgroundColor: palette.danger,
   },
   badgeText: {
-    color: '#ffffff',
+    color: palette.onAccent,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     fontSize: 16,

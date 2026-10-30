@@ -41,16 +41,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/mobile/src/themeRolesM023.test.tsx` (new: role pins, literal scan, Graphite/Simple screen assertions); updated `theme.test.ts`, `alertWidgets.test.tsx`, `themeRolloutB.test.tsx` — pass |
+| Verification command run | ☑ pass | Supervisor re-run on `task/M023` (c7bb2e1): `Test Suites: 51 passed, 51 total` / `Tests: 535 passed, 535 total`; typecheck 0 errors — pass |
+| Negative cases hold | ☑ pass | no #rrggbb literal outside `src/theme.ts` (scan test); ScreenFrame explicit background still wins (`#123456` sentinel test); components without a provider resolve Simple — pass |
+| verify | ☑ N/A | no simulator; Supervisor ran `npx expo export --platform ios` — printed `Exported: /tmp/claude-1000/m023-export-sup` — pass for the bundle; device check pending (human) |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | 22 changed files (`ff90227..task/M023`) incl. shared ScreenFrame/FormFields and their callers' tests — pass |
+| Full smoke suite still green (no regression) | ☑ pass | 535/535 — pass |
+| **Companion score (easy-verifier)** | ☑ N/A | not run |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no simulator; device check pending (human) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | role pins equal docs/design/graphite-mint/tokens.json values (themeRolesM023.test.tsx) — pass |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no layout change |
 
 ---
 
@@ -61,12 +61,19 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured `Fri Oct 30 10:22:04 UTC 2026`, tests written, no implementation commit yet; `pnpm --filter @kitchenos/mobile test`):
+```
+FAIL src/alertWidgets.test.tsx
+FAIL src/themeRolesM023.test.tsx
+FAIL src/themeRolloutB.test.tsx
+FAIL src/theme.test.ts
+Tests:       19 failed, 514 passed, 533 total
+Test Suites: 4 failed, 47 passed, 51 total
+```
+Failing new/updated tests (names): `palette roles (M023 AC1)` x2 (simple and dark-neon pins); `no leftover colour literals (M023 AC2) > only the allow-listed literals remain`; `<simple|dark-neon> palette applied to screens (M023 AC3, AC4, AC5)` > announcements inputs/hint/divider, dashboard unread badge + secondary buttons, alert widgets warning/danger, shift log selected panel (both themes), plus form fields error, screen frame default background (dark-neon only: Simple already matches); updated `theme.test.ts` x3 (simple pin, Graphite pin, same roles); `alertWidgets.test.tsx` row colours (fold targets); `themeRolloutB.test.tsx` invite-accept secondary text x2.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: Supervisor re-run 2026-10-30 on `task/M023` (c7bb2e1): `Test Suites: 51 passed, 51 total` / `Tests: 535 passed, 535 total`; typecheck clean; iOS export OK. OR [verbatim excerpt of the new content]
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: On Graphite Mint, mobile inputs, borders, dividers, secondary and hint text, warnings and selected panels now use the design system's colours instead of the old blue-greys; Simple looks the same apart from a few merged near-identical shades.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**WITNESS**: Supervisor re-ran tests, typecheck and expo export on `task/M023`, 2026-10-30; implementing agent captured BEFORE at 10:22:04Z.

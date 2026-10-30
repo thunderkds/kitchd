@@ -189,7 +189,7 @@ export default function NotesScreen() {
       <TextInput
         style={styles.input}
         placeholder="Search by tag"
-        placeholderTextColor="#6f7c92"
+        placeholderTextColor={palette.hint}
         value={tagQuery}
         onChangeText={setTagQuery}
         autoCapitalize="none"
@@ -208,14 +208,14 @@ export default function NotesScreen() {
             name="title"
             style={styles.input}
             placeholder="Title (optional)"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
           />
           <FormTextInput
             control={control}
             name="body"
             style={styles.multiLineInput}
             placeholder="Write a note..."
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             multiline
           />
           <FormTextInput
@@ -223,7 +223,7 @@ export default function NotesScreen() {
             name="tags"
             style={styles.input}
             placeholder="Tags, comma separated"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -312,7 +312,7 @@ const createStyles = (palette: Palette) =>
       lineHeight: 34,
     },
     note: {
-      color: '#8f9db4',
+      color: palette.hint,
       fontSize: 13,
       lineHeight: 18,
     },
@@ -336,15 +336,15 @@ const createStyles = (palette: Palette) =>
       borderRadius: 999,
       paddingVertical: 12,
       borderWidth: 1,
-      borderColor: '#2d374b',
-      backgroundColor: '#101521',
+      borderColor: palette.inputBorder,
+      backgroundColor: palette.inputBackground,
     },
     segmentButtonActive: {
       backgroundColor: palette.accent,
       borderColor: palette.accent,
     },
     segmentText: {
-      color: '#c1cbe0',
+      color: palette.textSecondary,
       fontSize: 13,
       fontWeight: '700',
     },
@@ -356,9 +356,9 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: palette.text,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     multiLineInput: {
       minHeight: 120,
@@ -366,9 +366,9 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: palette.text,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
       textAlignVertical: 'top',
     },
     primaryButton: {
@@ -388,8 +388,8 @@ const createStyles = (palette: Palette) =>
       borderRadius: 16,
       paddingVertical: 14,
       borderWidth: 1,
-      borderColor: '#2d374b',
-      backgroundColor: '#101521',
+      borderColor: palette.inputBorder,
+      backgroundColor: palette.inputBackground,
     },
     secondaryButtonText: {
       color: palette.text,
@@ -400,7 +400,7 @@ const createStyles = (palette: Palette) =>
       gap: 12,
       padding: 16,
       borderRadius: 20,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
       borderColor: palette.border,
     },
@@ -412,7 +412,7 @@ const createStyles = (palette: Palette) =>
       gap: 10,
       paddingVertical: 12,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     noteHeader: {
       flexDirection: 'row',
@@ -435,17 +435,17 @@ const createStyles = (palette: Palette) =>
       fontWeight: '700',
     },
     noteBody: {
-      color: '#ccd5e6',
+      color: palette.textSecondary,
       fontSize: 14,
       lineHeight: 20,
     },
     tags: {
-      color: '#8f9db4',
+      color: palette.hint,
       fontSize: 12,
       lineHeight: 18,
     },
     linked: {
-      color: '#8f9db4',
+      color: palette.hint,
       fontSize: 12,
       lineHeight: 18,
       fontStyle: 'italic',
@@ -459,9 +459,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 999,
       paddingHorizontal: 10,
       paddingVertical: 6,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     badgeText: {
       color: palette.text,
@@ -473,9 +473,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 14,
       paddingHorizontal: 12,
       paddingVertical: 8,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     smallButtonText: {
       color: palette.text,
@@ -487,9 +487,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 14,
       paddingHorizontal: 14,
       paddingVertical: 10,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     backButtonText: {
       color: palette.text,

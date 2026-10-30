@@ -1,11 +1,13 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
+import { useTheme } from '../theme';
 
 export function FieldError({ message }: { message?: string }) {
+  const { palette } = useTheme();
   if (!message) return null;
 
   return (
-    <Text accessibilityRole="alert" style={styles.error}>
+    <Text accessibilityRole="alert" style={[styles.error, { color: palette.danger }]}>
       {message}
     </Text>
   );
@@ -33,12 +35,12 @@ export function FormTextInput<T extends FieldValues>({ control, name, ...inputPr
   );
 }
 
+// Colours come from useTheme().palette (applied inline); only layout lives here.
 const styles = StyleSheet.create({
   field: {
     gap: 4,
   },
   error: {
-    color: '#ff8c8c',
     fontSize: 13,
     lineHeight: 18,
   },

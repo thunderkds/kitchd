@@ -83,10 +83,10 @@ describe('LowStockWidget (M015 AC1, AC3, AC5)', () => {
     await screen.findByText('Half')
 
     expect(rowBackground('Half')).toBe(CRITICAL_BG)
-    expect(flat(screen.getByText('Half').props.style).color).toBe('#ff8a8a')
+    expect(flat(screen.getByText('Half').props.style).color).toBe('#ff8c8c')
     expect(rowBackground('Empty')).toBe(CRITICAL_BG)
     expect(rowBackground('Above half')).toBe(WARNING_BG)
-    expect(flat(screen.getByText('Above half').props.style).color).toBe('#ffc14d')
+    expect(flat(screen.getByText('Above half').props.style).color).toBe('#ffd27a')
   })
 
   it('treats a null threshold as a warning, never critical', async () => {

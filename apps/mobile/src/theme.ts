@@ -16,6 +16,16 @@ export interface Palette {
   danger: string;
   border: string;
   onAccent: string;
+  // M023: the eight roles that fold the leftover hard-coded colours (inputs, rules, secondary text,
+  // statuses, selected panels) into the palette. Simple keeps the most-used shade of each group.
+  inputBackground: string;
+  inputBorder: string;
+  divider: string;
+  textSecondary: string;
+  hint: string;
+  warning: string;
+  success: string;
+  raised: string;
 }
 
 export const DEFAULT_THEME: ThemePreferenceId = 'simple';
@@ -32,6 +42,14 @@ export const PALETTES: Record<ThemePreferenceId, Palette> = {
     danger: '#ff8c8c',
     border: '#273044',
     onAccent: '#ffffff',
+    inputBackground: '#101521',
+    inputBorder: '#2d374b',
+    divider: '#222b3a',
+    textSecondary: '#ccd5e6',
+    hint: '#8f9db4',
+    warning: '#ffd27a',
+    success: '#93e0a6',
+    raised: '#1d2740',
   },
   // Graphite Mint (M022; docs/design/graphite-mint/tokens.json). The id stays `dark-neon` so stored
   // preferences and the API enum are untouched. `surface` is bg-raised: mobile cards keep a fill.
@@ -45,6 +63,14 @@ export const PALETTES: Record<ThemePreferenceId, Palette> = {
     danger: '#E8968F',
     border: '#262B29',
     onAccent: '#0E100F',
+    inputBackground: '#0E100F', // bg-sunken
+    inputBorder: '#2C3230', // line-strong
+    divider: '#1F2321', // line-subtle
+    textSecondary: '#ABB3AE', // text-2
+    hint: '#8C9590', // text-muted
+    warning: '#E3B66B', // warn
+    success: '#7EDDB0', // accent
+    raised: '#181B1A', // bg-raised
   },
 };
 

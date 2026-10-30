@@ -188,7 +188,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     lineHeight: 34,
   },
   body: {
-    color: '#ccd5e6',
+    color: palette.textSecondary,
     fontSize: 16,
     lineHeight: 24,
   },
@@ -202,15 +202,15 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
+    borderColor: palette.inputBorder,
+    backgroundColor: palette.inputBackground,
   },
   segmentButtonActive: {
     backgroundColor: palette.accent,
     borderColor: palette.accent,
   },
   segmentText: {
-    color: '#c1cbe0',
+    color: palette.textSecondary,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -222,9 +222,9 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     color: palette.text,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   primaryButton: {
     alignItems: 'center',
@@ -238,7 +238,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     fontWeight: '800',
   },
   note: {
-    color: '#8f9db4',
+    color: palette.hint,
     fontSize: 13,
     lineHeight: 18,
   },
