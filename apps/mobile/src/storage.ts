@@ -1,10 +1,13 @@
 import * as SecureStore from 'expo-secure-store';
-import type { SessionStorageAdapter, StoredUser } from '@kitchenos/shared';
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  AUTH_USER_STORAGE_KEY,
+  type SessionStorageAdapter,
+  type StoredUser,
+} from '@kitchenos/shared';
 import { Platform } from 'react-native';
 import { queryClient } from './queryClient';
 
-const ACCESS_TOKEN_STORAGE_KEY = 'accessToken';
-const AUTH_USER_STORAGE_KEY = 'authUser';
 const NATIVE_SESSION_STORAGE_KEY = 'session';
 const LEGACY_ACCESS_TOKEN_STORAGE_KEY = ACCESS_TOKEN_STORAGE_KEY;
 const LEGACY_AUTH_USER_STORAGE_KEY = AUTH_USER_STORAGE_KEY;
@@ -73,7 +76,8 @@ function loadNativeStorage(): Promise<void> {
           return;
         } catch (error) {
           nativeSessionState = defaultNativeSessionState();
-          console.warn('Failed to parse native session storage', error);
+          // The error name only: V8 quotes short input in the message, and this input holds the token.
+          console.warn('Failed to parse native session storage', error instanceof Error ? error.name : 'unknown error');
           return;
         }
       }
@@ -225,9 +229,29 @@ export async function clearSession(): Promise<void> {
   nativeSessionState = defaultNativeSessionState();
   // Before the awaited SecureStore deletes, so the socket closes even if they throw.
   notifySessionChange();
-  await SecureStore.deleteItemAsync(NATIVE_SESSION_STORAGE_KEY);
-  await Promise.all([
+
+  // Legacy keys first: if one survives and `session` is gone, the next hydration would migrate it
+  // back into a live session. A surviving legacy key therefore keeps `session` as an empty blob.
+  const legacyDeletes = await Promise.allSettled([
     SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
     SecureStore.deleteItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
   ]);
+  let sessionGone = legacyDeletes.every((result) => result.status === 'fulfilled');
+  if (sessionGone) {
+    try {
+      await SecureStore.deleteItemAsync(NATIVE_SESSION_STORAGE_KEY);
+    } catch {
+      sessionGone = false;
+    }
+  }
+
+  if (!sessionGone) {
+    // Cannot remove everything, so overwrite the stored token with the empty state instead. Memory
+    // is already cleared above, so a failure here must not make logout look like it failed.
+    try {
+      await persistNativeSessionState();
+    } catch (error) {
+      console.warn('Failed to clear native session storage', error instanceof Error ? error.message : 'unknown error');
+    }
+  }
 }

@@ -88,6 +88,8 @@ export default function GuidelinesScreen() {
     if (!canWrite) return;
     resetForm(guideline);
     setFormMode('edit');
+    // The form lives on the list view, so leave the detail view or the button appears to do nothing.
+    setMode('list');
   };
 
   const closeForm = () => {

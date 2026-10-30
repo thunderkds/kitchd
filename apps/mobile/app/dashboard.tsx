@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { clearSession } from '../src/storage';
 import { session } from '../src/session';
 import { signOut } from '../src/signOut';
@@ -14,9 +14,9 @@ export default function DashboardScreen() {
   const user = session.getUser();
   const unreadCount = useNotifications(!!user).data?.unreadCount ?? 0;
 
+  // <Redirect> navigates from an effect; calling router.replace during render is a side effect in render.
   if (!user) {
-    router.replace('/');
-    return null;
+    return <Redirect href="/" />;
   }
 
   return (

@@ -71,7 +71,8 @@ describe('logout clears the query cache (M004 AC6)', () => {
     seedCache(queryClient)
     mockSecureStore.deleteItemAsync.mockRejectedValue(new Error('keychain locked'))
 
-    await expect(storage.clearSession()).rejects.toThrow('keychain locked')
+    // M013: a failed delete falls back to overwriting the blob, so logout itself no longer rejects.
+    await expect(storage.clearSession()).resolves.toBeUndefined()
 
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0)
   })

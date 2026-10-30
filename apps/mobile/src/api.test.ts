@@ -101,7 +101,9 @@ describe('request(): 401 handling (M012 F1)', () => {
     const { api, storage } = loadModules()
     await storage.sessionReady
     await storage.persistSession('token-123', user)
+    // M013: clearSession falls back to overwriting the blob, so the keychain must refuse that too.
     mockSecureStore.deleteItemAsync.mockRejectedValue(new Error('keychain locked'))
+    mockSecureStore.setItemAsync.mockRejectedValue(new Error('keychain locked'))
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
     globalThis.fetch = jest.fn().mockResolvedValue(mockResponse(401, { message: 'Unauthorized' }))
 

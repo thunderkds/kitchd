@@ -171,8 +171,7 @@ describe('guideline form edit', () => {
     renderScreen(<GuidelinesScreen />)
     fireEvent.press(await screen.findByText('Opening'))
     fireEvent.press(await screen.findByText('Edit guideline'))
-    // The detail view does not render the form itself, it appears on the list view after Back.
-    fireEvent.press(screen.getByText('Back'))
+    // M013 AC8: Edit opens the form straight away, no detour through Back.
 
     expect(await screen.findByDisplayValue('Opening')).toBeTruthy()
     expect(screen.getByPlaceholderText('Steps, one per line').props.value).toBe('Unlock\nLights')

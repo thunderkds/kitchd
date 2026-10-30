@@ -11,7 +11,7 @@ import {
   type AcceptInvitePayload,
 } from '../../src/schemas/invite';
 import { persistSession } from '../../src/storage';
-import { toStoredUser } from '../../src/session';
+import { session, toStoredUser } from '../../src/session';
 import { inviteTokenFromParam } from '../../src/inviteToken';
 import { ScreenFrame } from '../../src/components/ScreenFrame';
 
@@ -24,6 +24,8 @@ export default function AcceptInviteScreen() {
     defaultValues: { token: initialToken ?? '', password: '' },
     resolver: zodResolver(acceptInviteSchema),
   });
+  // Read once at mount, like the web page: accepting replaces whoever is signed in, so say so up front.
+  const [currentUser] = useState(() => session.getUser());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -62,6 +64,12 @@ export default function AcceptInviteScreen() {
           <Text style={styles.body}>
             Paste the invite token from the owner or admin. The mobile app uses the same public accept endpoint as the web flow.
           </Text>
+
+          {currentUser && (
+            <Text style={styles.notice}>
+              You are signed in as {currentUser.email}. Accepting this invitation will sign you in as the invited user.
+            </Text>
+          )}
 
           <FormTextInput
             control={control}
@@ -132,6 +140,11 @@ const styles = StyleSheet.create({
     color: '#ccd5e6',
     fontSize: 15,
     lineHeight: 22,
+  },
+  notice: {
+    color: '#ffd28a',
+    fontSize: 14,
+    lineHeight: 20,
   },
   input: {
     borderRadius: 16,

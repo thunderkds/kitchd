@@ -94,7 +94,42 @@ describe('native session storage: secure-store write + read', () => {
     const storage = createSessionStorage()
     expect(storage.getItem('accessToken')).toBeNull()
     expect(storage.getItem('authUser')).toBeNull()
-    expect(warnSpy).toHaveBeenCalledWith('Failed to parse native session storage', expect.any(SyntaxError))
+    expect(warnSpy).toHaveBeenCalledWith('Failed to parse native session storage', expect.any(String))
+  })
+
+  // M013 AC3: V8 quotes short, non-object-looking input in its SyntaxError message, so the blob
+  // (which holds the token) must never reach the log, as an error object or inside its message.
+  it('never logs the raw stored blob when parsing fails (M013 AC3)', async () => {
+    mockSecureStore.data.set('session', 'secret-token-abc')
+    const { sessionReady } = loadStorageModule()
+    await sessionReady
+
+    const logged = JSON.stringify(warnSpy.mock.calls.flat().map((arg) => (arg instanceof Error ? [arg.name, arg.message] : arg)))
+    expect(logged).not.toContain('secret-token-abc')
+    warnSpy.mock.calls.flat().forEach((arg) => expect(arg).not.toBeInstanceOf(Error))
+  })
+
+  it('reads the token/user keys from @kitchenos/shared instead of redefining them (M013 AC4)', async () => {
+    mockSecureStore.data.set('session', blob('token-123', userJson))
+    let loaded!: typeof import('./storage')
+    jest.isolateModules(() => {
+      jest.doMock('@kitchenos/shared', () => ({
+        ...jest.requireActual('@kitchenos/shared'),
+        ACCESS_TOKEN_STORAGE_KEY: 'sharedAccessKey',
+        AUTH_USER_STORAGE_KEY: 'sharedUserKey',
+      }))
+      try {
+        loaded = require('./storage')
+      } finally {
+        jest.dontMock('@kitchenos/shared')
+      }
+    })
+    await loaded.sessionReady
+
+    const storage = loaded.createSessionStorage()
+    expect(storage.getItem('sharedAccessKey')).toBe('token-123')
+    expect(storage.getItem('sharedUserKey')).toBe(userJson)
+    expect(storage.getItem('accessToken')).toBeNull()
   })
 
   it('resolves sessionReady with an empty session and warns when the secure store read rejects', async () => {
@@ -344,6 +379,77 @@ describe('native session storage: atomic write + failure path (80a0bcf)', () => 
     await second.sessionReady
 
     expect(second.createSessionStorage().getItem('accessToken')).toBeNull()
+  })
+})
+
+describe('native session storage: logout durability (M013)', () => {
+  const rejectDeleteFor = (...keys: string[]) => {
+    const real = mockSecureStore.deleteItemAsync.getMockImplementation()!
+    mockSecureStore.deleteItemAsync.mockImplementation(async (key: string) => {
+      if (keys.includes(key)) throw new Error(`cannot delete ${key}`)
+      return real(key)
+    })
+  }
+
+  it('AC1: deletes the legacy keys before the session key', async () => {
+    mockSecureStore.data.set('session', blob('token-123', userJson))
+    mockSecureStore.data.set('accessToken', 'stale')
+    mockSecureStore.data.set('authUser', 'stale')
+    const { clearSession, sessionReady } = loadStorageModule()
+    await sessionReady
+
+    await clearSession()
+
+    const deleted = mockSecureStore.deleteItemAsync.mock.calls.map(([key]: [string]) => key)
+    expect(deleted.indexOf('session')).toBe(deleted.length - 1)
+    expect(deleted).toEqual(expect.arrayContaining(['accessToken', 'authUser']))
+  })
+
+  it('AC1: a failed legacy delete does not let the next hydration restore a token', async () => {
+    mockSecureStore.data.set('session', blob('token-123', userJson))
+    mockSecureStore.data.set('accessToken', 'legacy-token')
+    const first = loadStorageModule()
+    await first.sessionReady
+    rejectDeleteFor('accessToken')
+
+    await first.clearSession()
+
+    const second = loadStorageModule()
+    await second.sessionReady
+    expect(second.createSessionStorage().getItem('accessToken')).toBeNull()
+    expect(second.createSessionStorage().getItem('authUser')).toBeNull()
+  })
+
+  it('AC2: a failed session delete falls back to writing the empty state', async () => {
+    mockSecureStore.data.set('session', blob('token-123', userJson))
+    const first = loadStorageModule()
+    await first.sessionReady
+    const listener = jest.fn()
+    first.onSessionChange(listener)
+    rejectDeleteFor('session')
+
+    await expect(first.clearSession()).resolves.toBeUndefined()
+
+    expect(mockSecureStore.data.get('session')).toBe(blob(null, null))
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(first.createSessionStorage().getItem('accessToken')).toBeNull()
+    const second = loadStorageModule()
+    await second.sessionReady
+    expect(second.createSessionStorage().getItem('accessToken')).toBeNull()
+  })
+
+  it('AC2: when the empty-state write also fails, clearSession still resolves with memory cleared and warns message-only', async () => {
+    mockSecureStore.data.set('session', blob('token-123', userJson))
+    const { clearSession, createSessionStorage, sessionReady } = loadStorageModule()
+    await sessionReady
+    rejectDeleteFor('session')
+    mockSecureStore.setItemAsync.mockRejectedValue(new Error('disk full'))
+
+    await expect(clearSession()).resolves.toBeUndefined()
+
+    expect(createSessionStorage().getItem('accessToken')).toBeNull()
+    expect(warnSpy).toHaveBeenCalledWith('Failed to clear native session storage', 'disk full')
+    warnSpy.mock.calls.flat().forEach((arg) => expect(arg).not.toBeInstanceOf(Error))
   })
 })
 

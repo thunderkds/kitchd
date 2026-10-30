@@ -58,10 +58,12 @@ export default function HomeScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json()) as AuthResponseDto;
       if (!res.ok) {
-        throw new Error((data as { message?: string }).message ?? 'Request failed');
+        // A proxy or gateway error is often HTML, so a body that is not JSON must not surface as a SyntaxError.
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? `Request failed (${res.status})`);
       }
+      const data = (await res.json()) as AuthResponseDto;
 
       const storedUser = toStoredUser(data.user);
       await persistSession(data.accessToken, storedUser);

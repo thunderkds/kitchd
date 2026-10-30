@@ -355,7 +355,8 @@ describe('AppState and logout (M009 AC3)', () => {
     const socket = lastSocket()
     mockSecureStore.deleteItemAsync.mockRejectedValue(new Error('keychain locked'))
 
-    await expect(storage.clearSession()).rejects.toThrow('keychain locked')
+    // M013: a failed delete falls back to overwriting the blob, so logout itself no longer rejects.
+    await expect(storage.clearSession()).resolves.toBeUndefined()
 
     expect(socket.disconnect).toHaveBeenCalled()
   })
