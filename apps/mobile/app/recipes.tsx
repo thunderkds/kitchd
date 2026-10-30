@@ -12,6 +12,7 @@ import { recipeSchema, type RecipeFormValues, type RecipeRowValues } from '../sr
 import { queryErrorMessage, queryLoadError, useIngredients, useRecipes, useRecipeVersions } from '../src/queries';
 import { queryKeys, recipeVersionKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
 
@@ -36,6 +37,8 @@ function initialRows(recipe?: Recipe | null): RecipeRowValues[] {
 
 export default function RecipesScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canWrite = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
@@ -265,7 +268,7 @@ export default function RecipesScreen() {
 
   if (loading) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <View style={[styles.content, styles.header]}>
           <Text style={styles.kicker}>KitchenOS mobile</Text>
           <Text style={styles.title}>Recipes</Text>
@@ -277,7 +280,7 @@ export default function RecipesScreen() {
 
   if (mode === 'detail' && selected) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <View style={styles.headerRow}>
@@ -393,7 +396,7 @@ export default function RecipesScreen() {
   );
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <FlashList
         data={recipes}
         keyExtractor={(recipe) => recipe.id}
@@ -414,7 +417,8 @@ export default function RecipesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
   content: {
     padding: 24,
   },
@@ -426,9 +430,9 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
     marginTop: 16,
   },
   headerRow: {
@@ -438,20 +442,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
   },
   sectionTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -461,11 +465,11 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -481,12 +485,12 @@ const styles = StyleSheet.create({
     borderTopColor: '#222b3a',
   },
   recipeName: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
   recipeMeta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
   },
   stepRow: {
@@ -498,7 +502,7 @@ const styles = StyleSheet.create({
   },
   stepIndex: {
     width: 22,
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -515,12 +519,12 @@ const styles = StyleSheet.create({
     borderTopColor: '#222b3a',
   },
   ingredientName: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
   ingredientMeta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
   },
   rowCard: {
@@ -545,7 +549,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   pickerButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -594,7 +598,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -603,7 +607,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -620,7 +624,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },

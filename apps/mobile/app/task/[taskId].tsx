@@ -25,6 +25,7 @@ import {
 import { CommentsSection } from '../../src/commentsSection';
 import { ScreenFrame } from '../../src/components/ScreenFrame';
 import { session } from '../../src/session';
+import { useTheme, type Palette } from '../../src/theme';
 
 type PendingCompletion = {
   taskId: string;
@@ -92,6 +93,8 @@ function toPayloadItems(items: EditableChecklistItem[]): ChecklistItem[] {
 
 export default function TaskDetailScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const params = useLocalSearchParams();
   const taskId = Array.isArray(params.taskId) ? params.taskId[0] : params.taskId;
 
@@ -411,7 +414,7 @@ export default function TaskDetailScreen() {
   }
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <View style={styles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
@@ -600,20 +603,21 @@ export default function TaskDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
   screen: {
     flex: 1,
     gap: 16,
     padding: 24,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
   },
   card: {
     gap: 14,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   headerRow: {
     flexDirection: 'row',
@@ -626,25 +630,25 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
   },
   taskTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 22,
     fontWeight: '800',
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 14,
   },
   note: {
@@ -653,7 +657,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -673,7 +677,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#222b3a',
   },
   sectionTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -696,8 +700,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   checkboxChecked: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
+    backgroundColor: palette.accent,
+    borderColor: palette.accent,
   },
   checkboxText: {
     color: '#ffffff',
@@ -714,7 +718,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   checklistAction: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -728,7 +732,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -736,7 +740,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -752,7 +756,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -767,13 +771,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#101521',
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   input: {
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -785,13 +789,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
     borderWidth: 1,
     borderColor: '#2d374b',
   },
   selectorButtonActive: {
     backgroundColor: '#1d2740',
-    borderColor: '#6b8cff',
+    borderColor: palette.accent,
   },
   selectorButtonText: {
     color: '#ccd5e6',
@@ -811,7 +815,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -826,7 +830,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   smallButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -844,9 +848,9 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 24,
     padding: 20,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   deductionList: {
     gap: 8,
@@ -861,7 +865,7 @@ const styles = StyleSheet.create({
   },
   deductionName: {
     flex: 1,
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },

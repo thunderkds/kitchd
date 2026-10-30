@@ -13,6 +13,7 @@ import { queryLoadError, useNotes } from '../src/queries';
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 
 const NOTE_SCOPES: NoteScope[] = ['mine', 'team'];
 
@@ -26,6 +27,8 @@ function describeLink(note: Note): string | null {
 
 export default function NotesScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
 
   const [scope, setScope] = useState<NoteScope>('team');
@@ -242,7 +245,7 @@ export default function NotesScreen() {
   );
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <FlashList
         data={sortedNotes}
         keyExtractor={(note) => note.id}
@@ -280,7 +283,8 @@ export default function NotesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
   content: {
     padding: 24,
   },
@@ -295,14 +299,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
@@ -313,12 +317,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
   sectionTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -336,8 +340,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   segmentButtonActive: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
+    backgroundColor: palette.accent,
+    borderColor: palette.accent,
   },
   segmentText: {
     color: '#c1cbe0',
@@ -351,7 +355,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -361,7 +365,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -371,7 +375,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -388,7 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -398,7 +402,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#101521',
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   formActions: {
     flexDirection: 'row',
@@ -421,12 +425,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   noteTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 15,
     fontWeight: '700',
   },
   noteTitleMuted: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -460,7 +464,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   badgeText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -474,7 +478,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   smallButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -488,7 +492,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },

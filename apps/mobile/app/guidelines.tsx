@@ -17,6 +17,7 @@ import { guidelineSchema, type GuidelineFormValues, type GuidelinePayload } from
 import { queryLoadError, useGuidelines } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 import { ScreenFrame } from '../src/components/ScreenFrame';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
@@ -27,6 +28,8 @@ type FormMode = 'create' | 'edit';
 
 export default function GuidelinesScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canWrite = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
@@ -130,7 +133,7 @@ export default function GuidelinesScreen() {
 
   if (loading) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <Text style={styles.kicker}>KitchenOS mobile</Text>
@@ -144,7 +147,7 @@ export default function GuidelinesScreen() {
 
   if (mode === 'detail' && selected) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <View style={styles.headerRow}>
@@ -184,7 +187,7 @@ export default function GuidelinesScreen() {
   }
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <View style={styles.headerRow}>
@@ -270,10 +273,11 @@ export default function GuidelinesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
   },
   content: {
     flexGrow: 1,
@@ -284,9 +288,9 @@ const styles = StyleSheet.create({
     gap: 14,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   headerRow: {
     flexDirection: 'row',
@@ -295,14 +299,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
@@ -313,17 +317,17 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 14,
     textTransform: 'uppercase',
   },
   sectionTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -336,7 +340,7 @@ const styles = StyleSheet.create({
   },
   stepIndex: {
     width: 24,
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -355,7 +359,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   listTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -373,7 +377,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -393,8 +397,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   segmentButtonActive: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
+    backgroundColor: palette.accent,
+    borderColor: palette.accent,
   },
   segmentText: {
     color: '#c1cbe0',
@@ -410,7 +414,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#101521',
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   formActions: {
     flexDirection: 'row',
@@ -426,7 +430,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -435,7 +439,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -452,7 +456,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
