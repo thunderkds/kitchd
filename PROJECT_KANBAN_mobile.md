@@ -53,6 +53,7 @@
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
+- [ ] **M023** — Fold leftover mobile colours into 8 palette roles (no bluish tones on Graphite Mint; Simple near-duplicates merged) | mobile-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_M023.md` | Brainstorm: `BRAINSTORMING_LOG_m023-mobile-palette-roles.md` | Started: 2026-10-30
 
 ### Ready for Review
 
