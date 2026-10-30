@@ -37,6 +37,13 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 -->
 
+## Decisions (user, not auto mode)
+
+This task was run in normal mode: the user made each choice in the session on 2026-10-30. The session's first request carried `[auto]` (for M013), so `stop_auto_mode_check` treats this task as auto mode too. That is a false positive, and no Advocate debate was run.
+1. Graphite Mint replaces Dark Neon; Simple stays; API/DB theme values unchanged. User chose "Replace Dark Neon (Recommended)".
+2. Scope = tokens + key components; layouts unchanged. User chose "Tokens + key components (Recommended)".
+3. Path B from `BRAINSTORMING_LOG_graphite-mint.md`: mobile fonts cut, web and mobile in parallel. User chose "Go ahead (Recommended)".
+
 ## Evidence
 
 | Check | Result | Notes / output snippet |
