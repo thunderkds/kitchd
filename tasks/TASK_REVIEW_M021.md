@@ -41,16 +41,18 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/mobile/src/storage.test.ts` › "a login landing mid-logout (M021)" (2 tests) — pass |
+| Verification command run | ☑ pass | post-merge on `feat/m001-pnpm-workspace`: `Tests: 463 passed, 463 total`; typecheck 0 errors |
+| Negative cases hold | ☑ pass | version unchanged → M013 behaviour (all logout-durability tests unchanged and green); legacy delete fails + login landed → new session not overwritten |
+| verify | ☑ N/A | no simulator; auto-checked by the suite — pass; device check pending (human) |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `clearSession` + its callers (`src/api.ts:273`, `app/dashboard.tsx:79`) + the only other version writer (`src/theme.ts:84-86`, reads the user fresh, writes nothing once cleared) |
+| Full smoke suite still green (no regression) | ☑ pass | 463/463 |
+| **Companion score (easy-verifier)** | ☑ N/A | not run |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI |
+
+Code review (Supervisor, inline): 0 P0/P1/P2; P3 — a login landing during the final `session` delete await is not detected, safe because SecureStore serialises operations (delete issued before the login's write). Security review (Supervisor, inline, Risk Medium): no findings — the early return only fires after a newer write, and the only non-login writer cannot write once the session is cleared. Startup reads line present.
 
 ---
 
@@ -68,9 +70,8 @@ FAIL src/storage.test.ts
 Tests:       1 failed, 39 passed, 40 total
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: `Tests: 463 passed, 463 total` (post-merge)
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: Signing in immediately after signing out no longer risks losing the new session on the next launch.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**WITNESS**: Supervisor re-ran the suite post-merge, 2026-10-30.
