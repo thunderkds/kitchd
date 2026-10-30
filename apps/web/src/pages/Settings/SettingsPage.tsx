@@ -6,7 +6,7 @@ import { getKitchen, renameKitchen } from '../../features/kitchens/api';
 
 const THEME_OPTIONS: { id: ThemeId; label: string; description: string }[] = [
   { id: 'simple', label: 'Simple', description: "KitchenOS's original light theme." },
-  { id: 'dark-neon', label: 'Dark Neon', description: 'A high-contrast dark theme with a neon accent.' },
+  { id: 'dark-neon', label: 'Graphite Mint', description: 'A dark graphite theme with a mint highlight.' },
 ];
 
 /**
@@ -174,7 +174,7 @@ export function SettingsPage() {
                 <div className="mt-4 flex justify-end">
                   <button
                     type="submit"
-                    className="px-3 py-2 text-sm rounded bg-accent text-white disabled:opacity-50"
+                    className="px-3 py-2 text-sm rounded bg-accent text-on-accent disabled:opacity-50"
                     disabled={savingKitchen || !kitchenName.trim() || kitchenName.trim() === savedKitchenName}
                   >
                     {savingKitchen ? 'Saving…' : 'Save name'}

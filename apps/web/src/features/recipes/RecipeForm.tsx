@@ -172,7 +172,7 @@ export function RecipeForm({ mode, initial, ingredients, onSubmit, onCancel, bar
       <div className="flex items-center gap-2">
         <button
           type="button"
-          className="self-start px-3 py-2 text-sm rounded bg-accent text-white disabled:opacity-50"
+          className="self-start px-3 py-2 text-sm rounded bg-accent text-on-accent disabled:opacity-50"
           onClick={handleSubmit}
           disabled={submitting}
         >

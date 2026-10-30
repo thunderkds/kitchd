@@ -197,7 +197,7 @@ export function TeamPage() {
         {canManage && (
           <button
             type="button"
-            className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
+            className="self-start px-3 py-2 text-sm rounded bg-accent text-on-accent"
             onClick={openInvite}
           >
             Invite Member
@@ -262,7 +262,7 @@ export function TeamPage() {
             </button>
             <button
               type="button"
-              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90"
               onClick={handleInvite}
             >
               Send Invite

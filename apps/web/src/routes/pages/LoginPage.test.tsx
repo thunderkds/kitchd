@@ -24,7 +24,8 @@ describe('LoginPage mode toggle (T052 AC4)', () => {
         <LoginPage />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('button', { name: 'Sign up' })).toHaveAttribute('aria-pressed', 'true');
+    // The mode toggle is the first "Sign up" button; the submit button shares its name.
+    expect(screen.getAllByRole('button', { name: 'Sign up' })[0]).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Log in' })).toHaveAttribute('aria-pressed', 'false');
   });
 });

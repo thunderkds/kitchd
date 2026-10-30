@@ -106,7 +106,7 @@ export function AcceptInvitePage() {
               </p>
               <button
                 type="submit"
-                className="bg-accent text-white rounded py-2 min-h-[44px] disabled:opacity-50"
+                className="bg-accent text-on-accent rounded py-2 min-h-[44px] disabled:opacity-50"
                 disabled={submitting}
               >
                 {submitting ? 'Please wait...' : 'Accept invitation'}

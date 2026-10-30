@@ -89,7 +89,7 @@ describe('T052 AC1: token blocks', () => {
 
 describe('T052 AC2: on-accent token', () => {
   it('is registered in @theme inline', () => {
-    const theme = rules.find((r) => r.selector.startsWith('@theme inline'));
+    const theme = rules.find((r) => r.selector.includes('@theme inline'));
     expect(theme?.body).toContain('--color-on-accent: var(--knos-on-accent)');
   });
 });
@@ -149,6 +149,14 @@ describe('T052 AC5: sidebar active item', () => {
   it('hovers inactive items with bg-raised', () => {
     const r = ruleFor(':hover', `${GM} .side-nav`);
     expect(r.body).toContain('background-color: #181b1a');
+  });
+});
+
+describe('T052 AC9: notices (Graphite only)', () => {
+  it('draws role=note banners as a text-2 line with an amber warn-line outline', () => {
+    const r = ruleFor("[role='note']");
+    expect(r.body).toContain('color: #abb3ae');
+    expect(r.body).toContain('border-color: rgba(227, 182, 107, 0.35)');
   });
 });
 

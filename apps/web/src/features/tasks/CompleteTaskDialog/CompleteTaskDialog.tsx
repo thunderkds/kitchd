@@ -42,7 +42,7 @@ export function CompleteTaskDialog({
         </p>
 
         {preview.hasNegativeWarning && (
-          <p className="text-sm text-warning bg-warning/10 border border-warning/40 rounded px-3 py-2 mb-3">
+          <p role="note" className="text-sm text-warning bg-warning/10 border border-warning/40 rounded px-3 py-2 mb-3">
             Warning: at least one ingredient will go below zero on-hand. The
             deduction will still be applied.
           </p>
@@ -74,7 +74,7 @@ export function CompleteTaskDialog({
           </button>
           <button
             type="button"
-            className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90 disabled:opacity-50"
+            className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90 disabled:opacity-50"
             onClick={onConfirm}
             disabled={loading}
           >

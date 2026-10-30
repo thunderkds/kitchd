@@ -262,7 +262,7 @@ export function TasksPage() {
           {canCreate && (
             <button
               type="button"
-              className="px-3 py-2 text-sm rounded bg-accent text-white"
+              className="px-3 py-2 text-sm rounded bg-accent text-on-accent"
               onClick={() => setShowCreateDialog(true)}
             >
               New Task

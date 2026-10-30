@@ -11,8 +11,8 @@
  * component class — adding a future theme is a new `[data-theme]` block here,
  * zero component changes.
  *
- * "Simple" reproduces the app's original (pre-T026) look exactly. "Dark
- * Neon" is the new theme. Only two themes ship; a third is a pure CSS diff.
+ * "Simple" reproduces the app's original (pre-T026) look exactly. The dark
+ * theme (id `dark-neon`) is now Graphite Mint (T052). Only two themes ship; a third is a pure CSS diff.
  *
  * Each token is registered twice: once under its full semantic name
  * (`--color-text-primary`, per ADR-0001/Acceptance Criterion 1) and once
@@ -29,6 +29,7 @@
   --color-primary: var(--knos-text-primary);
   --color-muted: var(--knos-text-muted);
   --color-accent: var(--knos-accent);
+  --color-on-accent: var(--knos-on-accent);
   --color-border: var(--knos-border);
   --color-danger: var(--knos-danger);
   --color-success: var(--knos-success);
@@ -38,7 +39,8 @@
 /*
  * 2026-07-14 — borderless / gradient-box revision.
  *
- * `--knos-border` is `transparent` in both themes below: Tailwind v4's
+ * `--knos-border` is `transparent` in Simple (T052: Graphite Mint sets a
+ * visible hairline, #262b29): Tailwind v4's
  * preflight sets `border-color: var(--color-border, currentColor)` on
  * every element, so every bare `border`/`border-t-*` class across the app
  * already resolves through this one token (confirmed — no component file
@@ -66,36 +68,37 @@
   --knos-danger: #dc2626;
   --knos-success: #16a34a;
   --knos-warning: #d97706;
+  --knos-on-accent: #ffffff;
 }
 
 /*
- * Dark Neon palette (2026-07-14 revision) — rebased on Carlos Alfaro's
- * "DarkNeon" Bootstrap admin template (github.com/Carlos007007/DarkNeon,
- * css/style.css :root block) rather than an invented palette. That
- * reference uses a tight 6-color set: near-black background (#14111A),
- * darker sidebar/modal tone (#06030D), a muted plum border (#2F2A3D),
- * off-white text (#EEEEEE), a crimson/hot-pink accent (#D51944, with a
- * brighter rgba(250,30,78,.1) glow on hover states), and a desaturated
- * gray for secondary text (#6E6C74). We keep our own surface/surface-raised
- * two-tier elevation model (the reference doesn't distinguish card levels)
- * but pull hues from the same family, and brighten --knos-text-muted
- * slightly past the reference's #6E6C74 for body-text contrast at 14px on
- * a near-black background. No dedicated status colors exist in the
- * reference (it leans on Bootstrap defaults elsewhere) — danger/success
- * chosen to sit in the same magenta/teal-neon register as the accent.
+ * T052 — Graphite Mint. Replaces the old Dark Neon palette; the theme id
+ * stays `dark-neon` (API value `dark_neon`) so nothing about persistence or
+ * the paint-time script changes. Values come from
+ * docs/design/graphite-mint/tokens.json:
+ *   surface/raised/raised-2 = bg, text = text, muted = text-muted,
+ *   accent = neon, border = line, border-input = line-strong,
+ *   danger = danger, success = accent (soft mint), warning = warn,
+ *   on-accent = on-neon (dark text on a neon fill, 14:1).
+ * Raised surfaces are the same colour as the page (cards are outlined with
+ * a hairline, not filled), so the raised gradient has equal stops and is
+ * switched off below. Every rule that follows the block is scoped to
+ * `[data-theme='dark-neon']`, so Simple is untouched.
  */
 [data-theme='dark-neon'] {
-  --knos-surface: #14111a;
-  --knos-surface-raised: #1c1730;
-  --knos-surface-raised-2: #34163a;
-  --knos-text-primary: #eeeeee;
-  --knos-text-muted: #948fa0;
-  --knos-accent: #d51944;
-  --knos-border: transparent;
-  --knos-border-input: #4a3f5c;
-  --knos-danger: #fa1e4e;
-  --knos-success: #00e0a0;
-  --knos-warning: #ffb020;
+  --knos-surface: #121413;
+  --knos-surface-raised: #121413;
+  --knos-surface-raised-2: #121413;
+  --knos-text-primary: #dce0dd;
+  --knos-text-muted: #8c9590;
+  --knos-accent: #3cf5a8;
+  --knos-border: #262b29;
+  --knos-border-input: #2c3230;
+  --knos-danger: #e8968f;
+  --knos-success: #7eddb0;
+  --knos-warning: #e3b66b;
+  --knos-on-accent: #0e100f;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 body {
@@ -110,12 +113,9 @@ body {
  * above the :root block. `background-color` stays the flat
  * `--knos-surface-raised` as a fallback for contexts a background-image
  * can't reach (e.g. a <select>'s native dropdown panel); `background-image`
- * is what actually paints in normal box/card contexts. Dark Neon's second
- * stop (`--knos-surface-raised-2`) is deliberately accent-tinted (plum
- * toward the crimson accent hue) rather than another flat near-black, so
- * the gradient reads as a "neon glow" instead of a muddy gray wash — first
- * revision (2026-07-14) used two close-in-value dark tones and the user
- * correctly called it out as looking bad.
+ * is what actually paints in normal box/card contexts. In Graphite Mint
+ * (T052) both stops are equal and the image is switched off, so the
+ * gradient only shows in Simple.
  */
 .bg-surface-raised {
   background-color: var(--knos-surface-raised);
@@ -182,4 +182,86 @@ summary {
 button:disabled,
 [role="button"][aria-disabled="true"] {
   cursor: not-allowed;
+}
+
+/*
+ * T052 — Graphite Mint rules. All scoped to the dark-neon theme; colours are
+ * the literal tokens.json values (bg-sunken #0e100f, bg-raised #181b1a,
+ * line-strong #2c3230, neon #3cf5a8, neon-soft/-line rgba of neon, text-2
+ * #abb3ae, warn-line rgba of warn). See docs/design/graphite-mint/.
+ */
+
+/* Typography: IBM Plex Sans (400/500/600), system-ui fallback if the
+   Google Fonts link is unreachable. */
+[data-theme='dark-neon'] body {
+  font-family: "IBM Plex Sans", system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cards: outlined, not filled — no gradient, no drop shadow. Raised boxes
+   with no border class of their own (dialogs, auth cards) get the hairline
+   here; buttons sit inside bordered groups and are skipped. */
+[data-theme='dark-neon'] .bg-surface-raised {
+  background-image: none;
+}
+[data-theme='dark-neon'] .bg-surface-raised:not([class*='border']):not(button) {
+  border: 1px solid var(--knos-border);
+}
+[data-theme='dark-neon'] :is(.shadow, .shadow-sm, .shadow-lg) {
+  box-shadow: none;
+}
+
+/* Inputs: sunken fill and a line-strong border. */
+[data-theme='dark-neon'] input:not([type='checkbox']):not([type='radio']),
+[data-theme='dark-neon'] select,
+[data-theme='dark-neon'] textarea {
+  background-color: #0e100f;
+  border-color: #2c3230;
+}
+
+/* Primary (accent-filled) buttons glow; segmented toggles do not. */
+[data-theme='dark-neon'] button.bg-accent:not([aria-pressed]):not([aria-selected]) {
+  box-shadow: 0 0 0 1px rgba(60, 245, 168, 0.25), 0 0 18px rgba(60, 245, 168, 0.25);
+}
+[data-theme='dark-neon'] button.bg-accent:not([aria-pressed]):not([aria-selected]):disabled {
+  box-shadow: none;
+}
+
+/* Selected segment of a toggle (view toggle, notes scope, login mode, task
+   mode tabs): neon-soft with neon text, like the active nav item. */
+[data-theme='dark-neon'] button.bg-accent[aria-pressed='true'],
+[data-theme='dark-neon'] button.bg-accent[aria-selected='true'] {
+  background-color: rgba(60, 245, 168, 0.08);
+  color: #3cf5a8;
+  box-shadow: inset 0 0 0 1px rgba(60, 245, 168, 0.35);
+}
+
+/* Sidebar: active page is neon-soft with a ring; hover is bg-raised. */
+[data-theme='dark-neon'] .side-nav a[aria-current='page'] {
+  background-color: rgba(60, 245, 168, 0.08);
+  color: #3cf5a8;
+  text-shadow: 0 0 12px rgba(60, 245, 168, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(60, 245, 168, 0.35);
+  font-weight: 500;
+}
+[data-theme='dark-neon'] .side-nav a:not([aria-current='page']):hover {
+  background-color: #181b1a;
+}
+
+/* Notices: one-line outline, text-2 body, amber outline for warnings. */
+[data-theme='dark-neon'] [role='note'] {
+  background-color: transparent;
+  color: #abb3ae;
+  border-color: rgba(227, 182, 107, 0.35);
+}
+
+/* Focus ring: 2px solid neon, 2px offset. */
+[data-theme='dark-neon'] a:focus-visible,
+[data-theme='dark-neon'] button:focus-visible,
+[data-theme='dark-neon'] [role='button']:focus-visible,
+[data-theme='dark-neon'] input:focus-visible,
+[data-theme='dark-neon'] select:focus-visible,
+[data-theme='dark-neon'] textarea:focus-visible {
+  outline: 2px solid #3cf5a8;
+  outline-offset: 2px;
 }
