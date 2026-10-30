@@ -65,7 +65,7 @@ describe('AcceptInviteScreen signed-in notice (M013 AC7)', () => {
 
     expect(
       screen.getByText(
-        'You are signed in as chef@example.com. Accepting this invitation will sign you in as the invited user.',
+        'You are signed in as chef@example.com. Accepting this invitation will sign you out of that account and sign you in as the invited user.',
       ),
     ).toBeTruthy()
     // The form is still there: the notice informs, it does not block.

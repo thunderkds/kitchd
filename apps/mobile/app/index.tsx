@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, type Resolver } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { FormTextInput } from '../src/components/FormFields';
 import { loginSchema, signupSchema, type AuthFormValues } from '../src/schemas/auth';
 import { persistSession } from '../src/storage';
 import { session, toStoredUser } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 import { ScreenFrame } from '../src/components/ScreenFrame';
 
 type Mode = 'login' | 'signup';
@@ -23,6 +24,8 @@ const RESOLVERS: Record<Mode, Resolver<AuthFormValues>> = {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const [mode, setMode] = useState<Mode>('signup');
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(() => session.getUser());
   const [message, setMessage] = useState<string | null>(null);
@@ -78,7 +81,7 @@ export default function HomeScreen() {
 
   if (signedIn) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <Text style={styles.kicker}>KitchenOS mobile</Text>
@@ -91,7 +94,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <Text style={styles.kicker}>KitchenOS mobile</Text>
@@ -153,10 +156,10 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
   },
   content: {
     flexGrow: 1,
@@ -167,19 +170,19 @@ const styles = StyleSheet.create({
     gap: 14,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
@@ -203,8 +206,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   segmentButtonActive: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
+    backgroundColor: palette.accent,
+    borderColor: palette.accent,
   },
   segmentText: {
     color: '#c1cbe0',
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -227,7 +230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   linkButtonText: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 15,
     fontWeight: '700',
   },

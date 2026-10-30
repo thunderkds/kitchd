@@ -5,20 +5,24 @@ import { Text, View } from 'react-native';
 import { queryClient } from '../src/queryClient';
 import { startRealtime } from '../src/realtime';
 import { sessionReady } from '../src/storage';
+import { useTheme } from '../src/theme';
 
+// Rendered before the session is read, so there is usually no user yet and this resolves the default (Simple).
+// No provider is needed: ThemeContext defaults to the module store.
 function BootScreen() {
+  const { palette } = useTheme();
   return (
     <View
       style={{
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0d1016',
+        backgroundColor: palette.background,
       }}
     >
       <Text
         style={{
-          color: '#f4f7ff',
+          color: palette.text,
           fontSize: 18,
           fontWeight: '700',
         }}

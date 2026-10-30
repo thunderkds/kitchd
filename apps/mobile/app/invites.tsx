@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,12 +11,15 @@ import { queryLoadError, usePendingInvites } from '../src/queries';
 import { restoreIfSessionUnchanged, sessionTokenAtStart } from '../src/optimisticRollback';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 import type { UserRole } from '@kitchenos/shared';
 import { ScreenFrame } from '../src/components/ScreenFrame';
 
 
 export default function InvitesScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canManage = caller?.role === 'OWNER' || caller?.role === 'ADMIN';
 
@@ -104,7 +107,7 @@ export default function InvitesScreen() {
 
   if (!canManage) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <Text style={styles.kicker}>KitchenOS mobile</Text>
@@ -120,7 +123,7 @@ export default function InvitesScreen() {
   }
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <View style={styles.headerRow}>
@@ -190,10 +193,10 @@ export default function InvitesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0d1016',
+    backgroundColor: palette.background,
   },
   content: {
     flexGrow: 1,
@@ -204,9 +207,9 @@ const styles = StyleSheet.create({
     gap: 14,
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#171c26',
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   headerRow: {
     flexDirection: 'row',
@@ -215,14 +218,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -251,7 +254,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   secondaryButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
+    color: palette.text,
     backgroundColor: '#101521',
     borderWidth: 1,
     borderColor: '#2d374b',
@@ -280,8 +283,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   segmentButtonActive: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
+    backgroundColor: palette.accent,
+    borderColor: palette.accent,
   },
   segmentText: {
     color: '#c1cbe0',
@@ -295,7 +298,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -320,7 +323,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   inviteMeta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
     textTransform: 'uppercase',
   },
@@ -334,7 +337,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   revokeButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -348,7 +351,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },
