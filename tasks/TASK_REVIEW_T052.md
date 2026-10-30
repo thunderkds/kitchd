@@ -61,8 +61,13 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-30T08:44:17Z (`date -u`), new tests written, no implementation yet (`pnpm --filter @kitchenos/web test`):
+
+```
+Test Files  6 failed | 33 passed (39)
+     Tests  21 failed | 233 passed (254)
+```
+Failing new tests: graphiteMint.test.ts (Simple values + on-accent token; dark-neon Graphite values; @theme inline on-accent; bg-surface-raised gradient removed; borderless raised boxes outlined; shadows dropped; sunken inputs; primary-button glow; segmented toggle; sidebar active; sidebar hover; focus ring; IBM Plex body/mono; Google Fonts link), onAccentContrast.test.ts (no text-white on bg-accent; no text-white at all), Sidebar.test.tsx (on-accent text; side-nav hook), SettingsPage.test.tsx (T052 AC8 Graphite Mint label), LoginPage.test.tsx and NotesPage.test.tsx (aria-pressed on toggles).
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
