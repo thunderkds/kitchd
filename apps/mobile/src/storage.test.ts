@@ -451,6 +451,70 @@ describe('native session storage: logout durability (M013)', () => {
     expect(warnSpy).toHaveBeenCalledWith('Failed to clear native session storage', 'disk full')
     warnSpy.mock.calls.flat().forEach((arg) => expect(arg).not.toBeInstanceOf(Error))
   })
+
+  // M021: a login that lands while clearSession still awaits its deletes owns the stored blob.
+  describe('a login landing mid-logout (M021)', () => {
+    // Holds only clearSession's two legacy deletes (the next two calls); later calls pass through.
+    function holdNextLegacyDeletes() {
+      const real = mockSecureStore.deleteItemAsync.getMockImplementation()!
+      let release!: () => void
+      const gate = new Promise<void>((resolve) => (release = resolve))
+      mockSecureStore.deleteItemAsync.mockImplementationOnce(async (key: string) => {
+        await gate
+        return real(key)
+      })
+      mockSecureStore.deleteItemAsync.mockImplementationOnce(async (key: string) => {
+        await gate
+        return real(key)
+      })
+      return () => release()
+    }
+
+    it('AC1: persistSession completing while clearSession awaits its deletes keeps the new session', async () => {
+      mockSecureStore.data.set('session', blob('old-token', userJson))
+      const first = loadStorageModule()
+      await first.sessionReady
+      const release = holdNextLegacyDeletes()
+
+      const clearing = first.clearSession()
+      await flush()
+      await first.persistSession('new-token', JSON.parse(userJson))
+      release()
+      await clearing
+
+      expect(mockSecureStore.data.get('session')).toBe(blob('new-token', userJson))
+      expect(first.createSessionStorage().getItem('accessToken')).toBe('new-token')
+      const second = loadStorageModule()
+      await second.sessionReady
+      expect(second.createSessionStorage().getItem('accessToken')).toBe('new-token')
+    })
+
+    it('AC1: when a legacy delete fails and a login landed, the new session is not overwritten with the empty blob', async () => {
+      mockSecureStore.data.set('session', blob('old-token', userJson))
+      mockSecureStore.data.set('accessToken', 'legacy-token')
+      const first = loadStorageModule()
+      await first.sessionReady
+      const real = mockSecureStore.deleteItemAsync.getMockImplementation()!
+      let release!: () => void
+      const gate = new Promise<void>((resolve) => (release = resolve))
+      mockSecureStore.deleteItemAsync.mockImplementationOnce(async () => {
+        await gate
+        throw new Error('cannot delete accessToken')
+      })
+      mockSecureStore.deleteItemAsync.mockImplementationOnce(async (key: string) => {
+        await gate
+        return real(key)
+      })
+
+      const clearing = first.clearSession()
+      await flush()
+      await first.persistSession('new-token', JSON.parse(userJson))
+      release()
+      await expect(clearing).resolves.toBeUndefined()
+
+      expect(mockSecureStore.data.get('session')).toBe(blob('new-token', userJson))
+    })
+  })
 })
 
 describe('native session storage: write racing the cold-start hydration', () => {

@@ -229,6 +229,8 @@ export async function clearSession(): Promise<void> {
   nativeSessionState = defaultNativeSessionState();
   // Before the awaited SecureStore deletes, so the socket closes even if they throw.
   notifySessionChange();
+  // Any write after this point is a newer login that owns the stored `session` blob.
+  const versionAfterClear = nativeWriteVersion;
 
   // Legacy keys first: if one survives and `session` is gone, the next hydration would migrate it
   // back into a live session. A surviving legacy key therefore keeps `session` as an empty blob.
@@ -236,6 +238,12 @@ export async function clearSession(): Promise<void> {
     SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_STORAGE_KEY),
     SecureStore.deleteItemAsync(LEGACY_AUTH_USER_STORAGE_KEY),
   ]);
+  if (nativeWriteVersion !== versionAfterClear) {
+    // A login landed while the deletes were in flight: its saved session must survive, so neither
+    // delete nor overwrite `session`. persistSession also deletes the legacy keys itself.
+    return;
+  }
+
   let sessionGone = legacyDeletes.every((result) => result.status === 'fulfilled');
   if (sessionGone) {
     try {
