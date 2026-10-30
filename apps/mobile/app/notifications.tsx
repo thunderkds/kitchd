@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,6 +8,7 @@ import { ScreenFrame } from '../src/components/ScreenFrame';
 import { queryLoadError, useNotifications } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 
 const TYPE_LABEL = {
   MENTION: 'Mention',
@@ -23,6 +24,8 @@ function formatDate(iso: string): string {
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
 
   const queryClient = useQueryClient();
@@ -104,7 +107,7 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <FlashList
         data={notifications}
         keyExtractor={(notification) => notification.id}
@@ -130,7 +133,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   content: {
     padding: 24,
   },
@@ -145,14 +148,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -174,23 +177,23 @@ const styles = StyleSheet.create({
     borderTopColor: '#222b3a',
   },
   bodyText: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 14,
     lineHeight: 20,
   },
   bodyTextUnread: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
     textTransform: 'uppercase',
   },
   stateUnread: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -202,7 +205,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -219,7 +222,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },

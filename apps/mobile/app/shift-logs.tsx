@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,6 +8,7 @@ import { ScreenFrame } from '../src/components/ScreenFrame';
 import { queryErrorMessage, useShiftLogs } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 
 // Viewer is read-only (FR-018): an explicit allow-list, so an unknown role gets no composer.
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF', 'STAFF'];
@@ -28,6 +29,8 @@ function formatCreatedAt(value: string): string {
 
 export default function ShiftLogsScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canWrite = !!caller && WRITE_ROLES.includes(caller.role);
 
@@ -140,7 +143,7 @@ export default function ShiftLogsScreen() {
   );
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <FlashList
         data={logs ?? []}
         keyExtractor={(log) => log.id}
@@ -163,7 +166,7 @@ export default function ShiftLogsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: Palette) => StyleSheet.create({
   content: {
     padding: 24,
   },
@@ -178,14 +181,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   kicker: {
-    color: '#86a0ff',
+    color: palette.accentSoft,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
@@ -196,12 +199,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   error: {
-    color: '#ff8c8c',
+    color: palette.danger,
     fontSize: 13,
     lineHeight: 18,
   },
   sectionTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   listTitle: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -227,7 +230,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   meta: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 12,
   },
   multiLineInput: {
@@ -235,8 +238,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#171c26',
+    color: palette.text,
+    backgroundColor: palette.surface,
     borderWidth: 1,
     borderColor: '#2d374b',
     textAlignVertical: 'top',
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#101521',
     borderWidth: 1,
-    borderColor: '#273044',
+    borderColor: palette.border,
   },
   shiftRow: {
     flexDirection: 'row',
@@ -265,22 +268,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#101521',
   },
   shiftButtonSelected: {
-    borderColor: '#6b8cff',
+    borderColor: palette.accent,
     backgroundColor: '#1f2a4d',
   },
   shiftButtonText: {
-    color: '#9ca9bf',
+    color: palette.muted,
     fontSize: 15,
     fontWeight: '700',
   },
   shiftButtonTextSelected: {
-    color: '#f4f7ff',
+    color: palette.text,
   },
   primaryButton: {
     alignItems: 'center',
     borderRadius: 16,
     paddingVertical: 14,
-    backgroundColor: '#6b8cff',
+    backgroundColor: palette.accent,
   },
   primaryButtonText: {
     color: '#ffffff',
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
     borderColor: '#2d374b',
   },
   backButtonText: {
-    color: '#f4f7ff',
+    color: palette.text,
     fontSize: 14,
     fontWeight: '700',
   },

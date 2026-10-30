@@ -15,6 +15,8 @@ jest.mock('./storage', () => {
   })
   return { sessionReady, __resolveSession: resolve }
 })
+// The boot screen reads the theme (M020), which reads the session; its real store needs the full storage module.
+jest.mock('./session', () => ({ session: { getUser: () => null } }))
 jest.mock('./queryClient', () => ({ queryClient: new (require('@tanstack/react-query').QueryClient)() }))
 jest.mock('./realtime', () => ({ startRealtime: () => mockStartRealtime() }))
 
