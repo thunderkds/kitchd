@@ -1,10 +1,12 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { StyleSheet } from 'react-native'
+import { PALETTES } from './theme'
 import { CommentsSection } from './commentsSection'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 
-let mockUser: { id: string; role: string } | null = { id: 'u1', role: 'CHEF' }
+let mockUser: { id: string; role: string; themePreference?: string } | null = { id: 'u1', role: 'CHEF' }
 
 jest.mock('./session', () => ({
   session: { getUser: () => mockUser },
@@ -159,5 +161,107 @@ describe('CommentsSection (M007)', () => {
     mocked.listComments.mockRejectedValue(Object.assign(new Error('Forbidden'), { status: 403 }))
     renderSection()
     expect(await screen.findByText('Forbidden')).toBeTruthy()
+  })
+
+  describe('M019 replies + theme', () => {
+    const thread = () => [
+      comment({ id: 'c1', body: 'Top one', authorId: 'u2' }),
+      comment({ id: 'c2', body: 'Top two', authorId: 'u2' }),
+      comment({ id: 'r1', body: 'Reply to one', authorId: 'u3', parentId: 'c1' }),
+    ]
+
+    it('AC1: groups replies under their parent, indented, after the parent and before the next top-level', async () => {
+      mocked.listComments.mockResolvedValue(thread())
+      renderSection()
+      await screen.findByText('Top one')
+
+      const bodies = screen.getAllByTestId('comment-body').map((n) => n.props.children)
+      expect(bodies).toEqual(['Top one', 'Reply to one', 'Top two'])
+      const flat = (style: unknown) => StyleSheet.flatten(style as never) as { marginLeft?: number }
+      expect(flat(screen.getByTestId('comment-r1').props.style).marginLeft).toBeGreaterThan(0)
+      expect(flat(screen.getByTestId('comment-c1').props.style).marginLeft ?? 0).toBe(0)
+    })
+
+    it('AC2: Reply on a top-level comment posts createComment with parentId and the reply appears after refetch', async () => {
+      mocked.listComments
+        .mockResolvedValueOnce([comment({ id: 'c1', body: 'Top one', authorId: 'u2' })])
+        .mockResolvedValue([
+          comment({ id: 'c1', body: 'Top one', authorId: 'u2' }),
+          comment({ id: 'r9', body: 'My reply', parentId: 'c1' }),
+        ])
+      mocked.createComment.mockResolvedValue(comment({ id: 'r9', body: 'My reply', parentId: 'c1' }))
+      renderSection()
+      await screen.findByText('Top one')
+
+      fireEvent.press(screen.getByTestId('reply-c1'))
+      expect(screen.getByText('Replying to a comment')).toBeTruthy()
+      fireEvent.changeText(screen.getByPlaceholderText(/Write a comment/), 'My reply')
+      fireEvent.press(screen.getByText('Post'))
+
+      await waitFor(() =>
+        expect(mocked.createComment).toHaveBeenCalledWith({
+          entityType: 'task',
+          entityId: 'task-1',
+          body: 'My reply',
+          parentId: 'c1',
+        }),
+      )
+      expect(await screen.findByText('My reply')).toBeTruthy()
+      expect(screen.queryByText('Replying to a comment')).toBeNull()
+    })
+
+    it('AC2: cancelling the reply returns to a top-level post (no parentId)', async () => {
+      mocked.listComments.mockResolvedValue([comment({ id: 'c1', body: 'Top one', authorId: 'u2' })])
+      mocked.createComment.mockResolvedValue(comment({ id: 'c5', body: 'Plain' }))
+      renderSection()
+      await screen.findByText('Top one')
+
+      fireEvent.press(screen.getByTestId('reply-c1'))
+      fireEvent.press(screen.getByText('Cancel reply'))
+      fireEvent.changeText(screen.getByPlaceholderText(/Write a comment/), 'Plain')
+      fireEvent.press(screen.getByText('Post'))
+
+      await waitFor(() => expect(mocked.createComment).toHaveBeenCalled())
+      expect(mocked.createComment.mock.calls[0][0]).toEqual({ entityType: 'task', entityId: 'task-1', body: 'Plain' })
+    })
+
+    it('AC2: VIEWER sees no Reply action', async () => {
+      mockUser = { id: 'u1', role: 'VIEWER' }
+      mocked.listComments.mockResolvedValue(thread())
+      renderSection()
+      await screen.findByText('Top one')
+      expect(screen.queryByText('Reply')).toBeNull()
+      expect(screen.queryByTestId('reply-c1')).toBeNull()
+    })
+
+    it('AC3: replies have no Reply action', async () => {
+      mocked.listComments.mockResolvedValue(thread())
+      renderSection()
+      await screen.findByText('Top one')
+      expect(screen.getByTestId('reply-c1')).toBeTruthy()
+      expect(screen.getByTestId('reply-c2')).toBeTruthy()
+      expect(screen.queryByTestId('reply-r1')).toBeNull()
+      expect(screen.getAllByText('Reply')).toHaveLength(2)
+    })
+
+    it('AC4: colours come from the theme palette (simple vs dark-neon accent on the Post button)', async () => {
+      const postBg = () => {
+        const style = StyleSheet.flatten(screen.getByTestId('post-button').props.style as never) as {
+          backgroundColor?: string
+        }
+        return style.backgroundColor
+      }
+      mockUser = { id: 'u1', role: 'CHEF', themePreference: 'dark-neon' }
+      mocked.listComments.mockResolvedValue([comment({ id: 'c1', body: 'Top one', authorId: 'u2' })])
+      renderSection()
+      await screen.findByText('Top one')
+      expect(postBg()).toBe(PALETTES['dark-neon'].accent)
+      const cardBg = StyleSheet.flatten(screen.getByTestId('comment-c1').props.style as never) as {
+        backgroundColor?: string
+        borderColor?: string
+      }
+      expect(cardBg.backgroundColor).toBe(PALETTES['dark-neon'].background)
+      expect(cardBg.borderColor).toBe(PALETTES['dark-neon'].border)
+    })
   })
 })
