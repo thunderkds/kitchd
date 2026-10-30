@@ -142,7 +142,7 @@ export function Comments({ entityType, entityId }: CommentsProps) {
         <button
           type="submit"
           disabled={submitting || !draft.trim()}
-          className="self-end text-sm bg-accent text-white rounded px-3 py-1.5 disabled:opacity-50"
+          className="self-end text-sm bg-accent text-on-accent rounded px-3 py-1.5 disabled:opacity-50"
           data-testid="comment-submit"
         >
           Post

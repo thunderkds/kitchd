@@ -122,14 +122,16 @@ export function NotesPage() {
           <div role="group" aria-label="Notes scope">
             <button
               type="button"
-              className={`px-3 py-2 text-sm rounded-l border ${scope === 'mine' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
+              className={`px-3 py-2 text-sm rounded-l border ${scope === 'mine' ? 'bg-accent text-on-accent' : 'bg-surface-raised'}`}
+              aria-pressed={scope === 'mine'}
               onClick={() => setScope('mine')}
             >
               My Notes
             </button>
             <button
               type="button"
-              className={`px-3 py-2 text-sm rounded-r border ${scope === 'team' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
+              className={`px-3 py-2 text-sm rounded-r border ${scope === 'team' ? 'bg-accent text-on-accent' : 'bg-surface-raised'}`}
+              aria-pressed={scope === 'team'}
               onClick={() => setScope('team')}
             >
               Team Notes
@@ -137,7 +139,7 @@ export function NotesPage() {
           </div>
           <button
             type="button"
-            className="px-3 py-2 text-sm rounded bg-accent text-white"
+            className="px-3 py-2 text-sm rounded bg-accent text-on-accent"
             onClick={openForm}
           >
             New Note
@@ -185,7 +187,7 @@ export function NotesPage() {
             </button>
             <button
               type="button"
-              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90"
               onClick={handleCreate}
             >
               Add Note

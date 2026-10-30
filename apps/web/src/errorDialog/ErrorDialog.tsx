@@ -23,7 +23,7 @@ export function ErrorDialog({
       <div className="flex justify-end">
         <button
           type="button"
-          className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90"
+          className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90"
           onClick={onClose}
         >
           Close

@@ -57,14 +57,16 @@ export function LoginPage() {
         <div className="flex mb-6 rounded overflow-hidden border">
           <button
             type="button"
-            className={`flex-1 py-2 ${mode === 'signup' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
+            className={`flex-1 py-2 ${mode === 'signup' ? 'bg-accent text-on-accent' : 'bg-surface-raised'}`}
+            aria-pressed={mode === 'signup'}
             onClick={() => setMode('signup')}
           >
             Sign up
           </button>
           <button
             type="button"
-            className={`flex-1 py-2 ${mode === 'login' ? 'bg-accent text-white' : 'bg-surface-raised'}`}
+            className={`flex-1 py-2 ${mode === 'login' ? 'bg-accent text-on-accent' : 'bg-surface-raised'}`}
+            aria-pressed={mode === 'login'}
             onClick={() => setMode('login')}
           >
             Log in
@@ -109,7 +111,7 @@ export function LoginPage() {
           )}
           <button
             type="submit"
-            className="bg-accent text-white rounded py-2 disabled:opacity-50"
+            className="bg-accent text-on-accent rounded py-2 disabled:opacity-50"
             disabled={loading}
           >
             {loading ? 'Please wait...' : mode === 'signup' ? 'Sign up' : 'Log in'}

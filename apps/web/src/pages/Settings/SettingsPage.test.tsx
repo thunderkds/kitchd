@@ -69,7 +69,24 @@ describe('SettingsPage (T026/T048)', () => {
     expect(screen.getByTestId('theme-option-dark-neon')).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('AC4: selecting Dark Neon calls the T025 endpoint and updates <html data-theme>', async () => {
+  it('T052 AC8: labels the dark option "Graphite Mint" with its description', async () => {
+    setUser({
+      id: 'u1',
+      email: 'a@b.com',
+      organizationId: 'o1',
+      kitchenId: 'k1',
+      role: 'OWNER',
+      themePreference: 'simple',
+    });
+    renderSettings();
+
+    const option = await screen.findByTestId('theme-option-dark-neon');
+    expect(option).toHaveTextContent('Graphite Mint');
+    expect(option).toHaveTextContent('A dark graphite theme with a mint highlight.');
+    expect(screen.queryByText('Dark Neon')).not.toBeInTheDocument();
+  });
+
+  it('AC4: selecting Graphite Mint calls the T025 endpoint and updates <html data-theme>', async () => {
     const user = userEvent.setup();
     setToken('fake-jwt');
     setUser({

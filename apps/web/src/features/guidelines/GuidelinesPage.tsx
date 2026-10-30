@@ -149,7 +149,7 @@ export function GuidelinesPage() {
         {canWrite && (
           <button
             type="button"
-            className="self-start px-3 py-2 text-sm rounded bg-accent text-white"
+            className="self-start px-3 py-2 text-sm rounded bg-accent text-on-accent"
             onClick={openCreate}
           >
             New Guideline

@@ -16,3 +16,16 @@ describe('LoginPage', () => {
     expect(screen.queryByPlaceholderText('Organization name')).not.toBeInTheDocument();
   });
 });
+
+describe('LoginPage mode toggle (T052 AC4)', () => {
+  it('exposes the selected mode via aria-pressed so the theme can style it as a segment, not a primary button', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    // The mode toggle is the first "Sign up" button; the submit button shares its name.
+    expect(screen.getAllByRole('button', { name: 'Sign up' })[0]).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Log in' })).toHaveAttribute('aria-pressed', 'false');
+  });
+});

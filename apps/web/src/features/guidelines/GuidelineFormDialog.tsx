@@ -114,7 +114,7 @@ export function GuidelineFormDialog({
         </button>
         <button
           type="button"
-          className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90 disabled:opacity-50"
+          className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90 disabled:opacity-50"
           onClick={handleSubmit}
           disabled={submitting}
         >

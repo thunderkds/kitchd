@@ -118,7 +118,7 @@ export function CreateTaskDialog({
             role="tab"
             aria-selected={mode === m.value}
             className={`text-sm px-3 py-2 min-h-[44px] rounded border ${
-              mode === m.value ? 'bg-accent text-white border-accent' : 'bg-surface hover:opacity-80'
+              mode === m.value ? 'bg-accent text-on-accent border-accent' : 'bg-surface hover:opacity-80'
             }`}
             onClick={() => {
               setMode(m.value);
@@ -220,7 +220,7 @@ export function CreateTaskDialog({
         </button>
         <button
           type="button"
-          className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90 disabled:opacity-50"
+          className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90 disabled:opacity-50"
           onClick={handleSubmit}
           disabled={submitting}
         >

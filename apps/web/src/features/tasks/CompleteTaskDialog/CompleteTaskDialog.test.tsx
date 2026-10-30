@@ -70,6 +70,8 @@ describe('CompleteTaskDialog', () => {
     );
 
     expect(screen.getByText(/go below zero/i)).toBeInTheDocument();
+    // T052 AC9: the banner is a role=note so the Graphite theme can style it as a Notice.
+    expect(screen.getByRole('note')).toHaveTextContent(/go below zero/i);
     expect(screen.getByRole('button', { name: 'Confirm' })).not.toBeDisabled();
   });
 

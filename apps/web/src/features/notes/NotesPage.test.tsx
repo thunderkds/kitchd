@@ -59,6 +59,18 @@ describe('NotesPage', () => {
     );
   });
 
+  it('T052 AC4: scope toggle exposes the selected segment via aria-pressed', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [] });
+    render(
+      <MemoryRouter>
+        <NotesPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Team Notes' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'My Notes' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('toggling to My Notes refetches with scope=mine', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => [] });
 

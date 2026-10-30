@@ -75,7 +75,7 @@ export function AnnouncementsPage() {
         {canBroadcast && (
           <button
             type="button"
-            className="self-start bg-accent text-white rounded px-3 py-1.5 text-sm font-medium"
+            className="self-start bg-accent text-on-accent rounded px-3 py-1.5 text-sm font-medium"
             onClick={openForm}
           >
             New Announcement
@@ -130,7 +130,7 @@ export function AnnouncementsPage() {
               </button>
               <button
                 type="submit"
-                className="bg-accent text-white rounded px-3 py-2 min-h-[44px] min-w-[44px] text-sm font-medium hover:opacity-90"
+                className="bg-accent text-on-accent rounded px-3 py-2 min-h-[44px] min-w-[44px] text-sm font-medium hover:opacity-90"
               >
                 Broadcast
               </button>

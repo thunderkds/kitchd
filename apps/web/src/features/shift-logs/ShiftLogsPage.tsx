@@ -85,7 +85,7 @@ export function ShiftLogsPage() {
         {canWrite && (
           <button
             type="button"
-            className="px-3 py-2 text-sm rounded bg-accent text-white"
+            className="px-3 py-2 text-sm rounded bg-accent text-on-accent"
             onClick={openForm}
           >
             New Shift Log
@@ -145,7 +145,7 @@ export function ShiftLogsPage() {
             </button>
             <button
               type="button"
-              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-white hover:opacity-90"
+              className="text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded bg-accent text-on-accent hover:opacity-90"
               onClick={handleCreate}
             >
               Add Shift Log
