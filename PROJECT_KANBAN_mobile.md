@@ -52,6 +52,7 @@
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
+- [ ] **M022** — Graphite Mint replaces Dark Neon on mobile (palette + `onAccent`; label "Graphite Mint"; fonts cut) | mobile-developer | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_M022.md` | Brainstorm: `BRAINSTORMING_LOG_graphite-mint.md` | Started: 2026-10-30
 
 ### Ready for Review
 

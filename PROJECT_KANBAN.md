@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-10-29
+**Last updated**: 2026-10-30
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -10,9 +10,11 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
+- [ ] **T052** — Graphite Mint replaces Dark Neon on the web (tokens + key components) | frontend-developer | C2 | Risk: High | P1
 > (empty — T042 audit follow-ups T043–T050 all Done 2026-10-29)
 
 ### In Progress
+- [ ] **T052** — Graphite Mint replaces Dark Neon on the web (tokens + key components; label "Graphite Mint", id `dark-neon` unchanged) | frontend-developer | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T052.md` | Brainstorm: `BRAINSTORMING_LOG_graphite-mint.md` | Started: 2026-10-30
 
 ### Ready for Review
 
