@@ -1,5 +1,5 @@
 # PROJECT_KANBAN_mobile.md — React Native / Expo scope
-**Last updated**: 2026-10-29
+**Last updated**: 2026-10-30
 **Branch**: `feat/react-native-migration` (`5904b08`)
 
 > Separate board per Hard-Stop Gate 4 — `apps/mobile` is a distinct tech scope (different runtime, different deploy target) from the `apps/web` board in `PROJECT_KANBAN.md`.
@@ -44,11 +44,11 @@
 
 
 **Wave E — gaps registered by the M011 audit (`docs/audits/backend-mobile-coverage_2026-10-29.md`)**
-- [ ] **M013** — M002 P3 follow-ups F7–F13 (see `tasks/TASK_REVIEW_M002.md`) + M012 P3 residuals (`storage.ts:75` error-object log, no redirect after 401) + guideline detail→Edit renders no form until Back (M005 review) | mobile-developer | C1 | Risk: Low | P3 | backlog | Linear HUN-108
 - [ ] **M018** — Roll the M006 theme palette out to the remaining 9 hard-coded screens (tasks, recipes, guidelines, notes, inventory, team, invites, login, boot) so Dark Neon is not a mixed UI; reply composer for comments (web parity, M007 cut) | mobile-developer | C2 | Risk: Low | P3 | backlog — from Wave 2 review
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
+- [ ] **M013** — M002/M012/M005 P3 debt: logout durability (F7 + delete-failure), parse-log, F10, F11, F12, F13 invite notice, guideline Edit; F8/F9/F13a cut | mobile-developer | C1 | Risk: Medium | P3 | Guide: `tasks/TASK_GUIDE_M013.md` | Linear HUN-108 | Started: 2026-10-30
 
 ### Ready for Review
 
