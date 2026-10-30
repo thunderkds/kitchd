@@ -10,13 +10,13 @@ Mode: auto
 1. Picked M013 as the next task (web board all Done; mobile Wave E backlog, debt before features) — RULE: `PROJECT_KANBAN_mobile.md` § Wave A "pay down the M000 debt (must clear before new features)"
 2. Risk Medium (session storage / logout path) — RULE: `CLAUDE.md` § Risk Level Criteria "Medium | … involves state management or API contracts"
 3. Scope = Path C + F12: fix F7, delete-failure, parse-log, F10, F11 (in place), F12, F13b, guideline edit; cut F8, F9, F13a — DEBATED: Path C + F12 (Advocate 1: A, fix everything incl. a write queue and a `request()` public-route option; Advocate 2: C, user/security-visible items only). Advocate 1's main F8 claim (login writes through the adapter) was checked and is false: the only adapter writer is `apps/mobile/src/theme.ts:86` ⚠ decided for you — please review
-4. F13a (Bearer on invite accept) closed as harmless — FACT: `apps/api/src/users/users.controller.ts:33` "@Post('invite/accept')" carries no `@UseGuards` (unlike `:27` "@UseGuards(JwtAuthGuard, RolesGuard)"), so the header is ignored and cannot 401
-5. F13b: warn and proceed, not block — FACT: `apps/web/src/routes/pages/AcceptInvitePage.tsx:81` "You are signed in as {currentUser.email}. Accepting this invitation will sign you"
-6. 401 redirect item dropped as already done — FACT: `apps/mobile/src/api.ts:277` "redirectToSignIn();"
-7. AC3 deviation accepted: log `error.name`, not `error.message` — FACT: on Node v26 V8's SyntaxError message quotes the input (`Unexpected token 's', "secret-token-abc" is not valid JSON`), so the literal AC would still leak the token; the AC's testable condition (no raw blob in the log) is what was asked
+4. F13a (Bearer on invite accept) closed as harmless — FACT: apps/api/src/users/users.controller.ts:33 "@Post('invite/accept')" — no `@UseGuards` on that route (unlike line 27), so the header is ignored and cannot 401
+5. F13b: warn and proceed, not block (web parity) — FACT: apps/web/src/routes/pages/AcceptInvitePage.tsx:81 "You are signed in as {currentUser.email}. Accepting this invitation will sign you"
+6. 401 redirect item dropped as already done — FACT: apps/mobile/src/api.ts:277 "redirectToSignIn();"
+7. AC3 deviation accepted: log `error.name`, not `error.message` (the literal AC would still leak the token) — FACT: apps/mobile/src/storage.test.ts:100 "// M013 AC3: V8 quotes short, non-object-looking input in its SyntaxError message, so the blob"
 8. `clearSession` now resolves on SecureStore failure (3 existing tests updated) — RULE: `tasks/TASK_GUIDE_M013.md` § Edge cases "if *that* also throws, warn (message only) and still resolve"
-9. Spawned on this session's CLI/model without `craft-spawn-prompt` — process miss, logged as code-review P1 (no `Startup reads:` line). SAFER OPTION: no code impact; future spawns use `craft-spawn-prompt` ⚠ decided for you — please review
-10. Merged `task/M013` into `feat/m001-pnpm-workspace` (local, not pushed) — RULE: same flow as M004–M017 (`PROJECT_KANBAN_mobile.md` § Done)
+9. Merged `task/M013` into `feat/m001-pnpm-workspace` (local, not pushed) — RULE: PROJECT_KANBAN_mobile.md § Done (M004–M017 were merged the same way)
+Process note (not a decision): the implementer spawn prompt was hand-written instead of via `craft-spawn-prompt`, so it had no Startup reads block — logged as code-review P1; future spawns use the skill.
 Checks: tests `pnpm --filter @kitchenos/mobile test` — 48/48 suites, 461/461 tests (post-merge); typecheck clean; reviews code-review — 0 P0, 1 P1 (process), 1 P2, 3 P3; security-review — no findings; real run `npx expo export --platform ios` — printed `Exported: …/m013-export` (auto-checked, not /verify)
 Not done: push (yours); device check on a simulator/phone (yours, as for M004–M017); P3 suggestions below; `fewer-permission-prompts`/`update-config` setup skipped (RULE: tracks.md stop #5)
 
