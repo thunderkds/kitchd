@@ -43,6 +43,14 @@ describe('theme mapping (M006 AC3)', () => {
       danger: '#ff8c8c',
       border: '#273044',
       onAccent: '#ffffff',
+      inputBackground: '#101521',
+      inputBorder: '#2d374b',
+      divider: '#222b3a',
+      textSecondary: '#ccd5e6',
+      hint: '#8f9db4',
+      warning: '#ffd27a',
+      success: '#93e0a6',
+      raised: '#1d2740',
     })
   })
 
@@ -57,6 +65,14 @@ describe('theme mapping (M006 AC3)', () => {
       danger: '#E8968F',
       border: '#262B29',
       onAccent: '#0E100F',
+      inputBackground: '#0E100F',
+      inputBorder: '#2C3230',
+      divider: '#1F2321',
+      textSecondary: '#ABB3AE',
+      hint: '#8C9590',
+      warning: '#E3B66B',
+      success: '#7EDDB0',
+      raised: '#181B1A',
     })
   })
 
@@ -77,7 +93,10 @@ describe('theme mapping (M006 AC3)', () => {
   it('gives every palette the same colour roles', () => {
     for (const palette of Object.values(PALETTES)) {
       expect(Object.keys(palette).sort()).toEqual(
-        ['accent', 'accentSoft', 'background', 'border', 'danger', 'muted', 'onAccent', 'surface', 'text'].sort(),
+        [
+          'accent', 'accentSoft', 'background', 'border', 'danger', 'muted', 'onAccent', 'surface', 'text',
+          'inputBackground', 'inputBorder', 'divider', 'textSecondary', 'hint', 'warning', 'success', 'raised',
+        ].sort(),
       )
     }
   })

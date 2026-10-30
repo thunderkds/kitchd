@@ -61,8 +61,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured `Fri Oct 30 10:22:04 UTC 2026`, tests written, no implementation commit yet; `pnpm --filter @kitchenos/mobile test`):
+```
+FAIL src/alertWidgets.test.tsx
+FAIL src/themeRolesM023.test.tsx
+FAIL src/themeRolloutB.test.tsx
+FAIL src/theme.test.ts
+Tests:       19 failed, 514 passed, 533 total
+Test Suites: 4 failed, 47 passed, 51 total
+```
+Failing new/updated tests (names): `palette roles (M023 AC1)` x2 (simple and dark-neon pins); `no leftover colour literals (M023 AC2) > only the allow-listed literals remain`; `<simple|dark-neon> palette applied to screens (M023 AC3, AC4, AC5)` > announcements inputs/hint/divider, dashboard unread badge + secondary buttons, alert widgets warning/danger, shift log selected panel (both themes), plus form fields error, screen frame default background (dark-neon only: Simple already matches); updated `theme.test.ts` x3 (simple pin, Graphite pin, same roles); `alertWidgets.test.tsx` row colours (fold targets); `themeRolloutB.test.tsx` invite-accept secondary text x2.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
