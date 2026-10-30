@@ -673,7 +673,7 @@ const createStyles = (palette: Palette) =>
       backgroundColor: palette.accent,
     },
     actionButtonText: {
-      color: '#ffffff',
+      color: palette.onAccent,
       fontSize: 14,
       fontWeight: '700',
     },
@@ -698,7 +698,7 @@ const createStyles = (palette: Palette) =>
       backgroundColor: palette.accent,
     },
     primaryButtonText: {
-      color: '#ffffff',
+      color: palette.onAccent,
       fontSize: 16,
       fontWeight: '800',
     },
@@ -748,7 +748,7 @@ const createStyles = (palette: Palette) =>
       fontWeight: '700',
     },
     segmentTextActive: {
-      color: '#ffffff',
+      color: palette.onAccent,
     },
     input: {
       borderRadius: 16,

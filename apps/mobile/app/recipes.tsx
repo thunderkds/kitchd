@@ -610,7 +610,7 @@ const createStyles = (palette: Palette) =>
       backgroundColor: palette.accent,
     },
     primaryButtonText: {
-      color: '#ffffff',
+      color: palette.onAccent,
       fontSize: 14,
       fontWeight: '800',
     },

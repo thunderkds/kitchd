@@ -215,7 +215,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     fontWeight: '700',
   },
   segmentTextActive: {
-    color: '#ffffff',
+    color: palette.onAccent,
   },
   input: {
     borderRadius: 16,
@@ -233,7 +233,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     backgroundColor: palette.accent,
   },
   primaryButtonText: {
-    color: '#ffffff',
+    color: palette.onAccent,
     fontSize: 16,
     fontWeight: '800',
   },

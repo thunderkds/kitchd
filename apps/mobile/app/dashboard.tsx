@@ -77,7 +77,7 @@ export default function DashboardScreen() {
             <Text style={styles.secondaryButtonText}>Open settings</Text>
           </Pressable>
           <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={() => void signOut(clearSession, (path) => router.replace(path))}>
-            <Text style={styles.primaryButtonText}>Sign out</Text>
+            <Text style={[styles.primaryButtonText, { color: palette.onAccent }]}>Sign out</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -167,7 +167,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6b8cff',
   },
   primaryButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '800',
   },

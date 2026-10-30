@@ -11,7 +11,7 @@ jest.mock('./session', () => ({
   },
 }))
 
-import { DEFAULT_THEME, PALETTES, createThemeStore, resolvePalette, toApiTheme } from './theme'
+import { DEFAULT_THEME, PALETTES, THEME_OPTIONS, createThemeStore, resolvePalette, toApiTheme } from './theme'
 
 const chef: StoredUser = {
   id: 'u1',
@@ -42,16 +42,29 @@ describe('theme mapping (M006 AC3)', () => {
       accentSoft: '#86a0ff',
       danger: '#ff8c8c',
       border: '#273044',
+      onAccent: '#ffffff',
     })
   })
 
-  it('dark-neon keeps the dark base and swaps only the accent family (web dark_neon accent #d51944)', () => {
-    const { accent, accentSoft, ...base } = PALETTES['dark-neon']
-    const { accent: simpleAccent, accentSoft: simpleSoft, ...simpleBase } = PALETTES.simple
-    expect(base).toEqual(simpleBase)
-    expect(accent).toBe('#d51944')
-    expect(accent).not.toBe(simpleAccent)
-    expect(accentSoft).not.toBe(simpleSoft)
+  it('dark-neon holds the Graphite Mint tokens (M022 AC1)', () => {
+    expect(PALETTES['dark-neon']).toEqual({
+      background: '#121413',
+      surface: '#181B1A',
+      text: '#DCE0DD',
+      muted: '#8C9590',
+      accent: '#3CF5A8',
+      accentSoft: '#7EDDB0',
+      danger: '#E8968F',
+      border: '#262B29',
+      onAccent: '#0E100F',
+    })
+  })
+
+  it('labels the dark-neon option "Graphite Mint" but keeps its id (M022 AC3)', () => {
+    const option = THEME_OPTIONS.find((o) => o.id === 'dark-neon')
+    expect(option?.label).toBe('Graphite Mint')
+    expect(option?.description).toBe('A dark graphite theme with a mint highlight.')
+    expect(THEME_OPTIONS.map((o) => o.id)).toEqual(['simple', 'dark-neon'])
   })
 
   it('falls back to the default palette for a missing or unknown preference', () => {
@@ -64,7 +77,7 @@ describe('theme mapping (M006 AC3)', () => {
   it('gives every palette the same colour roles', () => {
     for (const palette of Object.values(PALETTES)) {
       expect(Object.keys(palette).sort()).toEqual(
-        ['accent', 'accentSoft', 'background', 'border', 'danger', 'muted', 'surface', 'text'].sort(),
+        ['accent', 'accentSoft', 'background', 'border', 'danger', 'muted', 'onAccent', 'surface', 'text'].sort(),
       )
     }
   })

@@ -48,16 +48,16 @@ This task was run in normal mode: the user made each choice in the session on 20
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/mobile/src/theme.test.ts`, `themeRolloutA.test.tsx`, `themeRolloutB.test.tsx`, `dashboardScreen.test.tsx`, `announcementsTheme.test.tsx`, `settingsScreen.test.tsx` — pass |
+| Verification command run | ☑ pass | Supervisor re-run on `task/M022`: `Test Suites: 50 passed, 50 total` / `Tests: 518 passed, 518 total`; typecheck clean — pass |
+| Negative cases hold | ☑ pass | Simple palette identical apart from `onAccent: '#ffffff'` (test); Simple on-accent tests passed before and after (regression guard); white on non-accent fills left as is — pass |
+| verify | ☑ N/A | no simulator; agent ran `expo export --platform ios` — succeeded; device check pending (human) — pass for the bundle |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | 22 changed files (`b1891dd..task/M022`); every `styles.primaryButtonText` use on the 3 static-StyleSheet screens checked for the inline override — pass |
+| Full smoke suite still green (no regression) | ☑ pass | 518/518 — pass |
+| **Companion score (easy-verifier)** | ☑ N/A | not run |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no simulator; device check pending (human) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | `theme.test.ts` asserts the palette equals the tokens.json values — pass |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no layout change |
 
 ---
 
@@ -68,12 +68,23 @@ This task was run in normal mode: the user made each choice in the session on 20
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-30T08:42:16Z (`date -u`), tests written, no implementation commit yet.
+`pnpm --filter @kitchenos/mobile test` ->
+```
+Test Suites: 6 failed, 44 passed, 50 total
+Tests:       32 failed, 486 passed, 518 total
+```
+Failing suites: theme.test.ts, themeRolloutA.test.tsx, themeRolloutB.test.tsx, dashboardScreen.test.tsx,
+announcementsTheme.test.tsx, settingsScreen.test.tsx. New/updated failing tests include:
+- theme.test.ts: "dark-neon holds the Graphite Mint tokens (M022 AC1)", "labels the dark-neon option \"Graphite Mint\" but keeps its id (M022 AC3)", "simple is exactly the look ... (onAccent '#ffffff')", "gives every palette the same colour roles" (onAccent)
+- themeRolloutA: "<screen> screen text on the accent fill (M022 AC2) > dark-neon: the primary button label is drawn in onAccent" for guidelines, inventory, notes, recipes, task detail, tasks (6); plus the 6 updated "uses the dark-neon palette" cases
+- themeRolloutB: dark-neon cases for team (2), invites, login (2), invite-accept, notifications, shift log (8)
+- dashboardScreen: "dark-neon: the Sign out button fills with #3CF5A8 and its text is #0E100F (M022 AC2)" + palette case
+- announcementsTheme: dark-neon text on the primary button / palette case
+- settingsScreen: "dark-neon: the text on the Save name button is #0E100F (M022 AC2)" + 3 "Graphite Mint" label tests
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: Supervisor re-run 2026-10-30 on `task/M022` (20e818d): `Test Suites: 50 passed, 50 total` / `Tests: 518 passed, 518 total`; typecheck clean. OR [verbatim excerpt of the new content]
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A mobile user who picks the dark theme now gets Graphite Mint: graphite background, mint accents and dark, readable text on every mint button, tab and chip — labelled "Graphite Mint"; Simple looks the same.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**WITNESS**: Supervisor re-ran tests and typecheck on `task/M022`, 2026-10-30; implementing agent captured BEFORE at 08:42:16Z.

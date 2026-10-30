@@ -704,7 +704,7 @@ const createStyles = (palette: Palette) =>
       borderColor: palette.accent,
     },
     checkboxText: {
-      color: '#ffffff',
+      color: palette.onAccent,
       fontSize: 14,
       fontWeight: '800',
     },
@@ -743,7 +743,7 @@ const createStyles = (palette: Palette) =>
       backgroundColor: palette.accent,
     },
     primaryButtonText: {
-      color: '#ffffff',
+      color: palette.onAccent,
       fontSize: 16,
       fontWeight: '800',
     },

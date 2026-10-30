@@ -3,8 +3,9 @@ import type { ThemePreferenceId } from '@kitchenos/shared';
 import { session } from './session';
 
 // Minimal palette only (M006): the web's full CSS-token system is deliberately not reproduced.
-// `border` and `accentSoft` are the two roles beyond the guide's six: cards need an edge, and the
-// legacy screens use a lighter accent for kickers than for buttons.
+// `border` and `accentSoft` are two roles beyond the guide's six: cards need an edge, and the
+// legacy screens use a lighter accent for kickers than for buttons. `onAccent` (M022) is the text or
+// icon colour drawn ON an accent fill: white on Simple's blue, dark on Graphite Mint's neon mint.
 export interface Palette {
   background: string;
   surface: string;
@@ -14,6 +15,7 @@ export interface Palette {
   accentSoft: string;
   danger: string;
   border: string;
+  onAccent: string;
 }
 
 export const DEFAULT_THEME: ThemePreferenceId = 'simple';
@@ -29,23 +31,26 @@ export const PALETTES: Record<ThemePreferenceId, Palette> = {
     accentSoft: '#86a0ff',
     danger: '#ff8c8c',
     border: '#273044',
+    onAccent: '#ffffff',
   },
-  // Same dark base, neon accent family of the web's dark_neon theme (--knos-accent #d51944).
+  // Graphite Mint (M022; docs/design/graphite-mint/tokens.json). The id stays `dark-neon` so stored
+  // preferences and the API enum are untouched. `surface` is bg-raised: mobile cards keep a fill.
   'dark-neon': {
-    background: '#0d1016',
-    surface: '#171c26',
-    text: '#f4f7ff',
-    muted: '#9ca9bf',
-    accent: '#d51944',
-    accentSoft: '#ff6b8b',
-    danger: '#ff8c8c',
-    border: '#273044',
+    background: '#121413',
+    surface: '#181B1A',
+    text: '#DCE0DD',
+    muted: '#8C9590',
+    accent: '#3CF5A8',
+    accentSoft: '#7EDDB0',
+    danger: '#E8968F',
+    border: '#262B29',
+    onAccent: '#0E100F',
   },
 };
 
 export const THEME_OPTIONS: { id: ThemePreferenceId; label: string; description: string }[] = [
   { id: 'simple', label: 'Simple', description: "KitchenOS's original look." },
-  { id: 'dark-neon', label: 'Dark Neon', description: 'A high-contrast dark theme with a neon accent.' },
+  { id: 'dark-neon', label: 'Graphite Mint', description: 'A dark graphite theme with a mint highlight.' },
 ];
 
 function isThemePreference(value: unknown): value is ThemePreferenceId {

@@ -246,7 +246,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     fontWeight: '700',
   },
   roleChipTextActive: {
-    color: '#ffffff',
+    color: palette.onAccent,
   },
   removeButton: {
     minHeight: 44,
