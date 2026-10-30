@@ -31,7 +31,7 @@ afterEach(() => {
 
 it.each([
   ['simple', '#0d1016', '#86a0ff'],
-  ['dark-neon', '#0d1016', '#ff6b8b'],
+  ['dark-neon', '#121413', '#7EDDB0'],
 ] as const)('announcements list screen uses the %s palette (M006 AC3): background %s, kicker %s', async (themePreference, background, kicker) => {
   mockUser = { id: 'u1', email: 'a@b.c', organizationId: 'o', kitchenId: 'k', role: 'STAFF', themePreference }
   mocked.listAnnouncements.mockResolvedValue([])
@@ -44,6 +44,22 @@ it.each([
   expect(flat(screen.getByTestId('announcements-screen').props.style).backgroundColor).toBe(background)
   expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
   await screen.findByText('Announcements')
+})
+
+it.each([
+  ['simple', '#ffffff'],
+  ['dark-neon', '#0E100F'],
+] as const)('announcements: text on the primary button follows the %s palette (M022 AC2)', async (themePreference, text) => {
+  mockUser = { id: 'u1', email: 'a@b.c', organizationId: 'o', kitchenId: 'k', role: 'OWNER', themePreference }
+  mocked.listAnnouncements.mockResolvedValue([])
+  render(
+    <QueryClientProvider client={client}>
+      <AnnouncementsScreen />
+    </QueryClientProvider>,
+  )
+
+  await screen.findByText('No announcements yet.')
+  expect(flat(screen.getByText('New announcement').props.style).color).toBe(text)
 })
 
 it('announcements screen sits in the safe area and avoids the keyboard (M010 AC2 + AC3)', async () => {

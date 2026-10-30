@@ -99,7 +99,7 @@ export default function AnnouncementsScreen() {
 
           {canBroadcast && (
             <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} onPress={openForm}>
-              <Text style={styles.primaryButtonText}>New announcement</Text>
+              <Text style={[styles.primaryButtonText, { color: palette.onAccent }]}>New announcement</Text>
             </Pressable>
           )}
 
@@ -126,7 +126,7 @@ export default function AnnouncementsScreen() {
                   <Text style={styles.secondaryButtonText}>Cancel</Text>
                 </Pressable>
                 <Pressable style={[styles.primaryButton, { backgroundColor: palette.accent }]} disabled={saving} onPress={handleBroadcast}>
-                  <Text style={styles.primaryButtonText}>{saving ? 'Sending...' : 'Broadcast'}</Text>
+                  <Text style={[styles.primaryButtonText, { color: palette.onAccent }]}>{saving ? 'Sending...' : 'Broadcast'}</Text>
                 </Pressable>
               </View>
             </View>
@@ -282,7 +282,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6b8cff',
   },
   primaryButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '800',
   },

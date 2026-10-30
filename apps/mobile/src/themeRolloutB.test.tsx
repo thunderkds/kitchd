@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react-native'
+import { cleanup, render, screen, within } from '@testing-library/react-native'
 import type { StoredUser } from '@kitchenos/shared'
 import TeamScreen from '../app/team'
 import InvitesScreen from '../app/invites'
@@ -70,8 +70,11 @@ function styleOf(node: { props: { style?: unknown }; parent: unknown }, prop: st
 
 const THEMES = [
   ['simple', '#86a0ff', '#6b8cff'],
-  ['dark-neon', '#ff6b8b', '#d51944'],
+  ['dark-neon', '#7EDDB0', '#3CF5A8'],
 ] as const
+
+// M022 AC2: text drawn on an accent fill is palette.onAccent.
+const ON_ACCENT = { simple: '#ffffff', 'dark-neon': '#0E100F' } as const
 
 const asUser = (role: StoredUser['role'], themePreference: StoredUser['themePreference']): StoredUser => ({
   id: 'me',
@@ -102,7 +105,10 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
     await screen.findByText('chef@example.com')
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     expect(styleOf(screen.getByLabelText('Set role of chef@example.com to CHEF'), 'backgroundColor')).toBe(accent)
-    expect(flat(screen.getByText('Team roster').props.style).color).toBe('#f4f7ff')
+    expect(flat(screen.getByText('Team roster').props.style).color).toBe(themePreference === 'simple' ? '#f4f7ff' : '#DCE0DD')
+    // M022 AC2: the active chip is an accent fill, its label is onAccent; an inactive chip keeps its grey.
+    const activeChip = screen.getByLabelText('Set role of chef@example.com to CHEF')
+    expect(flat(within(activeChip).getByText('CHEF').props.style).color).toBe(ON_ACCENT[themePreference])
   })
 
   it('team screen (non-manager notice): kicker', () => {
@@ -120,7 +126,8 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
     await screen.findByText('No pending invites.')
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     expect(styleOf(screen.getByText('Create invite'), 'backgroundColor')).toBe(accent)
-    expect(styleOf(screen.getByText('Invites'), 'backgroundColor')).toBe('#171c26')
+    expect(flat(screen.getByText('Create invite').props.style).color).toBe(ON_ACCENT[themePreference])
+    expect(styleOf(screen.getByText('Invites'), 'backgroundColor')).toBe(themePreference === 'simple' ? '#171c26' : '#181B1A')
   })
 
   it('login screen: kicker and primary button follow the stored theme', () => {
@@ -147,6 +154,9 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
 
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     expect(styleOf(screen.getByText('Create account'), 'backgroundColor')).toBe(accent)
+    expect(flat(screen.getByText('Create account').props.style).color).toBe(ON_ACCENT[themePreference])
+    // The active segment ("Sign up") is an accent fill too; the inactive one keeps its grey.
+    expect(flat(screen.getByText('Sign up').props.style).color).toBe(ON_ACCENT[themePreference])
   })
 
   it('invite-accept screen: kicker and primary button', () => {
@@ -156,6 +166,7 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     // Title and button share the text "Accept invite"; the button is the second.
     expect(styleOf(screen.getAllByText('Accept invite')[1], 'backgroundColor')).toBe(accent)
+    expect(flat(screen.getAllByText('Accept invite')[1].props.style).color).toBe(ON_ACCENT[themePreference])
     expect(flat(screen.getByText(/Paste the invite token/).props.style).color).toBe('#ccd5e6')
   })
 
@@ -170,6 +181,7 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
     await screen.findByText('Mark all as read')
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     expect(styleOf(screen.getByText('Mark all as read'), 'backgroundColor')).toBe(accent)
+    expect(flat(screen.getByText('Mark all as read').props.style).color).toBe(ON_ACCENT[themePreference])
     expect(flat(screen.getByTestId('notification-n1-state').props.style).color).toBe(kicker)
   })
 
@@ -181,6 +193,7 @@ describe.each(THEMES)('%s palette (M020 AC1, AC2, AC4)', (themePreference, kicke
     await screen.findByText('No shift logs yet.')
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     expect(flat(screen.getByLabelText('Morning shift').props.style).borderColor).toBe(accent)
+    expect(flat(screen.getByText('Add shift log').props.style).color).toBe(ON_ACCENT[themePreference])
   })
 })
 

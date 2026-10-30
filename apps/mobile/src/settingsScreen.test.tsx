@@ -82,7 +82,7 @@ describe('SettingsScreen theme (M006 AC2)', () => {
     mockUser = userWith('CHEF', 'dark-neon')
     renderScreen()
 
-    expect(selected('Dark Neon')).toBe(true)
+    expect(selected('Graphite Mint')).toBe(true)
     expect(selected('Simple')).toBe(false)
     await kitchenNameInput()
   })
@@ -94,12 +94,24 @@ describe('SettingsScreen theme (M006 AC2)', () => {
     const flat = (style: unknown) => Object.assign({}, ...[style].flat(5).filter(Boolean))
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe('#86a0ff')
 
-    fireEvent.press(screen.getByRole('radio', { name: 'Dark Neon' }))
+    fireEvent.press(screen.getByRole('radio', { name: 'Graphite Mint' }))
 
-    await waitFor(() => expect(selected('Dark Neon')).toBe(true))
+    await waitFor(() => expect(selected('Graphite Mint')).toBe(true))
     expect(mocked.updateTheme).toHaveBeenCalledWith('dark-neon')
     expect(mockUser?.themePreference).toBe('dark-neon')
-    expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe('#ff6b8b')
+    expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe('#7EDDB0')
+  })
+
+  it.each([
+    ['simple', '#ffffff'],
+    ['dark-neon', '#0E100F'],
+  ] as const)('%s: the text on the Save name button is %s (M022 AC2)', async (themePreference, text) => {
+    mockUser = userWith('CHEF', themePreference)
+    renderScreen()
+    await kitchenNameInput()
+
+    const flat = (style: unknown) => Object.assign({}, ...[style].flat(5).filter(Boolean))
+    expect(flat(screen.getByText('Save name').props.style).color).toBe(text)
   })
 
   it('on failure shows the error and keeps the old value', async () => {
@@ -107,11 +119,11 @@ describe('SettingsScreen theme (M006 AC2)', () => {
     renderScreen()
     await kitchenNameInput()
 
-    fireEvent.press(screen.getByRole('radio', { name: 'Dark Neon' }))
+    fireEvent.press(screen.getByRole('radio', { name: 'Graphite Mint' }))
 
     expect(await screen.findByText('Theme service down')).toBeTruthy()
     expect(selected('Simple')).toBe(true)
-    expect(selected('Dark Neon')).toBe(false)
+    expect(selected('Graphite Mint')).toBe(false)
     expect(mockUser?.themePreference).toBe('simple')
   })
 })

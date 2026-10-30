@@ -105,8 +105,11 @@ const SCREENS: [string, () => ReactElement, string][] = [
 const PALETTE_CASES = [
   // Simple is the identity: the exact colours the screens hard-coded before M018 (AC3).
   ['simple', '#0d1016', '#86a0ff', '#6b8cff'],
-  ['dark-neon', '#0d1016', '#ff6b8b', '#d51944'],
+  ['dark-neon', '#121413', '#7EDDB0', '#3CF5A8'],
 ] as const
+
+// M022 AC2: the text drawn on an accent fill is palette.onAccent (Simple keeps white, Graphite Mint goes dark).
+const ON_ACCENT = { simple: '#ffffff', 'dark-neon': '#0E100F' } as const
 
 describe.each(SCREENS)('%s screen palette (M018)', (_name, element, buttonLabel) => {
   it.each(PALETTE_CASES)('uses the %s palette: background %s, kicker %s, primary button %s', async (themePreference, background, kicker, accent) => {
@@ -119,5 +122,17 @@ describe.each(SCREENS)('%s screen palette (M018)', (_name, element, buttonLabel)
     expect(flat(screen.UNSAFE_getAllByType(SafeAreaView)[0].props.style).backgroundColor).toBe(background)
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
     expect(backgroundBehind(buttonLabel)).toBe(accent)
+  })
+})
+
+describe.each(SCREENS)('%s screen text on the accent fill (M022 AC2)', (_name, element, buttonLabel) => {
+  it.each(['simple', 'dark-neon'] as const)('%s: the primary button label is drawn in onAccent', async (themePreference) => {
+    mockUser = { id: 'u1', email: 'a@b.c', organizationId: 'o', kitchenId: 'k', role: 'CHEF', themePreference }
+    const client = createQueryClient()
+    clients.push(client)
+    render(<QueryClientProvider client={client}>{element()}</QueryClientProvider>)
+
+    await screen.findByText(buttonLabel)
+    expect(flat(screen.getByText(buttonLabel).props.style).color).toBe(ON_ACCENT[themePreference])
   })
 })

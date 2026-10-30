@@ -144,7 +144,7 @@ export default function SettingsScreen() {
                 style={[styles.primaryButton, { backgroundColor: palette.accent }, renameMutation.isPending && styles.disabled]}
                 onPress={() => void handleRename()}
               >
-                <Text style={styles.primaryButtonText}>{renameMutation.isPending ? 'Saving...' : 'Save name'}</Text>
+                <Text style={[styles.primaryButtonText, { color: palette.onAccent }]}>{renameMutation.isPending ? 'Saving...' : 'Save name'}</Text>
               </Pressable>
             </>
           ) : (
@@ -239,7 +239,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   primaryButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '800',
   },

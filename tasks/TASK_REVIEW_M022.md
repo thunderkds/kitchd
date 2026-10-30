@@ -61,8 +61,20 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-30T08:42:16Z (`date -u`), tests written, no implementation commit yet.
+`pnpm --filter @kitchenos/mobile test` ->
+```
+Test Suites: 6 failed, 44 passed, 50 total
+Tests:       32 failed, 486 passed, 518 total
+```
+Failing suites: theme.test.ts, themeRolloutA.test.tsx, themeRolloutB.test.tsx, dashboardScreen.test.tsx,
+announcementsTheme.test.tsx, settingsScreen.test.tsx. New/updated failing tests include:
+- theme.test.ts: "dark-neon holds the Graphite Mint tokens (M022 AC1)", "labels the dark-neon option \"Graphite Mint\" but keeps its id (M022 AC3)", "simple is exactly the look ... (onAccent '#ffffff')", "gives every palette the same colour roles" (onAccent)
+- themeRolloutA: "<screen> screen text on the accent fill (M022 AC2) > dark-neon: the primary button label is drawn in onAccent" for guidelines, inventory, notes, recipes, task detail, tasks (6); plus the 6 updated "uses the dark-neon palette" cases
+- themeRolloutB: dark-neon cases for team (2), invites, login (2), invite-accept, notifications, shift log (8)
+- dashboardScreen: "dark-neon: the Sign out button fills with #3CF5A8 and its text is #0E100F (M022 AC2)" + palette case
+- announcementsTheme: dark-neon text on the primary button / palette case
+- settingsScreen: "dark-neon: the text on the Save name button is #0E100F (M022 AC2)" + 3 "Graphite Mint" label tests
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 

@@ -69,13 +69,26 @@ describe('DashboardScreen (M006)', () => {
 
   it.each([
     ['simple', '#0d1016', '#86a0ff'],
-    ['dark-neon', '#0d1016', '#ff6b8b'],
+    ['dark-neon', '#121413', '#7EDDB0'],
   ] as const)('uses the %s palette (AC3): background %s, kicker %s', (themePreference, background, kicker) => {
     mockUser = { ...base, themePreference }
     renderDashboard()
 
     expect(flat(screen.getByTestId('dashboard-screen').props.style).backgroundColor).toBe(background)
     expect(flat(screen.getByText('KitchenOS mobile').props.style).color).toBe(kicker)
+  })
+
+  it.each([
+    ['simple', '#6b8cff', '#ffffff'],
+    ['dark-neon', '#3CF5A8', '#0E100F'],
+  ] as const)('%s: the Sign out button fills with %s and its text is %s (M022 AC2)', (themePreference, fill, text) => {
+    mockUser = { ...base, themePreference }
+    renderDashboard()
+
+    let node = screen.getByText('Sign out').parent
+    while (node && !flat(node.props.style).backgroundColor) node = node.parent
+    expect(flat(node?.props.style).backgroundColor).toBe(fill)
+    expect(flat(screen.getByText('Sign out').props.style).color).toBe(text)
   })
 
   it('a user with no stored preference sees the legacy colours (no visual change)', () => {
