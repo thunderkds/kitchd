@@ -4,6 +4,7 @@
 **Risk Level**: Low
 **Priority**: P3
 **Assigned agent**: mobile-developer
+**Agent guide**: `agents/mobile-developer.md`
 **Board**: `PROJECT_KANBAN_mobile.md`
 **Parallel wave**: M018 / M019 / M020 / M021 run concurrently in separate worktrees — stay inside your file list.
 
