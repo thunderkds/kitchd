@@ -12,6 +12,8 @@
 > Task line format: **Mxxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Done
+- [x] **M020** — Theme palette rollout group B (team, invites, login, invite accept, notifications, shift log, boot) + web notice wording | mobile-developer | C2 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M020.md` | Done: 2026-10-30 (device check pending)
+- [x] **M018** — Theme palette rollout group A (tasks, task detail, recipes, guidelines, notes, inventory) via `createStyles(palette)` | mobile-developer | C2 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M018.md` | Done: 2026-10-30 (device check pending)
 - [x] **M019** — Comment replies on task detail (single level, VIEWER read-only, web parity) + comments section on the theme palette | mobile-developer | C1 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M019.md` | Done: 2026-10-30 (device check pending)
 - [x] **M021** — Login landing mid-logout keeps its saved session (`nativeWriteVersion` check in `clearSession`); `M013_BEFORE.txt` trimmed to 18 lines | mobile-developer | C1 | Risk: Medium | P3 | Review: `tasks/TASK_REVIEW_M021.md` (security clean) | Done: 2026-10-30
 - [x] **M013** — P3 debt: logout durability (legacy keys first + empty-blob fallback), message-only parse log, `<Redirect>` instead of render-time replace, non-JSON login errors, shared key constants, invite "signed in as" notice, guideline Edit opens form; F8/F9/F13a cut (won't-fix) | mobile-developer | C1 | Risk: Medium | P3 | Guide: `tasks/TASK_GUIDE_M013.md` | Review: `tasks/TASK_REVIEW_M013.md` (security clean) | Linear HUN-108 | Done: 2026-10-30 (device check pending)
@@ -50,8 +52,6 @@
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
-- [ ] **M018** — Theme palette rollout group A: tasks, task detail, recipes, guidelines, notes, inventory | mobile-developer | C2 | Risk: Low | P3 | Guide: `tasks/TASK_GUIDE_M018.md` | Started: 2026-10-30
-- [ ] **M020** — Theme palette rollout group B: team, invites, login, invite accept (+ web notice wording), notifications, shift log, boot | mobile-developer | C2 | Risk: Low | P3 | Guide: `tasks/TASK_GUIDE_M020.md` | Started: 2026-10-30
 
 ### Ready for Review
 

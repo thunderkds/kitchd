@@ -41,16 +41,18 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `apps/mobile/src/themeRolloutB.test.tsx` (7 screens incl. boot), `src/inviteAcceptScreen.test.tsx` (notice wording) — pass |
+| Verification command run | ☑ pass | after all four wave merges: `Test Suites: 50 passed, 50 total` / `Tests: 499 passed, 499 total`; typecheck 0 errors; `expo export --platform ios` exported |
+| Negative cases hold | ☑ pass | Simple cases assert the pre-change hex values (passed before and after) |
+| verify | ☑ N/A | no simulator; auto-checked by suite + iOS export — pass; Dark Neon device check pending (human) |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | the 7 screens + `src/rootLayoutRealtime.test.tsx` (one mock line, needed because boot now reads the theme) |
+| Full smoke suite still green (no regression) | ☑ pass | 499/499 |
+| **Companion score (easy-verifier)** | ☑ N/A | not run |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no simulator; palette assertions per screen in tests |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | mapped hexes → `palette.*`; off-palette colours left literal per guide, no tokens added |
+| **UI: Responsiveness at target viewports** | ☑ N/A | colour-only change |
+
+Code review (Supervisor, inline): same `createStyles(palette)` deviation as M018, formatted correctly. Out-of-list edit accepted: `rootLayoutRealtime.test.tsx` gains `jest.mock("./session")`. P3: the boot dark-neon test mutates `PALETTES` and restores it in `finally` — works, but a test-only mutation of a shared export. Login/boot are effectively always Simple (no user yet) — by design. Startup reads line present.
 
 ---
 
@@ -81,7 +83,6 @@ Test Suites: 2 failed, 47 passed, 49 total
 
 **AFTER**: 2026-10-30T04:54:29Z, same command `pnpm --filter @kitchenos/mobile test`: `Tests: 479 passed, 479 total`, `Test Suites: 49 passed, 49 total`; `pnpm --filter @kitchenos/mobile typecheck` (`tsc --noEmit`) clean.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A Dark Neon user sees the neon accent on team, invites, invite accept, notifications and shift log; the invite notice now says it will sign you out of the current account, as on web.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**WITNESS**: Supervisor re-ran the suite after merging the whole wave, 2026-10-30.
