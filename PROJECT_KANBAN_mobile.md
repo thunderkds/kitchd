@@ -12,6 +12,7 @@
 > Task line format: **Mxxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Done
+- [x] **M013** — P3 debt: logout durability (legacy keys first + empty-blob fallback), message-only parse log, `<Redirect>` instead of render-time replace, non-JSON login errors, shared key constants, invite "signed in as" notice, guideline Edit opens form; F8/F9/F13a cut (won't-fix) | mobile-developer | C1 | Risk: Medium | P3 | Guide: `tasks/TASK_GUIDE_M013.md` | Review: `tasks/TASK_REVIEW_M013.md` (security clean) | Linear HUN-108 | Done: 2026-10-30 (device check pending)
 - [x] **M010** — FlashList on tasks/inventory/recipes/notes/shift-logs/notifications/team, `ScreenFrame` (safe area + keyboard avoidance), forms in a stable list header; expo-image + Reanimated cut | mobile-developer | C2 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_M010.md` | Review: `tasks/TASK_REVIEW_M010.md` | Linear HUN-104 | Done: 2026-10-29 (device check pending)
 - [x] **M011** — Mobile↔backend coverage audit: **57** routes (T042's 58 was a miscount; grep's 59 includes 2 in a comment), 35 consumed, 15 new gaps → M014–M017 + M006 widened | Supervisor | C1 | Risk: Low | P2 | Report: `docs/audits/backend-mobile-coverage_2026-10-29.md` | Linear HUN-105 | Done: 2026-10-29
 - [x] **M005** — Forms: React Hook Form + Zod on 9 screens, rules mirror the API DTOs, zero calls on invalid submit; fixed blank-cost-as-0 and edit-threshold-null | mobile-developer | Review: `tasks/TASK_REVIEW_M005.md` | Linear HUN-99 | Done: 2026-10-29 (device check pending)
@@ -48,7 +49,6 @@
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
-- [ ] **M013** — M002/M012/M005 P3 debt: logout durability (F7 + delete-failure), parse-log, F10, F11, F12, F13 invite notice, guideline Edit; F8/F9/F13a cut | mobile-developer | C1 | Risk: Medium | P3 | Guide: `tasks/TASK_GUIDE_M013.md` | Linear HUN-108 | Started: 2026-10-30
 
 ### Ready for Review
 
