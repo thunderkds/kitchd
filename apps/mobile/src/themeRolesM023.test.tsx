@@ -1,5 +1,3 @@
-import { readdirSync, readFileSync, statSync } from 'fs'
-import { join, relative } from 'path'
 import { StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -14,6 +12,18 @@ import { ScreenFrame } from './components/ScreenFrame'
 import * as api from './api'
 import { createQueryClient } from './queryClient'
 import { PALETTES } from './theme'
+
+// The mobile app has no @types/node (and gains no dependency for one test), so type the three node modules used.
+declare const __dirname: string
+const { readdirSync, readFileSync, statSync } = jest.requireActual<{
+  readdirSync(dir: string): string[]
+  readFileSync(file: string, encoding: 'utf8'): string
+  statSync(path: string): { isDirectory(): boolean }
+}>('fs')
+const { join, relative } = jest.requireActual<{
+  join(...parts: string[]): string
+  relative(from: string, to: string): string
+}>('path')
 
 // M023: the leftover hard-coded mobile colours now come from eight new palette roles. The palette
 // comes from useTheme(), which reads the stored user's themePreference (same shape as M020's tests).

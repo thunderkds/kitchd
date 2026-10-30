@@ -161,7 +161,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     lineHeight: 34,
   },
   note: {
-    color: '#8f9db4',
+    color: palette.hint,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -174,7 +174,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#222b3a',
+    borderTopColor: palette.divider,
   },
   bodyText: {
     color: palette.muted,
@@ -198,7 +198,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     fontWeight: '700',
   },
   stateRead: {
-    color: '#6f7c92',
+    color: palette.hint,
     fontSize: 12,
   },
   primaryButton: {
@@ -217,9 +217,9 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   backButtonText: {
     color: palette.text,

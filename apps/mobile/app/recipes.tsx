@@ -180,13 +180,13 @@ export default function RecipesScreen() {
     formMode && canWrite ? (
       <View style={styles.formCard}>
         <Text style={styles.sectionTitle}>{formMode === 'edit' ? 'Edit recipe' : 'New recipe'}</Text>
-        <FormTextInput control={control} name="name" style={styles.input} placeholder="Name" placeholderTextColor="#6f7c92" />
+        <FormTextInput control={control} name="name" style={styles.input} placeholder="Name" placeholderTextColor={palette.hint} />
         <FormTextInput
           control={control}
           name="servings"
           style={styles.input}
           placeholder="Servings"
-          placeholderTextColor="#6f7c92"
+          placeholderTextColor={palette.hint}
           keyboardType="decimal-pad"
         />
         <FormTextInput
@@ -194,7 +194,7 @@ export default function RecipesScreen() {
           name="steps"
           style={[styles.input, styles.stepsInput]}
           placeholder="Steps, one per line"
-          placeholderTextColor="#6f7c92"
+          placeholderTextColor={palette.hint}
           multiline
         />
         <Text style={styles.sectionTitle}>Ingredients</Text>
@@ -232,7 +232,7 @@ export default function RecipesScreen() {
                   name={`rows.${idx}.qty`}
                   style={styles.input}
                   placeholder="Quantity"
-                  placeholderTextColor="#6f7c92"
+                  placeholderTextColor={palette.hint}
                   keyboardType="decimal-pad"
                 />
                 <View style={styles.rowActions}>
@@ -460,7 +460,7 @@ const createStyles = (palette: Palette) =>
       fontWeight: '700',
     },
     note: {
-      color: '#8f9db4',
+      color: palette.hint,
       fontSize: 13,
       lineHeight: 18,
     },
@@ -474,7 +474,7 @@ const createStyles = (palette: Palette) =>
       lineHeight: 18,
     },
     total: {
-      color: '#cdd7ea',
+      color: palette.textSecondary,
       fontSize: 14,
       fontWeight: '700',
     },
@@ -482,7 +482,7 @@ const createStyles = (palette: Palette) =>
       gap: 4,
       paddingVertical: 12,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     recipeName: {
       color: palette.text,
@@ -498,7 +498,7 @@ const createStyles = (palette: Palette) =>
       gap: 10,
       paddingVertical: 8,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     stepIndex: {
       width: 22,
@@ -508,7 +508,7 @@ const createStyles = (palette: Palette) =>
     },
     stepText: {
       flex: 1,
-      color: '#cdd7ea',
+      color: palette.textSecondary,
       fontSize: 13,
       lineHeight: 18,
     },
@@ -516,7 +516,7 @@ const createStyles = (palette: Palette) =>
       gap: 2,
       paddingVertical: 8,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     ingredientName: {
       color: palette.text,
@@ -531,12 +531,12 @@ const createStyles = (palette: Palette) =>
       gap: 10,
       padding: 14,
       borderRadius: 18,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     rowLabel: {
-      color: '#cdd7ea',
+      color: palette.textSecondary,
       fontSize: 13,
       fontWeight: '700',
     },
@@ -550,9 +550,9 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: palette.text,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     stepsInput: {
       minHeight: 120,
@@ -564,8 +564,8 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 16,
       paddingVertical: 14,
       borderWidth: 1,
-      borderColor: '#2d374b',
-      backgroundColor: '#101521',
+      borderColor: palette.inputBorder,
+      backgroundColor: palette.inputBackground,
     },
     pickerButtonText: {
       color: palette.text,
@@ -579,12 +579,12 @@ const createStyles = (palette: Palette) =>
       borderRadius: 14,
       paddingHorizontal: 14,
       paddingVertical: 12,
-      backgroundColor: '#161d2b',
+      backgroundColor: palette.raised,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     pickerOptionText: {
-      color: '#cdd7ea',
+      color: palette.textSecondary,
       fontSize: 13,
       fontWeight: '600',
     },
@@ -594,8 +594,8 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 14,
       paddingVertical: 12,
       borderWidth: 1,
-      borderColor: '#2d374b',
-      backgroundColor: '#101521',
+      borderColor: palette.inputBorder,
+      backgroundColor: palette.inputBackground,
     },
     secondaryButtonText: {
       color: palette.text,
@@ -619,9 +619,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 14,
       paddingHorizontal: 14,
       paddingVertical: 10,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     backButtonText: {
       color: palette.text,

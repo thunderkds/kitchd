@@ -370,14 +370,14 @@ export default function TasksScreen() {
                 name="title"
                 style={styles.input}
                 placeholder="Task title"
-                placeholderTextColor="#6f7c92"
+                placeholderTextColor={palette.hint}
               />
               <FormTextInput
                 control={createControl}
                 name="dueDate"
                 style={styles.input}
                 placeholder="Due date YYYY-MM-DD"
-                placeholderTextColor="#6f7c92"
+                placeholderTextColor={palette.hint}
                 autoCapitalize="none"
               />
               <FormTextInput
@@ -385,7 +385,7 @@ export default function TasksScreen() {
                 name="assigneeId"
                 style={styles.input}
                 placeholder="Assignee ID (optional)"
-                placeholderTextColor="#6f7c92"
+                placeholderTextColor={palette.hint}
                 autoCapitalize="none"
               />
               {assignableUsers.length > 0 && (
@@ -599,7 +599,7 @@ const createStyles = (palette: Palette) =>
       lineHeight: 34,
     },
     note: {
-      color: '#8f9db4',
+      color: palette.hint,
       fontSize: 13,
       lineHeight: 18,
     },
@@ -609,19 +609,19 @@ const createStyles = (palette: Palette) =>
       lineHeight: 18,
     },
     warning: {
-      color: '#ffd27a',
+      color: palette.warning,
       fontSize: 13,
       lineHeight: 18,
     },
     warningText: {
-      color: '#ffd27a',
+      color: palette.warning,
       fontWeight: '700',
     },
     sectionHeader: {
       paddingTop: 8,
       paddingBottom: 10,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     sectionTitle: {
       color: palette.text,
@@ -632,13 +632,13 @@ const createStyles = (palette: Palette) =>
       gap: 10,
       paddingVertical: 12,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     taskIdentity: {
       gap: 2,
     },
     taskTitle: {
-      color: '#ccd5e6',
+      color: palette.textSecondary,
       fontSize: 15,
       fontWeight: '700',
     },
@@ -656,9 +656,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 999,
       paddingHorizontal: 10,
       paddingVertical: 6,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     badgeText: {
       color: palette.text,
@@ -682,9 +682,9 @@ const createStyles = (palette: Palette) =>
       borderRadius: 14,
       paddingHorizontal: 14,
       paddingVertical: 10,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     backButtonText: {
       color: palette.text,
@@ -707,8 +707,8 @@ const createStyles = (palette: Palette) =>
       borderRadius: 16,
       paddingVertical: 14,
       borderWidth: 1,
-      borderColor: '#2d374b',
-      backgroundColor: '#101521',
+      borderColor: palette.inputBorder,
+      backgroundColor: palette.inputBackground,
     },
     secondaryButtonText: {
       color: palette.text,
@@ -719,7 +719,7 @@ const createStyles = (palette: Palette) =>
       gap: 12,
       padding: 16,
       borderRadius: 20,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
       borderColor: palette.border,
     },
@@ -735,7 +735,7 @@ const createStyles = (palette: Palette) =>
       paddingVertical: 12,
       paddingHorizontal: 14,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
       backgroundColor: palette.background,
     },
     segmentButtonActive: {
@@ -743,7 +743,7 @@ const createStyles = (palette: Palette) =>
       borderColor: palette.accent,
     },
     segmentText: {
-      color: '#c1cbe0',
+      color: palette.textSecondary,
       fontSize: 13,
       fontWeight: '700',
     },
@@ -755,9 +755,9 @@ const createStyles = (palette: Palette) =>
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: palette.text,
-      backgroundColor: '#101521',
+      backgroundColor: palette.inputBackground,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     selectorList: {
       gap: 8,
@@ -768,14 +768,14 @@ const createStyles = (palette: Palette) =>
       paddingVertical: 12,
       backgroundColor: palette.background,
       borderWidth: 1,
-      borderColor: '#2d374b',
+      borderColor: palette.inputBorder,
     },
     selectorButtonActive: {
-      backgroundColor: '#1d2740',
+      backgroundColor: palette.raised,
       borderColor: palette.accent,
     },
     selectorButtonText: {
-      color: '#ccd5e6',
+      color: palette.textSecondary,
       fontSize: 14,
       fontWeight: '700',
     },
@@ -813,7 +813,7 @@ const createStyles = (palette: Palette) =>
       gap: 12,
       paddingVertical: 10,
       borderTopWidth: 1,
-      borderTopColor: '#222b3a',
+      borderTopColor: palette.divider,
     },
     deductionName: {
       flex: 1,
@@ -822,7 +822,7 @@ const createStyles = (palette: Palette) =>
       fontWeight: '700',
     },
     deductionAmount: {
-      color: '#ccd5e6',
+      color: palette.textSecondary,
       fontSize: 14,
       fontWeight: '700',
     },

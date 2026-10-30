@@ -121,7 +121,7 @@ export default function ShiftLogsScreen() {
             style={styles.multiLineInput}
             accessibilityLabel="Shift log body"
             placeholder="What should the next shift know?"
-            placeholderTextColor="#6f7c92"
+            placeholderTextColor={palette.hint}
             multiline
             value={body}
             onChangeText={(text) => {
@@ -194,7 +194,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     lineHeight: 34,
   },
   note: {
-    color: '#8f9db4',
+    color: palette.hint,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -212,7 +212,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#222b3a',
+    borderTopColor: palette.divider,
   },
   rowHeader: {
     flexDirection: 'row',
@@ -225,7 +225,7 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     fontWeight: '700',
   },
   bodyText: {
-    color: '#ccd5e6',
+    color: palette.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -241,14 +241,14 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     color: palette.text,
     backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
     textAlignVertical: 'top',
   },
   formCard: {
     gap: 12,
     padding: 16,
     borderRadius: 20,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
     borderColor: palette.border,
   },
@@ -264,12 +264,12 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
+    borderColor: palette.inputBorder,
+    backgroundColor: palette.inputBackground,
   },
   shiftButtonSelected: {
     borderColor: palette.accent,
-    backgroundColor: '#1f2a4d',
+    backgroundColor: palette.raised,
   },
   shiftButtonText: {
     color: palette.muted,
@@ -297,9 +297,9 @@ const createStyles = (palette: Palette) => StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#101521',
+    backgroundColor: palette.inputBackground,
     borderWidth: 1,
-    borderColor: '#2d374b',
+    borderColor: palette.inputBorder,
   },
   backButtonText: {
     color: palette.text,
