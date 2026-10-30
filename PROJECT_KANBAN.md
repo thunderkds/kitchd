@@ -10,16 +10,15 @@
 > Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Todo
-- [ ] **T052** — Graphite Mint replaces Dark Neon on the web (tokens + key components) | frontend-developer | C2 | Risk: High | P1
 > (empty — T042 audit follow-ups T043–T050 all Done 2026-10-29)
 
 ### In Progress
-- [ ] **T052** — Graphite Mint replaces Dark Neon on the web (tokens + key components; label "Graphite Mint", id `dark-neon` unchanged) | frontend-developer | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T052.md` | Brainstorm: `BRAINSTORMING_LOG_graphite-mint.md` | Started: 2026-10-30
 
 ### Ready for Review
 
 
 ### Done
+- [x] **T052** — Graphite Mint replaces Dark Neon on the web: Graphite tokens, `--color-on-accent` (dark text on mint), outlined flat cards, sunken inputs, glow on primary buttons only, Graphite sidebar highlight, neon focus ring, IBM Plex; label "Graphite Mint", id `dark-neon` unchanged; Simple unchanged | frontend-developer | C2 | Risk: High | P1 | Review: `tasks/TASK_REVIEW_T052.md` (code-review 0 P0/P1, 2 P2, 3 P3; security clean) | 255/255 web tests | Done: 2026-10-30 (Dashboard/Tasks/Settings visual check pending — human)
 - [x] **T051** — Web dev server rendered a blank page: `@kitchenos/shared` is CommonJS and Vite dev served it raw (found during Stage 5 of T044–T049; build + 228 tests were green, so nothing caught it) | frontend-developer | C1 | Risk: Low | P0 | Fix: `optimizeDeps.include` + `smoke:dev` regression script (`d1a9466`) | Review: `tasks/TASK_REVIEW_T051.md` | Linear HUN-106 | Done: 2026-10-29
 - [x] **T050** — RBAC matrix audit now covers every `/users` route (9 tests incl. cross-tenant 404; mutation-checked) | backend-developer | C1 | Risk: Medium | P2 | `82599ea`→`87036c3` | Review: `tasks/TASK_REVIEW_T050.md` (security verdict clean) | Linear HUN-94 | Done: 2026-10-29
 - [x] **T049** — Clearing a set low-stock threshold now PATCHes `minThreshold: null` (API already accepted null) | frontend-developer | C1 | Risk: Low | P2 | `52341c1`→`8ccff9f` | Review: `tasks/TASK_REVIEW_T049.md` | Linear HUN-93 | Done: 2026-10-29

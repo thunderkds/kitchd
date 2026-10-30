@@ -12,6 +12,7 @@
 > Task line format: **Mxxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Done
+- [x] **M022** — Graphite Mint replaces Dark Neon on mobile: palette = Graphite tokens, new `onAccent` role (dark text on mint) on 24 styles across 15 screens; label "Graphite Mint", id unchanged; fonts cut | mobile-developer | C2 | Risk: High | P1 | Review: `tasks/TASK_REVIEW_M022.md` (code-review 0 P0/P1, 2 P2, 2 P3; security clean) | 518/518 mobile tests | Done: 2026-10-30 (device check pending)
 - [x] **M020** — Theme palette rollout group B (team, invites, login, invite accept, notifications, shift log, boot) + web notice wording | mobile-developer | C2 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M020.md` | Done: 2026-10-30 (device check pending)
 - [x] **M018** — Theme palette rollout group A (tasks, task detail, recipes, guidelines, notes, inventory) via `createStyles(palette)` | mobile-developer | C2 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M018.md` | Done: 2026-10-30 (device check pending)
 - [x] **M019** — Comment replies on task detail (single level, VIEWER read-only, web parity) + comments section on the theme palette | mobile-developer | C1 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M019.md` | Done: 2026-10-30 (device check pending)
@@ -52,7 +53,6 @@
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
-- [ ] **M022** — Graphite Mint replaces Dark Neon on mobile (palette + `onAccent`; label "Graphite Mint"; fonts cut) | mobile-developer | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_M022.md` | Brainstorm: `BRAINSTORMING_LOG_graphite-mint.md` | Started: 2026-10-30
 
 ### Ready for Review
 
