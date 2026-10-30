@@ -78,6 +78,6 @@ Tests:       5 failed, 9 passed, 14 total
 
 **AFTER**: 2026-10-30 04:53 UTC, verification command: `Test Suites: 48 passed, 48 total` / `Tests: 467 passed, 467 total`; `tsc --noEmit` clean. All 6 new M019 tests in `src/commentsSection.test.tsx` pass.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A user can reply to a comment on a task, and the replies sit under it; the comments section follows the chosen theme.
 
 **WITNESS**: Supervisor re-ran the suite post-merge, 2026-10-30.
