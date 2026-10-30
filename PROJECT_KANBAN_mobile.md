@@ -12,6 +12,7 @@
 > Task line format: **Mxxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
 
 ### Done
+- [x] **M023** — Leftover mobile colours folded into 8 palette roles (inputs, borders, dividers, secondary/hint text, warning, success, selected panels); no #rrggbb literal outside `theme.ts` (scan test); Simple near-duplicates merged (user-approved) | mobile-developer | C2 | Risk: Medium | P2 | Review: `tasks/TASK_REVIEW_M023.md` (code-review 0 P0/P1, 1 P2, 2 P3; security clean) | 535/535 mobile tests | Done: 2026-10-30 (device check pending)
 - [x] **M022** — Graphite Mint replaces Dark Neon on mobile: palette = Graphite tokens, new `onAccent` role (dark text on mint) on 24 styles across 15 screens; label "Graphite Mint", id unchanged; fonts cut | mobile-developer | C2 | Risk: High | P1 | Review: `tasks/TASK_REVIEW_M022.md` (code-review 0 P0/P1, 2 P2, 2 P3; security clean) | 518/518 mobile tests | Done: 2026-10-30 (device check pending)
 - [x] **M020** — Theme palette rollout group B (team, invites, login, invite accept, notifications, shift log, boot) + web notice wording | mobile-developer | C2 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M020.md` | Done: 2026-10-30 (device check pending)
 - [x] **M018** — Theme palette rollout group A (tasks, task detail, recipes, guidelines, notes, inventory) via `createStyles(palette)` | mobile-developer | C2 | Risk: Low | P3 | Review: `tasks/TASK_REVIEW_M018.md` | Done: 2026-10-30 (device check pending)
@@ -53,7 +54,6 @@
 > M006 scope widened by M011: Settings also shows/renames the kitchen (`GET/PATCH /kitchens/:id`, Chef-only). CSV export is web-only by design; detail-by-id GETs are headless by design.
 
 ### In Progress
-- [ ] **M023** — Fold leftover mobile colours into 8 palette roles (no bluish tones on Graphite Mint; Simple near-duplicates merged) | mobile-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_M023.md` | Brainstorm: `BRAINSTORMING_LOG_m023-mobile-palette-roles.md` | Started: 2026-10-30
 
 ### Ready for Review
 
