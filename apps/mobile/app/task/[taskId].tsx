@@ -25,6 +25,7 @@ import {
 import { CommentsSection } from '../../src/commentsSection';
 import { ScreenFrame } from '../../src/components/ScreenFrame';
 import { session } from '../../src/session';
+import { useTheme, type Palette } from '../../src/theme';
 
 type PendingCompletion = {
   taskId: string;
@@ -92,6 +93,8 @@ function toPayloadItems(items: EditableChecklistItem[]): ChecklistItem[] {
 
 export default function TaskDetailScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const params = useLocalSearchParams();
   const taskId = Array.isArray(params.taskId) ? params.taskId[0] : params.taskId;
 
@@ -411,7 +414,7 @@ export default function TaskDetailScreen() {
   }
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <View style={styles.screen}>
         <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
@@ -600,274 +603,275 @@ export default function TaskDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    gap: 16,
-    padding: 24,
-    backgroundColor: '#0d1016',
-  },
-  card: {
-    gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  headerCopy: {
-    flex: 1,
-    gap: 4,
-  },
-  kicker: {
-    color: '#86a0ff',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: '#f4f7ff',
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-  },
-  taskTitle: {
-    color: '#f4f7ff',
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  meta: {
-    color: '#9ca9bf',
-    fontSize: 14,
-  },
-  note: {
-    color: '#8f9db4',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  error: {
-    color: '#ff8c8c',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  warning: {
-    color: '#ffd27a',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  warningText: {
-    color: '#ffd27a',
-    fontWeight: '700',
-  },
-  section: {
-    gap: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#222b3a',
-  },
-  sectionTitle: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  checklistRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#222b3a',
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
-  },
-  checkboxChecked: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
-  },
-  checkboxText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  checklistText: {
-    flex: 1,
-    color: '#ccd5e6',
-    fontSize: 14,
-  },
-  checklistTextDone: {
-    color: '#8f9db4',
-    textDecorationLine: 'line-through',
-  },
-  checklistAction: {
-    color: '#9ca9bf',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  backButton: {
-    alignItems: 'center',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  backButtonText: {
-    color: '#f4f7ff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  primaryButton: {
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingVertical: 14,
-    backgroundColor: '#6b8cff',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
-  },
-  secondaryButtonText: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  rowActions: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-  },
-  formCard: {
-    gap: 12,
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#273044',
-  },
-  input: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  selectorList: {
-    gap: 8,
-  },
-  selectorButton: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#0d1016',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  selectorButtonActive: {
-    backgroundColor: '#1d2740',
-    borderColor: '#6b8cff',
-  },
-  selectorButtonText: {
-    color: '#ccd5e6',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  selectorButtonTextActive: {
-    color: '#ffffff',
-  },
-  editChecklistRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  editChecklistInput: {
-    flex: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  smallButton: {
-    alignItems: 'center',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  smallButtonText: {
-    color: '#f4f7ff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    padding: 24,
-    backgroundColor: 'rgba(13, 16, 22, 0.85)',
-    justifyContent: 'center',
-  },
-  completionCard: {
-    gap: 12,
-    borderRadius: 24,
-    padding: 20,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
-  },
-  deductionList: {
-    gap: 8,
-  },
-  deductionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#222b3a',
-  },
-  deductionName: {
-    flex: 1,
-    color: '#f4f7ff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  deductionAmount: {
-    color: '#ccd5e6',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      gap: 16,
+      padding: 24,
+      backgroundColor: palette.background,
+    },
+    card: {
+      gap: 14,
+      borderRadius: 24,
+      padding: 24,
+      backgroundColor: palette.surface,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      alignItems: 'flex-start',
+    },
+    headerCopy: {
+      flex: 1,
+      gap: 4,
+    },
+    kicker: {
+      color: palette.accentSoft,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+    },
+    title: {
+      color: palette.text,
+      fontSize: 28,
+      fontWeight: '800',
+      lineHeight: 34,
+    },
+    taskTitle: {
+      color: palette.text,
+      fontSize: 22,
+      fontWeight: '800',
+    },
+    meta: {
+      color: palette.muted,
+      fontSize: 14,
+    },
+    note: {
+      color: '#8f9db4',
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    error: {
+      color: palette.danger,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    warning: {
+      color: '#ffd27a',
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    warningText: {
+      color: '#ffd27a',
+      fontWeight: '700',
+    },
+    section: {
+      gap: 10,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: '#222b3a',
+    },
+    sectionTitle: {
+      color: palette.text,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    checklistRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: '#222b3a',
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+      backgroundColor: '#101521',
+    },
+    checkboxChecked: {
+      backgroundColor: palette.accent,
+      borderColor: palette.accent,
+    },
+    checkboxText: {
+      color: '#ffffff',
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    checklistText: {
+      flex: 1,
+      color: '#ccd5e6',
+      fontSize: 14,
+    },
+    checklistTextDone: {
+      color: '#8f9db4',
+      textDecorationLine: 'line-through',
+    },
+    checklistAction: {
+      color: palette.muted,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    backButton: {
+      alignItems: 'center',
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    backButtonText: {
+      color: palette.text,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    primaryButton: {
+      alignItems: 'center',
+      borderRadius: 16,
+      paddingVertical: 14,
+      backgroundColor: palette.accent,
+    },
+    primaryButtonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    secondaryButton: {
+      alignItems: 'center',
+      borderRadius: 16,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: '#2d374b',
+      backgroundColor: '#101521',
+    },
+    secondaryButtonText: {
+      color: palette.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    rowActions: {
+      flexDirection: 'row',
+      gap: 10,
+      flexWrap: 'wrap',
+    },
+    formCard: {
+      gap: 12,
+      padding: 16,
+      borderRadius: 20,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    input: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      color: palette.text,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    selectorList: {
+      gap: 8,
+    },
+    selectorButton: {
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: palette.background,
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    selectorButtonActive: {
+      backgroundColor: '#1d2740',
+      borderColor: palette.accent,
+    },
+    selectorButtonText: {
+      color: '#ccd5e6',
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    selectorButtonTextActive: {
+      color: '#ffffff',
+    },
+    editChecklistRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    editChecklistInput: {
+      flex: 1,
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      color: palette.text,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    smallButton: {
+      alignItems: 'center',
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    smallButtonText: {
+      color: palette.text,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    overlay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      padding: 24,
+      backgroundColor: 'rgba(13, 16, 22, 0.85)',
+      justifyContent: 'center',
+    },
+    completionCard: {
+      gap: 12,
+      borderRadius: 24,
+      padding: 20,
+      backgroundColor: palette.surface,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    deductionList: {
+      gap: 8,
+    },
+    deductionRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: '#222b3a',
+    },
+    deductionName: {
+      flex: 1,
+      color: palette.text,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    deductionAmount: {
+      color: '#ccd5e6',
+      fontSize: 14,
+      fontWeight: '700',
+    },
+  });

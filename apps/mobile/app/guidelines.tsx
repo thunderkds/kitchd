@@ -17,6 +17,7 @@ import { guidelineSchema, type GuidelineFormValues, type GuidelinePayload } from
 import { queryLoadError, useGuidelines } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 import { ScreenFrame } from '../src/components/ScreenFrame';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
@@ -27,6 +28,8 @@ type FormMode = 'create' | 'edit';
 
 export default function GuidelinesScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canWrite = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
@@ -130,7 +133,7 @@ export default function GuidelinesScreen() {
 
   if (loading) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <Text style={styles.kicker}>KitchenOS mobile</Text>
@@ -144,7 +147,7 @@ export default function GuidelinesScreen() {
 
   if (mode === 'detail' && selected) {
     return (
-      <ScreenFrame>
+      <ScreenFrame background={palette.background}>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <View style={styles.headerRow}>
@@ -184,7 +187,7 @@ export default function GuidelinesScreen() {
   }
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <View style={styles.headerRow}>
@@ -270,190 +273,191 @@ export default function GuidelinesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#0d1016',
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  card: {
-    gap: 14,
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#171c26',
-    borderWidth: 1,
-    borderColor: '#273044',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  kicker: {
-    color: '#86a0ff',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: '#f4f7ff',
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-  },
-  note: {
-    color: '#8f9db4',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  error: {
-    color: '#ff8c8c',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  meta: {
-    color: '#9ca9bf',
-    fontSize: 14,
-    textTransform: 'uppercase',
-  },
-  sectionTitle: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  stepRow: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#222b3a',
-  },
-  stepIndex: {
-    width: 24,
-    color: '#86a0ff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  stepText: {
-    flex: 1,
-    color: '#ccd5e6',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  listRow: {
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#222b3a',
-  },
-  listIdentity: {
-    gap: 2,
-  },
-  listTitle: {
-    color: '#f4f7ff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  input: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  multiLineInput: {
-    minHeight: 128,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-    textAlignVertical: 'top',
-  },
-  segmentRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  segmentButton: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: 999,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
-  },
-  segmentButtonActive: {
-    backgroundColor: '#6b8cff',
-    borderColor: '#6b8cff',
-  },
-  segmentText: {
-    color: '#c1cbe0',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  segmentTextActive: {
-    color: '#ffffff',
-  },
-  formCard: {
-    gap: 12,
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#273044',
-  },
-  formActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  secondaryButton: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
-  },
-  secondaryButtonText: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  primaryButton: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingVertical: 14,
-    backgroundColor: '#6b8cff',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  backButton: {
-    alignItems: 'center',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  backButtonText: {
-    color: '#f4f7ff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: palette.background,
+    },
+    content: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 24,
+    },
+    card: {
+      gap: 14,
+      borderRadius: 24,
+      padding: 24,
+      backgroundColor: palette.surface,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      alignItems: 'flex-start',
+    },
+    kicker: {
+      color: palette.accentSoft,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+    },
+    title: {
+      color: palette.text,
+      fontSize: 28,
+      fontWeight: '800',
+      lineHeight: 34,
+    },
+    note: {
+      color: '#8f9db4',
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    error: {
+      color: palette.danger,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    meta: {
+      color: palette.muted,
+      fontSize: 14,
+      textTransform: 'uppercase',
+    },
+    sectionTitle: {
+      color: palette.text,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    stepRow: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: '#222b3a',
+    },
+    stepIndex: {
+      width: 24,
+      color: palette.accentSoft,
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    stepText: {
+      flex: 1,
+      color: '#ccd5e6',
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    listRow: {
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: '#222b3a',
+    },
+    listIdentity: {
+      gap: 2,
+    },
+    listTitle: {
+      color: palette.text,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    input: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      color: palette.text,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    multiLineInput: {
+      minHeight: 128,
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      color: palette.text,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+      textAlignVertical: 'top',
+    },
+    segmentRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    segmentButton: {
+      flex: 1,
+      alignItems: 'center',
+      borderRadius: 999,
+      paddingVertical: 12,
+      borderWidth: 1,
+      borderColor: '#2d374b',
+      backgroundColor: '#101521',
+    },
+    segmentButtonActive: {
+      backgroundColor: palette.accent,
+      borderColor: palette.accent,
+    },
+    segmentText: {
+      color: '#c1cbe0',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    segmentTextActive: {
+      color: '#ffffff',
+    },
+    formCard: {
+      gap: 12,
+      padding: 16,
+      borderRadius: 20,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    formActions: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    secondaryButton: {
+      flex: 1,
+      alignItems: 'center',
+      borderRadius: 16,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: '#2d374b',
+      backgroundColor: '#101521',
+    },
+    secondaryButtonText: {
+      color: palette.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    primaryButton: {
+      flex: 1,
+      alignItems: 'center',
+      borderRadius: 16,
+      paddingVertical: 14,
+      backgroundColor: palette.accent,
+    },
+    primaryButtonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    backButton: {
+      alignItems: 'center',
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    backButtonText: {
+      color: palette.text,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+  });

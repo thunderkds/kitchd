@@ -23,6 +23,7 @@ import {
 import { queryLoadError, useIngredientRows, type IngredientRow } from '../src/queries';
 import { queryKeys } from '../src/queryKeys';
 import { session } from '../src/session';
+import { useTheme, type Palette } from '../src/theme';
 
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'CHEF'] as const;
 
@@ -36,6 +37,8 @@ const EMPTY_FORM: IngredientFormValues = {
 
 export default function InventoryScreen() {
   const router = useRouter();
+  const { palette } = useTheme();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const caller = session.getUser();
   const canManage = !!caller && WRITE_ROLES.includes(caller.role as (typeof WRITE_ROLES)[number]);
 
@@ -242,7 +245,7 @@ export default function InventoryScreen() {
   );
 
   return (
-    <ScreenFrame>
+    <ScreenFrame background={palette.background}>
       <FlashList
         data={ingredients}
         keyExtractor={(ingredient) => ingredient.id}
@@ -307,129 +310,130 @@ export default function InventoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    padding: 24,
-  },
-  header: {
-    gap: 14,
-    paddingBottom: 14,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  kicker: {
-    color: '#86a0ff',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: '#f4f7ff',
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-  },
-  note: {
-    color: '#8f9db4',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  error: {
-    color: '#ff8c8c',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  sectionTitle: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  formCard: {
-    gap: 10,
-    borderRadius: 20,
-    padding: 16,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  input: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#f4f7ff',
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  ingredientRow: {
-    gap: 12,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#222b3a',
-  },
-  ingredientIdentity: {
-    gap: 2,
-  },
-  ingredientName: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  ingredientMeta: {
-    color: '#9ca9bf',
-    fontSize: 12,
-  },
-  rowActions: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-  },
-  receivePanel: {
-    gap: 10,
-  },
-  backButton: {
-    alignItems: 'center',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: '#101521',
-    borderWidth: 1,
-    borderColor: '#2d374b',
-  },
-  backButtonText: {
-    color: '#f4f7ff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#2d374b',
-    backgroundColor: '#101521',
-  },
-  secondaryButtonText: {
-    color: '#f4f7ff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  primaryButton: {
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#6b8cff',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-});
+const createStyles = (palette: Palette) =>
+  StyleSheet.create({
+    content: {
+      padding: 24,
+    },
+    header: {
+      gap: 14,
+      paddingBottom: 14,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      alignItems: 'flex-start',
+    },
+    kicker: {
+      color: palette.accentSoft,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+    },
+    title: {
+      color: palette.text,
+      fontSize: 28,
+      fontWeight: '800',
+      lineHeight: 34,
+    },
+    note: {
+      color: '#8f9db4',
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    error: {
+      color: palette.danger,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    sectionTitle: {
+      color: palette.text,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    formCard: {
+      gap: 10,
+      borderRadius: 20,
+      padding: 16,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    input: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      color: palette.text,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    ingredientRow: {
+      gap: 12,
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: '#222b3a',
+    },
+    ingredientIdentity: {
+      gap: 2,
+    },
+    ingredientName: {
+      color: palette.text,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    ingredientMeta: {
+      color: palette.muted,
+      fontSize: 12,
+    },
+    rowActions: {
+      flexDirection: 'row',
+      gap: 10,
+      flexWrap: 'wrap',
+    },
+    receivePanel: {
+      gap: 10,
+    },
+    backButton: {
+      alignItems: 'center',
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      backgroundColor: '#101521',
+      borderWidth: 1,
+      borderColor: '#2d374b',
+    },
+    backButtonText: {
+      color: palette.text,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    secondaryButton: {
+      alignItems: 'center',
+      borderRadius: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderWidth: 1,
+      borderColor: '#2d374b',
+      backgroundColor: '#101521',
+    },
+    secondaryButtonText: {
+      color: palette.text,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    primaryButton: {
+      alignItems: 'center',
+      borderRadius: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: palette.accent,
+    },
+    primaryButtonText: {
+      color: '#ffffff',
+      fontSize: 14,
+      fontWeight: '800',
+    },
+  });
